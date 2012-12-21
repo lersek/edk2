@@ -210,6 +210,7 @@ INF  MdeModulePkg/Universal/PCD/Pei/Pcd.inf
 INF  IntelFrameworkModulePkg/Universal/StatusCode/Pei/StatusCodePei.inf
 INF  OvmfPkg/PlatformPei/PlatformPei.inf
 INF  MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
+INF  UefiCpuPkg/Universal/Acpi/S3Resume2Pei/S3Resume2Pei.inf
 
 FILE FV_IMAGE = A4EF5A93-3F1B-4232-A1C4-F0910E6D1D9C {
   SECTION COMPRESS PI_NONE {
