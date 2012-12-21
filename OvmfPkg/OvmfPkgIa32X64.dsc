@@ -187,6 +187,7 @@
 !ifdef $(SOURCE_DEBUG_ENABLE)
   DebugAgentLib|SourceLevelDebugPkg/Library/DebugAgent/SecPeiDebugAgentLib.inf
 !endif
+  LockBoxLib|MdeModulePkg/Library/SmmLockBoxLib/SmmLockBoxPeiLib.inf
 
 [LibraryClasses.common.DXE_CORE]
   HobLib|MdePkg/Library/DxeCoreHobLib/DxeCoreHobLib.inf
@@ -385,6 +386,10 @@
       PcdLib|MdePkg/Library/PeiPcdLib/PeiPcdLib.inf
   }
   OvmfPkg/EmuSmmPei/EmuSmmPei.inf
+  UefiCpuPkg/Universal/Acpi/S3Resume2Pei/S3Resume2Pei.inf {
+    <LibraryClasses>
+      PcdLib|MdePkg/Library/PeiPcdLib/PeiPcdLib.inf
+  }
 
 [Components.X64]
   #
