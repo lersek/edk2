@@ -228,6 +228,16 @@ typedef struct {
   /// Maximum PCI bus number assigned.
   ///
   UINT8                             LastPciBus;
+
+  ///
+  /// Start address of UMB RAM (>> 24)
+  ///
+  UINT8                             UmbStart;
+
+  ///
+  /// End address of UMB RAM (>> 24)
+  ///
+  UINT8                             UmbEnd;
 } EFI_COMPATIBILITY16_TABLE;
 
 ///

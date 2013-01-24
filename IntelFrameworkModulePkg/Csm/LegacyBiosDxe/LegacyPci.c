@@ -2269,6 +2269,7 @@ LegacyBiosInstallRom (
   UINT32                LocalTime;
   UINT32                StartBbsIndex;
   UINT32                EndBbsIndex;
+  UINT32                MaxRomAddr;
   UINTN                 TempData;
   UINTN                 InitAddress;
   UINTN                 RuntimeAddress;
@@ -2284,7 +2285,13 @@ LegacyBiosInstallRom (
   Function        = 0;
   VideoMode       = 0;
   PhysicalAddress = 0;
+  MaxRomAddr      = PcdGet32 (PcdEndOpromShadowAddress);
 
+  if (Private->Legacy16Table->TableLength >= OFFSET_OF(EFI_COMPATIBILITY16_TABLE, UmbEnd) &&
+      Private->Legacy16Table->UmbStart != 0 && Private->Legacy16Table->UmbEnd != 0 &&
+      MaxRomAddr > (Private->Legacy16Table->UmbStart << 12)) {
+     MaxRomAddr = Private->Legacy16Table->UmbStart << 12;
+  }
   PciProgramAllInterruptLineRegisters (Private);
 
   if ((OpromRevision >= 3) && (Private->Csm16PciInterfaceVersion >= 0x0300)) {
@@ -2316,7 +2323,7 @@ LegacyBiosInstallRom (
     //   then test if there is enough space for its RT code
     //
     RuntimeAddress = Private->OptionRom;
-    if (RuntimeAddress + *RuntimeImageLength > PcdGet32 (PcdEndOpromShadowAddress)) {
+    if (RuntimeAddress + *RuntimeImageLength > MaxRomAddr) {
       DEBUG ((EFI_D_ERROR, "return LegacyBiosInstallRom(%d): EFI_OUT_OF_RESOURCES (no more space for OpROM)\n", __LINE__));
       gBS->FreePages (PhysicalAddress, EFI_SIZE_TO_PAGES (ImageSize));
       //
@@ -2334,7 +2341,7 @@ LegacyBiosInstallRom (
     //   test if there is enough space for its INIT code
     //
     InitAddress    = PCI_START_ADDRESS (Private->OptionRom);
-    if (InitAddress + ImageSize > PcdGet32 (PcdEndOpromShadowAddress)) {
+    if (InitAddress + ImageSize > MaxRomAddr) {
       DEBUG ((EFI_D_ERROR, "return LegacyBiosInstallRom(%d): EFI_OUT_OF_RESOURCES (no more space for OpROM)\n", __LINE__));
       //
       // Report Status Code to indicate that there is no enough space for OpROM
