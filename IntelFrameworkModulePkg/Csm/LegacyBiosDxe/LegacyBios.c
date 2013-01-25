@@ -543,7 +543,7 @@ ShadowAndStartLegacy16 (
   //
   // Skip Floppy and possible onboard IDE drives
   //
-  EfiToLegacy16BootTable->NumberBbsEntries = 1 + 2 * MAX_IDE_CONTROLLER;
+  EfiToLegacy16BootTable->NumberBbsEntries = sizeof(Private->IntThunk->BbsTable) / sizeof(BBS_TABLE);
 
   for (Index = 0; Index < (sizeof (Private->IntThunk->BbsTable) / sizeof (BBS_TABLE)); Index++) {
     BbsTable[Index].BootPriority = BBS_IGNORE_ENTRY;
