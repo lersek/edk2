@@ -259,8 +259,140 @@ LegacyBiosBuildBbs (
     }
   }
 
-  return EFI_SUCCESS;
+  //
+  // add virtio-blk devices
+  //
+  {
+    EFI_STATUS Status;
+    UINTN      NumPciIoHandles;
+    EFI_HANDLE *PciIoHandles;
 
+    BbsIndex = HddIndex * 2 + 1;
+
+    //
+    // scan all handles supporting the PCI IO protocol
+    //
+    Status = gBS->LocateHandleBuffer (
+                    ByProtocol,
+                    &gEfiPciIoProtocolGuid,
+                    NULL,
+                    &NumPciIoHandles,
+                    &PciIoHandles
+                    );
+
+    if (Status == EFI_SUCCESS) {
+      UINTN CurPciIo;
+
+      for (CurPciIo = 0; CurPciIo < NumPciIoHandles; ++CurPciIo) {
+        EFI_OPEN_PROTOCOL_INFORMATION_ENTRY *References;
+        UINTN                               NumReferences;
+        UINTN                               CurRef;
+
+        //
+        // on each handle supporting the PCI IO protocol, see which drivers
+        // (agents) have a PCI IO protocol interface actually opened
+        //
+        Status = gBS->OpenProtocolInformation (
+                        PciIoHandles[CurPciIo],
+                        &gEfiPciIoProtocolGuid,
+                        &References,
+                        &NumReferences
+                        );
+        if (EFI_ERROR (Status)) {
+          continue;
+        }
+
+        for (CurRef = 0; CurRef < NumReferences; ++CurRef) {
+          if (References[CurRef].Attributes & EFI_OPEN_PROTOCOL_BY_DRIVER) {
+            EFI_COMPONENT_NAME2_PROTOCOL *ComponentName;
+            CHAR16                       *DriverName;
+
+            //
+            // OpenProtocol() enforced non-NULL AgentHandle for this case
+            //
+            ASSERT (References[CurRef].AgentHandle != NULL);
+
+            //
+            // Check if the agent owning the open protocol interface can
+            // provide its name, and if so, whether it's VirtioBlkDxe. For this
+            // check we don't want a persistent reference to the agent's
+            // EFI_COMPONENT_NAME2_PROTOCOL instance, therefore we use
+            // HandleProtocol() instead of OpenProtocol().
+            //
+            Status = gBS->HandleProtocol (
+                            References[CurRef].AgentHandle,
+                            &gEfiComponentName2ProtocolGuid,
+                            (VOID **) &ComponentName
+                            );
+            if (EFI_ERROR (Status)) {
+              continue;
+            }
+
+            Status = ComponentName->GetDriverName (
+                                      ComponentName,
+                                      "en",
+                                      &DriverName
+                                      );
+
+            if (Status == EFI_SUCCESS &&
+                StrCmp (DriverName, L"Virtio Block Driver") == 0) {
+              break;
+            }
+          }
+        }
+
+        if (CurRef < NumReferences) {
+          EFI_PCI_IO_PROTOCOL *PciIo;
+          UINTN               Segment;
+          UINTN               Bus;
+          UINTN               Device;
+          UINTN               Function;
+
+          //
+          // reference by VirtioBlkDxe found, produce boot entry for device
+          //
+          Status = gBS->HandleProtocol (
+                          PciIoHandles[CurPciIo],
+                          &gEfiPciIoProtocolGuid,
+                          (VOID **) &PciIo
+                          );
+          ASSERT (Status == EFI_SUCCESS);
+
+          Status = PciIo->GetLocation (
+                            PciIo,
+                            &Segment,
+                            &Bus,
+                            &Device,
+                            &Function
+                            );
+          ASSERT (Status == EFI_SUCCESS);
+
+          if (Segment == 0) {
+            BbsTable[BbsIndex].Bus                      = (UINT32) Bus;
+            BbsTable[BbsIndex].Device                   = (UINT32) Device;
+            BbsTable[BbsIndex].Function                 = (UINT32) Function;
+            BbsTable[BbsIndex].Class                    = 1;
+            BbsTable[BbsIndex].SubClass                 = 0x80;
+            BbsTable[BbsIndex].StatusFlags.OldPosition  = 0;
+            BbsTable[BbsIndex].StatusFlags.Reserved1    = 0;
+            BbsTable[BbsIndex].StatusFlags.Enabled      = 0;
+            BbsTable[BbsIndex].StatusFlags.Failed       = 0;
+            BbsTable[BbsIndex].StatusFlags.MediaPresent = 0;
+            BbsTable[BbsIndex].StatusFlags.Reserved2    = 0;
+            BbsTable[BbsIndex].DeviceType               = BBS_HARDDISK;
+            BbsTable[BbsIndex].BootPriority             = BBS_UNPRIORITIZED_ENTRY;
+            ++BbsIndex;
+          }
+        }
+
+        FreePool (References);
+      }
+
+      FreePool (PciIoHandles);
+    }
+  }
+
+  return EFI_SUCCESS;
 }
 
 
