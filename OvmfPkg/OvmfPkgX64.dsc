@@ -442,10 +442,12 @@
   MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
   MdeModulePkg/Universal/MemoryTest/NullMemoryTestDxe/NullMemoryTestDxe.inf
 
+!ifndef $(CSM_ENABLE)
   OvmfPkg/QemuVideoDxe/QemuVideoDxe.inf {
     <LibraryClasses>
       BltLib|OptionRomPkg/Library/FrameBufferBltLib/FrameBufferBltLib.inf
   }
+!endif
 
   #
   # ISA Support
