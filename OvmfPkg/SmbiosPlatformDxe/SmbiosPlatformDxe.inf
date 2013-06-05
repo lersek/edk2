@@ -34,6 +34,7 @@
   SmbiosPlatformDxe.c
   Xen.c
   Qemu.c
+  QemuType0.c
 
 [Packages]
   MdePkg/MdePkg.dec

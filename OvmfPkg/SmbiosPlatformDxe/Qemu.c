@@ -628,7 +628,10 @@ InstallDefaultTables (
   IN OUT BUILD_CONTEXT       *Context
   )
 {
-  return EFI_SUCCESS;
+  EFI_STATUS Status;
+
+  Status = InstallSmbiosType0 (Smbios, ProducerHandle, Context);
+  return Status;
 }
 
 
