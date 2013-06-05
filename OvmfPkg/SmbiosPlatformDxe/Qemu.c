@@ -631,6 +631,11 @@ InstallDefaultTables (
   EFI_STATUS Status;
 
   Status = InstallSmbiosType0 (Smbios, ProducerHandle, Context);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  Status = InstallSmbiosType1 (Smbios, ProducerHandle, Context);
   return Status;
 }
 
