@@ -1,6 +1,7 @@
 /** @file
   This driver installs SMBIOS information for OVMF
 
+  Copyright (C) 2013, Red Hat, Inc.
   Copyright (c) 2011, Bei Guan <gbtju85@gmail.com>
   Copyright (c) 2011, Intel Corporation. All rights reserved.<BR>
 
@@ -15,6 +16,7 @@
 **/
 
 #include "SmbiosPlatformDxe.h"
+#include "Qemu.h"
 
 
 /**
@@ -164,6 +166,8 @@ SmbiosTablePublishEntry (
   EntryPointStructure = GetXenSmbiosTables ();
   if (EntryPointStructure != NULL) {
     Status = InstallAllStructures (Smbios, EntryPointStructure);
+  } else {
+    Status = InstallQemuSmbiosTables (Smbios, ImageHandle);
   }
 
   return Status;
