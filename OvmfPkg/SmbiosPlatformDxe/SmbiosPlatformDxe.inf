@@ -1,6 +1,7 @@
 ## @file
 #  This driver installs SMBIOS information for OVMF
 #
+#  Copyright (C) 2013, Red Hat, Inc.
 #  Copyright (c) 2011, Bei Guan <gbtju85@gmail.com>
 #  Copyright (c) 2011, Intel Corporation. All rights reserved.<BR>
 #
@@ -32,6 +33,7 @@
   SmbiosPlatformDxe.h
   SmbiosPlatformDxe.c
   Xen.c
+  Qemu.c
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -45,6 +47,8 @@
   UefiDriverEntryPoint
   DebugLib
   HobLib
+  QemuFwCfgLib
+  MemoryAllocationLib
 
 [Protocols]
   gEfiSmbiosProtocolGuid                      # PROTOCOL ALWAYS_CONSUMED
