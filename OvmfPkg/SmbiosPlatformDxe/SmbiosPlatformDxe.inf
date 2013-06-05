@@ -35,6 +35,7 @@
   Xen.c
   Qemu.c
   QemuType0.c
+  QemuType1.c
 
 [Packages]
   MdePkg/MdePkg.dec

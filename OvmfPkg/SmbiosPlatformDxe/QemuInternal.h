@@ -248,4 +248,34 @@ InstallSmbiosType0 (
   IN OUT BUILD_CONTEXT       *Context
   );
 
+
+/**
+  Install default (fallback) table for SMBIOS Type 1.
+
+  In case QEMU has provided no Type 1 SMBIOS table in whole, prepare one here,
+  patch it with any referring saved patches, and install it.
+
+  @param[in]     Smbios          The EFI_SMBIOS_PROTOCOL instance used for
+                                 installing SMBIOS tables.
+  @param[in]     ProducerHandle  Passed on to Smbios->Add(), ProducerHandle
+                                 tracks the origin of installed SMBIOS tables.
+  @param[in,out] Context         The BUILD_CONTEXT object tracking installed
+                                 tables and saved patches.
+
+  @retval EFI_SUCCESS  A Type 1 table has already been installed from the
+                       SMBIOS firmware configuration blob.
+  @retval EFI_SUCCESS  No Type 1 table was installed previously, and installing
+                       the default here has succeeded.
+  @return              Error codes from the PATCH_FORMATTED() and
+                       PATCH_UNFORMATTED() macros, except EFI_NOT_FOUND, which
+                       is only an informative result of theirs.
+**/
+EFI_STATUS
+EFIAPI
+InstallSmbiosType1 (
+  IN     EFI_SMBIOS_PROTOCOL *Smbios,
+  IN     EFI_HANDLE          ProducerHandle,
+  IN OUT BUILD_CONTEXT       *Context
+  );
+
 #endif
