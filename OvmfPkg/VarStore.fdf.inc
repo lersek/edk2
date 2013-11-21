@@ -17,7 +17,6 @@
 ##
 
 0x00000000|0x0000e000
-gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashNvStorageVariableBase|gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize
 #NV_VARIABLE_STORE
 DATA = {
   ## This is the EFI_FIRMWARE_VOLUME_HEADER
@@ -63,10 +62,8 @@ DATA = {
 
 0x0000e000|0x00001000
 #NV_EVENT_LOG
-gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashNvStorageEventLogBase|gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashNvStorageEventLogSize
 
 0x0000f000|0x00001000
-gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashNvStorageFtwWorkingBase|gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize
 #NV_FTW_WORKING
 DATA = {
   # EFI_FAULT_TOLERANT_WORKING_BLOCK_HEADER->Signature = gEdkiiWorkingBlockSignatureGuid         =
@@ -81,5 +78,3 @@ DATA = {
 
 0x00010000|0x00010000
 #NV_FTW_SPARE
-gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashNvStorageFtwSpareBase|gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize
-
