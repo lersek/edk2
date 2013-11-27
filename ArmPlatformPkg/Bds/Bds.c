@@ -19,6 +19,8 @@
 
 #include <Protocol/Bds.h>
 
+#include <Guid/Gpt.h>
+
 #define EFI_SET_TIMER_TO_SECOND   10000000
 
 EFI_HANDLE mImageHandle;
@@ -233,30 +235,49 @@ DefineDefaultBootEntries (
   Status = gRT->GetVariable (L"BootOrder", &gEfiGlobalVariableGuid, NULL, &Size, NULL);
   if (Status == EFI_NOT_FOUND) {
     if ((PcdGetPtr(PcdDefaultBootDevicePath) == NULL) || (StrLen ((CHAR16*)PcdGetPtr(PcdDefaultBootDevicePath)) == 0)) {
-      return EFI_UNSUPPORTED;
+      UINTN      NrHandles;
+      EFI_HANDLE *Handles;
+
+      BdsConnectAllDrivers();
+      Status = gBS->LocateHandleBuffer (ByProtocol,
+                      &gEfiPartTypeSystemPartGuid, NULL /* SearchKey */,
+                      &NrHandles, &Handles);
+      if (!EFI_ERROR (Status)) {
+        ASSERT (NrHandles > 0);
+        BootDevicePath = FileDevicePath (Handles[0], L"Image");
+        if (BootDevicePath == NULL) {
+          Status = EFI_OUT_OF_RESOURCES;
+        }
+        FreePool (Handles);
+      }
+      if (EFI_ERROR (Status)) {
+        DEBUG ((EFI_D_ERROR, "failed to auto-create default boot option: %r\n",
+          Status));
+        return Status;
+      }
+    } else {
+      Status = gBS->LocateProtocol (&gEfiDevicePathFromTextProtocolGuid, NULL, (VOID **)&EfiDevicePathFromTextProtocol);
+      if (EFI_ERROR(Status)) {
+        // You must provide an implementation of DevicePathFromTextProtocol in your firmware (eg: DevicePathDxe)
+        DEBUG((EFI_D_ERROR,"Error: Bds requires DevicePathFromTextProtocol\n"));
+        return Status;
+      }
+      BootDevicePath = EfiDevicePathFromTextProtocol->ConvertTextToDevicePath ((CHAR16*)PcdGetPtr(PcdDefaultBootDevicePath));
+
+      DEBUG_CODE_BEGIN();
+        // We convert back to the text representation of the device Path to see if the initial text is correct
+        EFI_DEVICE_PATH_TO_TEXT_PROTOCOL* DevicePathToTextProtocol;
+        CHAR16* DevicePathTxt;
+
+        Status = gBS->LocateProtocol(&gEfiDevicePathToTextProtocolGuid, NULL, (VOID **)&DevicePathToTextProtocol);
+        ASSERT_EFI_ERROR(Status);
+        DevicePathTxt = DevicePathToTextProtocol->ConvertDevicePathToText (BootDevicePath, TRUE, TRUE);
+
+        ASSERT (StrCmp ((CHAR16*)PcdGetPtr(PcdDefaultBootDevicePath), DevicePathTxt) == 0);
+
+        FreePool (DevicePathTxt);
+      DEBUG_CODE_END();
     }
-
-    Status = gBS->LocateProtocol (&gEfiDevicePathFromTextProtocolGuid, NULL, (VOID **)&EfiDevicePathFromTextProtocol);
-    if (EFI_ERROR(Status)) {
-      // You must provide an implementation of DevicePathFromTextProtocol in your firmware (eg: DevicePathDxe)
-      DEBUG((EFI_D_ERROR,"Error: Bds requires DevicePathFromTextProtocol\n"));
-      return Status;
-    }
-    BootDevicePath = EfiDevicePathFromTextProtocol->ConvertTextToDevicePath ((CHAR16*)PcdGetPtr(PcdDefaultBootDevicePath));
-
-    DEBUG_CODE_BEGIN();
-      // We convert back to the text representation of the device Path to see if the initial text is correct
-      EFI_DEVICE_PATH_TO_TEXT_PROTOCOL* DevicePathToTextProtocol;
-      CHAR16* DevicePathTxt;
-
-      Status = gBS->LocateProtocol(&gEfiDevicePathToTextProtocolGuid, NULL, (VOID **)&DevicePathToTextProtocol);
-      ASSERT_EFI_ERROR(Status);
-      DevicePathTxt = DevicePathToTextProtocol->ConvertDevicePathToText (BootDevicePath, TRUE, TRUE);
-
-      ASSERT (StrCmp ((CHAR16*)PcdGetPtr(PcdDefaultBootDevicePath), DevicePathTxt) == 0);
-
-      FreePool (DevicePathTxt);
-    DEBUG_CODE_END();
 
     // Create the entry is the Default values are correct
     if (BootDevicePath != NULL) {
