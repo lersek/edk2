@@ -333,11 +333,14 @@ MiscInitialization (
 
 VOID
 BootModeInitialization (
+  BOOLEAN S3Resume
   )
 {
-  EFI_STATUS Status;
+  EFI_BOOT_MODE BootMode;
+  EFI_STATUS    Status;
 
-  Status = PeiServicesSetBootMode (BOOT_WITH_FULL_CONFIGURATION);
+  BootMode = S3Resume ? BOOT_ON_S3_RESUME : BOOT_WITH_FULL_CONFIGURATION;
+  Status = PeiServicesSetBootMode (BootMode);
   ASSERT_EFI_ERROR (Status);
 
   Status = PeiServicesInstallPpi (mPpiBootMode);
@@ -413,12 +416,12 @@ InitializePlatform (
   EFI_PHYSICAL_ADDRESS  TopOfMemory;
   UINT32 XenLeaf;
 
-  S3Resume = FALSE;
   TopOfMemory = 0;
 
   DEBUG ((EFI_D_ERROR, "Platform PEIM Loaded\n"));
 
   DebugDumpCmos ();
+  S3Resume = (CmosRead8 (0xF) == 0xFE);
 
   XenLeaf = XenDetect ();
 
@@ -448,7 +451,7 @@ InitializePlatform (
 
   MiscInitialization ();
 
-  BootModeInitialization ();
+  BootModeInitialization (S3Resume);
 
   return EFI_SUCCESS;
 }
