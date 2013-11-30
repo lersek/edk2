@@ -337,9 +337,12 @@ VOID
 BootModeInitialization (
   )
 {
-  EFI_STATUS Status;
+  EFI_BOOT_MODE BootMode;
+  EFI_STATUS    Status;
 
-  Status = PeiServicesSetBootMode (BOOT_WITH_FULL_CONFIGURATION);
+  BootMode = (CmosRead8 (0xF) == 0xFE) ? BOOT_ON_S3_RESUME :
+                                         BOOT_WITH_FULL_CONFIGURATION;
+  Status = PeiServicesSetBootMode (BootMode);
   ASSERT_EFI_ERROR (Status);
 
   Status = PeiServicesInstallPpi (mPpiBootMode);
