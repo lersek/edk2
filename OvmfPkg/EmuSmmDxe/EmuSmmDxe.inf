@@ -1,0 +1,55 @@
+## @file
+# This module emulates SMRAM by providing EFI_SMM_ACCESS2_PROTOCOL and
+# EFI_SMM_CONTROL2_PROTOCOL.
+#
+# Copyright (C) 2013, Red Hat, Inc.
+#
+# This program and the accompanying materials are licensed and made available
+# under the terms and conditions of the BSD License which accompanies this
+# distribution. The full text of the license may be found at
+# http://opensource.org/licenses/bsd-license.php
+#
+# THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS, WITHOUT
+# WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = EmuSmmDxe
+  FILE_GUID                      = C993C48A-9EEC-4BBD-93B0-276ED216CD11
+  MODULE_TYPE                    = DXE_RUNTIME_DRIVER
+  VERSION_STRING                 = 1.0
+  PI_SPECIFICATION_VERSION       = 0x0001000A
+  ENTRY_POINT                    = EmuSmmDxeEntryPoint
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64
+#
+
+[Sources]
+  EmuSmmDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  OvmfPkg/OvmfPkg.dec
+
+[LibraryClasses]
+  DebugLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+
+[Protocols]
+  gEfiSmmAccess2ProtocolGuid   # PROTOCOL ALWAYS_PRODUCED
+  gEfiSmmControl2ProtocolGuid  # PROTOCOL ALWAYS_PRODUCED
+
+[Guids]
+
+[Pcd]
+  gUefiOvmfPkgTokenSpaceGuid.PcdEmuSmmAreaBase
+  gUefiOvmfPkgTokenSpaceGuid.PcdEmuSmmAreaSize
+
+[Depex]
+  TRUE

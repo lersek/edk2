@@ -467,6 +467,11 @@
   OvmfPkg/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
 
   #
+  # SMM Support
+  #
+  OvmfPkg/EmuSmmDxe/EmuSmmDxe.inf
+
+  #
   # ACPI Support
   #
   MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
