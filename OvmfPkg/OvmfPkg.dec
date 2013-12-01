@@ -68,6 +68,11 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdVirtioScsiMaxTargetLimit|31|UINT16|6
   gUefiOvmfPkgTokenSpaceGuid.PcdVirtioScsiMaxLunLimit|7|UINT32|7
 
+  ## This PCD determines the size of the runtime pool allocation that we
+  #  reserve in PlatformPei as backing store for EmuSmmDxe (ie. SMRAM
+  #  emulation). Zero size disables SMRAM emulation.
+  gUefiOvmfPkgTokenSpaceGuid.PcdEmuSmmAreaSize|0x00100000|UINT32|0x11
+
 [PcdsFixedAtBuild]
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashNvStorageEventLogBase|0x0|UINT32|0x8
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashNvStorageEventLogSize|0x0|UINT32|0x9
@@ -81,6 +86,12 @@
 [PcdsDynamic, PcdsDynamicEx]
   gUefiOvmfPkgTokenSpaceGuid.PcdEmuVariableEvent|0|UINT64|2
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashVariablesEnable|FALSE|BOOLEAN|0x10
+
+  ## The following PCD carries from PlatformPei to EmuSmmDxe the base address
+  #  of the runtime pool allocation that we reserve as backing store for SMRAM
+  #  emulation. Its type cannot be VOID* because PEI and DXE can have different
+  #  bitnesses.
+  gUefiOvmfPkgTokenSpaceGuid.PcdEmuSmmAreaBase|0x0|UINT64|0x12
 
 [PcdsFeatureFlag]
   gUefiOvmfPkgTokenSpaceGuid.PcdSecureBootEnable|FALSE|BOOLEAN|3

@@ -373,6 +373,30 @@ ReserveEmuVariableNvStore (
 
 
 VOID
+ReserveEmuSmmArea (
+  VOID
+  )
+{
+  UINT32 AreaSize;
+  VOID   *Address;
+
+  AreaSize = PcdGet32 (PcdEmuSmmAreaSize);
+  if (AreaSize == 0) {
+    return;
+  }
+
+  //
+  // We use the same trick here as in ReserveEmuVariableNvStore(). This area
+  // expressly doesn't need to survive cold reboots, only S3 Suspend and
+  // Resume.
+  //
+  Address = AllocateRuntimePool (AreaSize);
+  ASSERT (Address != NULL);
+  PcdSet64 (PcdEmuSmmAreaBase, (UINT64)(UINTN) Address);
+}
+
+
+VOID
 DebugDumpCmos (
   VOID
   )
@@ -433,6 +457,7 @@ InitializePlatform (
   }
 
   ReserveEmuVariableNvStore ();
+  ReserveEmuSmmArea ();
 
   PeiFvInitialization ();
 
