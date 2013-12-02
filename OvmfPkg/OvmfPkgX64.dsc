@@ -382,6 +382,10 @@
     <LibraryClasses>
       PcdLib|MdePkg/Library/PeiPcdLib/PeiPcdLib.inf
   }
+  OvmfPkg/EmuSmmPei/EmuSmmPei.inf {
+    <LibraryClasses>
+      PcdLib|MdePkg/Library/PeiPcdLib/PeiPcdLib.inf
+  }
 
   #
   # DXE Phase modules
