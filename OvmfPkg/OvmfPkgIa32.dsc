@@ -497,6 +497,7 @@
   MdeModulePkg/Core/PiSmmCore/PiSmmIpl.inf
   MdeModulePkg/Core/PiSmmCore/PiSmmCore.inf
   MdeModulePkg/Universal/LockBox/SmmLockBox/SmmLockBox.inf
+  OvmfPkg/DiscloseSmstSmm/DiscloseSmstSmm.inf
 
   #
   # ACPI Support
