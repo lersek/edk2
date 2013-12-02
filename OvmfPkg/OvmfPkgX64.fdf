@@ -318,6 +318,7 @@ INF  OvmfPkg/EmuSmmDxe/EmuSmmDxe.inf
 INF  MdeModulePkg/Core/PiSmmCore/PiSmmIpl.inf
 INF  MdeModulePkg/Core/PiSmmCore/PiSmmCore.inf
 INF  MdeModulePkg/Universal/LockBox/SmmLockBox/SmmLockBox.inf
+INF  OvmfPkg/DiscloseSmstSmm/DiscloseSmstSmm.inf
 
 INF  MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
 INF  OvmfPkg/AcpiPlatformDxe/AcpiPlatformDxe.inf
