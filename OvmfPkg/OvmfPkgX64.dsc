@@ -280,6 +280,7 @@
   DebugLib|OvmfPkg/Library/PlatformDebugLibIoPort/PlatformDebugLibIoPort.inf
 !endif
   LockBoxLib|MdeModulePkg/Library/SmmLockBoxLib/SmmLockBoxSmmLib.inf
+  PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
 
 ################################################################################
 #
@@ -496,6 +497,7 @@
   MdeModulePkg/Core/PiSmmCore/PiSmmIpl.inf
   MdeModulePkg/Core/PiSmmCore/PiSmmCore.inf
   MdeModulePkg/Universal/LockBox/SmmLockBox/SmmLockBox.inf
+  OvmfPkg/DiscloseSmstSmm/DiscloseSmstSmm.inf
 
   #
   # ACPI Support
