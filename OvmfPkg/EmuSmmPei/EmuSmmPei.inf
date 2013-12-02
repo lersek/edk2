@@ -1,0 +1,57 @@
+## @file
+# PEI module emulating SMRAM access by producing PEI_SMM_ACCESS_PPI and
+# EFI_PEI_SMM_COMMUNICATION_PPI.
+#
+# Copyright (C) 2013, Red Hat, Inc.
+#
+# This program and the accompanying materials are licensed and made available
+# under the terms and conditions of the BSD License which accompanies this
+# distribution. The full text of the license may be found at
+# http://opensource.org/licenses/bsd-license.php
+#
+# THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS, WITHOUT
+# WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = EmuSmmPei
+  FILE_GUID                      = F50DB7D2-FAD9-4E89-A8B4-BC4218C4D025
+  MODULE_TYPE                    = PEIM
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = EmuSmmPeiEntryPoint
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 IPF EBC
+#
+
+[Sources]
+  EmuSmmPei.c
+
+[Packages]
+  MdeModulePkg/MdeModulePkg.dec
+  MdePkg/MdePkg.dec
+  OvmfPkg/OvmfPkg.dec
+
+[Guids]
+  gEfiAcpiVariableGuid
+
+[LibraryClasses]
+  BaseMemoryLib
+  DebugLib
+  EmuNvramLib
+  HobLib
+  PeiServicesLib
+  PeimEntryPoint
+
+[Pcd]
+
+[Ppis]
+  gEfiPeiSmmCommunicationPpiGuid # PPI ALWAYS_PRODUCED
+  gPeiSmmAccessPpiGuid           # PPI ALWAYS_PRODUCED
+
+[Depex]
+  TRUE
