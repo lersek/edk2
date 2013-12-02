@@ -63,6 +63,7 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdAcpiPmBaseAddress
   gUefiOvmfPkgTokenSpaceGuid.PcdEmuSmmAreaSize
   gUefiOvmfPkgTokenSpaceGuid.PcdEmuSmmAreaBase
+  gUefiOvmfPkgTokenSpaceGuid.PcdDiscloseSmstPtrPtr
   gEfiMdeModulePkgTokenSpaceGuid.PcdVariableStoreSize
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize

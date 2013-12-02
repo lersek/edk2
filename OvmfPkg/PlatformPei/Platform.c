@@ -393,6 +393,10 @@ ReserveEmuSmmArea (
   Address = AllocateRuntimePool (AreaSize);
   ASSERT (Address != NULL);
   PcdSet64 (PcdEmuSmmAreaBase, (UINT64)(UINTN) Address);
+
+  Address = AllocateRuntimePool (sizeof (UINT64));
+  ASSERT (Address != NULL);
+  PcdSet64 (PcdDiscloseSmstPtrPtr, (UINT64)(UINTN) Address);
 }
 
 

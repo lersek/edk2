@@ -93,5 +93,10 @@
   #  bitnesses.
   gUefiOvmfPkgTokenSpaceGuid.PcdEmuSmmAreaBase|0x0|UINT64|0x12
 
+  ## The DiscloseSmstSmm SMM driver stores the address of the System Management
+  #  System Table in the location pointed to by this PCD. The EmuSmmPei PEIM
+  #  fetches the SMST address from the same location.
+  gUefiOvmfPkgTokenSpaceGuid.PcdDiscloseSmstPtrPtr|0x0|UINT64|0x13
+
 [PcdsFeatureFlag]
   gUefiOvmfPkgTokenSpaceGuid.PcdSecureBootEnable|FALSE|BOOLEAN|3
