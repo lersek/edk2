@@ -732,6 +732,29 @@ RestoreS3PageTables (
   }
 }
 
+#define RET_STACK_PAGES 8
+
+/**
+  Allocate and return a sufficiently aligned array in boot services data, to be
+  used as return stack.
+
+  Boot services data is in order because we can let the OS reuse this memory.
+**/
+STATIC
+VOID *
+EFIAPI
+GetNewReturnStack (
+  VOID
+  )
+{
+  VOID *ReturnStack;
+
+  ReturnStack = AllocateAlignedPages (RET_STACK_PAGES, CPU_STACK_ALIGNMENT);
+  ASSERT (ReturnStack != NULL);
+  ZeroMem (ReturnStack, RET_STACK_PAGES * EFI_PAGE_SIZE);
+  return ReturnStack;
+}
+
 /**
   Jump to boot script executor driver.
 
@@ -846,7 +869,7 @@ S3ResumeExecuteBootScript (
   DEBUG (( EFI_D_ERROR, "PeiS3ResumeState - %x\r\n", PeiS3ResumeState));
   PeiS3ResumeState->ReturnCs           = 0x10;
   PeiS3ResumeState->ReturnEntryPoint   = (EFI_PHYSICAL_ADDRESS)(UINTN)S3ResumeBootOs;
-  PeiS3ResumeState->ReturnStackPointer = (EFI_PHYSICAL_ADDRESS)(UINTN)&Status;
+  PeiS3ResumeState->ReturnStackPointer = (EFI_PHYSICAL_ADDRESS)(UINTN)GetNewReturnStack ();
   //
   // Save IDT
   //
@@ -1038,7 +1061,7 @@ S3RestoreConfig2 (
     SmmS3ResumeState->ReturnEntryPoint   = (EFI_PHYSICAL_ADDRESS)(UINTN)S3ResumeExecuteBootScript;
     SmmS3ResumeState->ReturnContext1     = (EFI_PHYSICAL_ADDRESS)(UINTN)AcpiS3Context;
     SmmS3ResumeState->ReturnContext2     = (EFI_PHYSICAL_ADDRESS)(UINTN)EfiBootScriptExecutorVariable;
-    SmmS3ResumeState->ReturnStackPointer = (EFI_PHYSICAL_ADDRESS)(UINTN)&Status;
+    SmmS3ResumeState->ReturnStackPointer = (EFI_PHYSICAL_ADDRESS)(UINTN)GetNewReturnStack ();
 
     DEBUG (( EFI_D_ERROR, "SMM S3 Signature                = %x\n", SmmS3ResumeState->Signature));
     DEBUG (( EFI_D_ERROR, "SMM S3 Stack Base               = %x\n", SmmS3ResumeState->SmmS3StackBase));
