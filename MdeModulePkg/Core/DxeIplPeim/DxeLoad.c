@@ -743,13 +743,14 @@ UpdateStackHob (
       BuildMemoryAllocationHob (
         Hob.MemoryAllocationStack->AllocDescriptor.MemoryBaseAddress,
         Hob.MemoryAllocationStack->AllocDescriptor.MemoryLength,
-        EfiBootServicesData
+        Hob.MemoryAllocationStack->AllocDescriptor.MemoryType
         );
       //
       // Update the BSP Stack Hob to reflect the new stack info.
       //
       Hob.MemoryAllocationStack->AllocDescriptor.MemoryBaseAddress = BaseAddress;
       Hob.MemoryAllocationStack->AllocDescriptor.MemoryLength = Length;
+      Hob.MemoryAllocationStack->AllocDescriptor.MemoryType = EfiBootServicesData;
       break;
     }
     Hob.Raw = GET_NEXT_HOB (Hob);
