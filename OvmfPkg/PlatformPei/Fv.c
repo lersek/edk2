@@ -54,6 +54,18 @@ PeiFvInitialization (
     EfiACPIMemoryNVS
     );
 
+  //
+  // Firmware decompression in DecompressGuidedFv() [OvmfPkg/Sec/SecMain.c]
+  // uses additional temporary memory.
+  //
+  BuildMemoryAllocationHob (
+    PcdGet32 (PcdOvmfMemFvBase) + PcdGet32 (PcdOvmfMemFvSize),
+    (SIZE_2MB  + // cover the end of OutputBuffer, rounded up to 1MB
+     SIZE_64KB   // cover the end of ScratchBuffer
+     ),
+    EfiACPIMemoryNVS
+    );
+
   return EFI_SUCCESS;
 }
 
