@@ -66,6 +66,16 @@ PeiFvInitialization (
     EfiACPIMemoryNVS
     );
 
+  //
+  // Cover the initial RAM area used as stack and temporary PEI heap. The base
+  // constant comes from OvmfPkg/Sec/{Ia32,X64}/SecEntry.{asm,S}, the size
+  // originates from SecCoreStartupWithStack() [OvmfPkg/Sec/SecMain.c].
+  //
+  BuildMemoryAllocationHob (
+    BASE_512KB - SIZE_64KB,
+    SIZE_64KB,
+    EfiACPIMemoryNVS
+    );
   return EFI_SUCCESS;
 }
 
