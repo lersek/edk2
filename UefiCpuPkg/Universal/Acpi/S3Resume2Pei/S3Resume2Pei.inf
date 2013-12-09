@@ -85,6 +85,7 @@
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdUse1GPageTable
+  gUefiCpuPkgTokenSpaceGuid.PcdPeiS3ResumeState
 
 [Depex]
   TRUE

@@ -851,7 +851,10 @@ S3ResumeExecuteBootScript (
   //
   // Prepare data for return back
   //
-  PeiS3ResumeState = AllocatePool (sizeof(*PeiS3ResumeState));
+  PeiS3ResumeState = (VOID *)(UINTN)PcdGet64 (PcdPeiS3ResumeState);
+  if (PeiS3ResumeState == NULL) {
+    PeiS3ResumeState = AllocatePool (sizeof(*PeiS3ResumeState));
+  }
   ASSERT (PeiS3ResumeState != NULL);
   DEBUG (( EFI_D_ERROR, "PeiS3ResumeState - %x\r\n", PeiS3ResumeState));
   PeiS3ResumeState->ReturnCs           = 0x10;

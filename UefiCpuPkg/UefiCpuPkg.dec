@@ -44,3 +44,10 @@
 [PcdsFixedAtBuild, PcdsPatchableInModule]
   gUefiCpuPkgTokenSpaceGuid.PcdCpuLocalApicBaseAddress|0xfee00000|UINT32|0x00000001
 
+[PcdsDynamic, PcdsDynamicEx]
+  ## The following PCD controls the allocation of "PeiS3ResumeState" in
+  #  S3ResumeExecuteBootScript()
+  #  [UefiCpuPkg/Universal/Acpi/S3Resume2Pei/S3Resume.c]. When left at NULL,
+  #  "PeiS3ResumeState" will be allocated with AllocatePool(). Otherwise the
+  #  address specified in the PCD will be assigned to "PeiS3ResumeState".
+  gUefiCpuPkgTokenSpaceGuid.PcdPeiS3ResumeState|0x0|UINT64|0x00000002
