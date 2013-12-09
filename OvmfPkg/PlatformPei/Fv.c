@@ -46,6 +46,17 @@ PeiFvInitialization (
   BuildFvHob (PcdGet32 (PcdOvmfMemFvBase), PcdGet32 (PcdOvmfMemFvSize));
 
   //
+  // Cover the initial RAM area used as stack and temporary PEI heap. The base
+  // constant comes from OvmfPkg/Sec/{Ia32,X64}/SecEntry.{asm,S}, the size
+  // originates from SecCoreStartupWithStack() [OvmfPkg/Sec/SecMain.c].
+  //
+  BuildMemoryAllocationHob (
+    BASE_512KB - SIZE_64KB,
+    SIZE_64KB,
+    EfiACPIMemoryNVS
+    );
+
+  //
   // Cover the decompressed main firmware with a memory allocation that
   // prevents the OS from using it. At S3 resume we overwrite this area.
   //
