@@ -46,12 +46,13 @@ PeiFvInitialization (
   BuildFvHob (PcdGet32 (PcdOvmfMemFvBase), PcdGet32 (PcdOvmfMemFvSize));
 
   //
-  // Create a memory allocation HOB.
+  // Cover the decompressed main firmware with a memory allocation that
+  // prevents the OS from using it. At S3 resume we overwrite this area.
   //
   BuildMemoryAllocationHob (
     PcdGet32 (PcdOvmfMemFvBase),
     PcdGet32 (PcdOvmfMemFvSize),
-    EfiBootServicesData
+    EfiACPIMemoryNVS
     );
 
   //
