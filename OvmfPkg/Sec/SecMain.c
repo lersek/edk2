@@ -28,8 +28,11 @@
 #include <Library/PeCoffGetEntryPointLib.h>
 #include <Library/PeCoffExtraActionLib.h>
 #include <Library/ExtractGuidedSectionLib.h>
+#include <Library/HobLib.h>
 
 #include <Ppi/TemporaryRamSupport.h>
+
+#include <Guid/MemoryAllocationHob.h>
 
 #define SEC_IDT_ENTRY_COUNT  34
 
@@ -695,6 +698,31 @@ SecStartupPhase2(
   CpuDeadLoop ();
 }
 
+/**
+  Expand the lifetime of the migrated PEI stack / heap area by changing its
+  allocation type to ACPI NVS.
+**/
+VOID
+EFIAPI
+ReservePermanentFromOs (
+  VOID
+  )
+{
+  EFI_HOB_MEMORY_ALLOCATION *MemHob;
+
+  for (MemHob = GetFirstHob (EFI_HOB_TYPE_MEMORY_ALLOCATION); MemHob != NULL;
+       MemHob = GetNextHob (EFI_HOB_TYPE_MEMORY_ALLOCATION,
+                    GET_NEXT_HOB (MemHob))) {
+    if (CompareGuid (&gEfiHobMemoryAllocStackGuid,
+          &MemHob->AllocDescriptor.Name)) {
+      break;
+    }
+  }
+  ASSERT (MemHob != NULL);
+  ASSERT (MemHob->AllocDescriptor.MemoryType == EfiBootServicesData);
+  MemHob->AllocDescriptor.MemoryType = EfiACPIMemoryNVS;
+}
+
 EFI_STATUS
 EFIAPI
 TemporaryRamMigration (
@@ -715,6 +743,13 @@ TemporaryRamMigration (
   
   DEBUG ((EFI_D_ERROR, "TemporaryRamMigration(0x%x, 0x%x, 0x%x)\n", (UINTN)TemporaryMemoryBase, (UINTN)PermanentMemoryBase, CopySize));
   
+  //
+  // This pokes into a HOB that's currently in temporary memory itself. Update
+  // it before it is migrated to permanent memory, with the rest of temporary
+  // memory.
+  //
+  ReservePermanentFromOs ();
+
   OldHeap = (VOID*)(UINTN)TemporaryMemoryBase;
   NewHeap = (VOID*)((UINTN)PermanentMemoryBase + (CopySize >> 1));
   

@@ -59,6 +59,7 @@
   PeCoffGetEntryPointLib
   PeCoffExtraActionLib
   ExtractGuidedSectionLib
+  HobLib
 
 [Ppis]
   gEfiTemporaryRamSupportPpiGuid                # PPI ALWAYS_PRODUCED
@@ -66,3 +67,6 @@
 [Pcd]
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfMemFvBase
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfMemFvSize
+
+[Guids]
+  gEfiHobMemoryAllocStackGuid
