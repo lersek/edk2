@@ -69,6 +69,13 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdVirtioScsiMaxTargetLimit|31|UINT16|6
   gUefiOvmfPkgTokenSpaceGuid.PcdVirtioScsiMaxLunLimit|7|UINT32|7
 
+  ## Sizes of the different areas inside the emulated NVRAM. Areas can be
+  #  disabled individually by setting their respective sizes to zero. If all
+  #  sizes are zero, then NVRAM emulation is fully disabled. Supported areas
+  #  are: LockBox, S3 Resume Pool.
+  gUefiOvmfPkgTokenSpaceGuid.PcdEmuNvramLockBoxSize|0x00100000|UINT32|0x11
+  gUefiOvmfPkgTokenSpaceGuid.PcdEmuNvramS3ResumePoolSize|0x02000000|UINT32|0x12
+
 [PcdsFixedAtBuild]
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashNvStorageEventLogBase|0x0|UINT32|0x8
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashNvStorageEventLogSize|0x0|UINT32|0x9
