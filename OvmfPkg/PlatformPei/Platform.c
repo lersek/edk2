@@ -35,9 +35,11 @@
 #include <Ppi/MasterBootMode.h>
 #include <IndustryStandard/Pci22.h>
 #include <Guid/XenInfo.h>
+#include <Guid/AcpiS3Context.h>
 #include <IndustryStandard/E820.h>
 #include <Library/ResourcePublicationLib.h>
 #include <Library/MtrrLib.h>
+#include <Library/BaseMemoryLib.h>
 
 #include "Platform.h"
 #include "Cmos.h"
@@ -401,6 +403,28 @@ ReserveEmuSmmArea (
 
 
 VOID
+ReservePeiS3ResumeState (
+  VOID
+  )
+{
+  UINTN                NumPages;
+  EFI_STATUS           Status;
+  EFI_PHYSICAL_ADDRESS Address;
+
+  //
+  // The contents of this region doesn't have to survive reboot. Its location
+  // must though.
+  //
+  NumPages = EFI_SIZE_TO_PAGES (sizeof (PEI_S3_RESUME_STATE));
+  Status = PeiServicesAllocatePages (EfiACPIMemoryNVS, NumPages, &Address);
+  ASSERT_EFI_ERROR (Status);
+  ZeroMem ((VOID *)(UINTN) Address, NumPages * EFI_PAGE_SIZE);
+  PcdSet64 (PcdPeiS3ResumeState, Address);
+  DEBUG ((EFI_D_INFO, "preallocated PeiS3ResumeState at 0x%Lx\n", Address));
+}
+
+
+VOID
 DebugDumpCmos (
   VOID
   )
@@ -462,6 +486,7 @@ InitializePlatform (
 
   ReserveEmuVariableNvStore ();
   ReserveEmuSmmArea ();
+  ReservePeiS3ResumeState ();
 
   PeiFvInitialization ();
 

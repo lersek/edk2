@@ -56,6 +56,7 @@
   PeimEntryPoint
   MtrrLib
   PcdLib
+  BaseMemoryLib
 
 [Pcd]
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfMemFvBase
@@ -70,6 +71,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvStoreReserved
   gEfiMdeModulePkgTokenSpaceGuid.PcdPciDisableBusEnumeration
   gUefiCpuPkgTokenSpaceGuid.PcdCpuLocalApicBaseAddress
+  gUefiCpuPkgTokenSpaceGuid.PcdPeiS3ResumeState
 
 [Ppis]
   gEfiPeiMasterBootModePpiGuid
