@@ -59,6 +59,7 @@
   PeCoffGetEntryPointLib
   PeCoffExtraActionLib
   ExtractGuidedSectionLib
+  EmuNvramLib
 
 [Ppis]
   gEfiTemporaryRamSupportPpiGuid                # PPI ALWAYS_PRODUCED

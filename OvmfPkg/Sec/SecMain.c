@@ -28,6 +28,7 @@
 #include <Library/PeCoffGetEntryPointLib.h>
 #include <Library/PeCoffExtraActionLib.h>
 #include <Library/ExtractGuidedSectionLib.h>
+#include <Library/EmuNvramLib.h>
 
 #include <Ppi/TemporaryRamSupport.h>
 
@@ -327,6 +328,11 @@ DecompressGuidedFv (
   //PcdGet32 (PcdOvmfMemFvBase), PcdGet32 (PcdOvmfMemFvSize)
   OutputBuffer = (VOID*) ((UINT8*)(UINTN) PcdGet32 (PcdOvmfMemFvBase) + SIZE_1MB);
   ScratchBuffer = ALIGN_POINTER ((UINT8*) OutputBuffer + OutputBufferSize, SIZE_1MB);
+
+  if (EmuNvramSize () != 0) {
+    ASSERT ((UINTN) ScratchBuffer + ScratchBufferSize <= EmuNvramBase ());
+  }
+
   Status = ExtractGuidedSectionDecode (
              Section,
              &OutputBuffer,
