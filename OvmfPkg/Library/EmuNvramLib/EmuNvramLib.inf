@@ -1,0 +1,42 @@
+## @file
+#
+#  Library exposing OVMF's emulated NVRAM.
+#
+#  Copyright (C) 2013, Red Hat, Inc.
+#
+#  This program and the accompanying materials are licensed and made available
+#  under the terms and conditions of the BSD License which accompanies this
+#  distribution. The full text of the license may be found at
+#  http://opensource.org/licenses/bsd-license.php
+#
+#  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR
+#  IMPLIED.
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = EmuNvramLib
+  FILE_GUID                      = 7FAD4BDA-A5BD-4D38-AEA5-4D93F49A1A0C
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = EmuNvramLib
+
+[Sources]
+  EmuNvramLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  OvmfPkg/OvmfPkg.dec
+
+[LibraryClasses]
+  PcdLib
+  DebugLib
+
+[Pcd]
+  gUefiOvmfPkgTokenSpaceGuid.PcdEmuNvramSmramSize
+  gUefiOvmfPkgTokenSpaceGuid.PcdEmuNvramSmstPtrSize
+  gUefiOvmfPkgTokenSpaceGuid.PcdEmuNvramS3ResumePoolSize
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfMemFvBase
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfMemFvSize

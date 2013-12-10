@@ -106,6 +106,7 @@
   LoadLinuxLib|OvmfPkg/Library/LoadLinuxLib/LoadLinuxLib.inf
   LockBoxLib|MdeModulePkg/Library/LockBoxNullLib/LockBoxNullLib.inf
   CustomizedDisplayLib|MdeModulePkg/Library/CustomizedDisplayLib/CustomizedDisplayLib.inf
+  EmuNvramLib|OvmfPkg/Library/EmuNvramLib/EmuNvramLib.inf
 
 !ifdef $(SOURCE_DEBUG_ENABLE)
   PeCoffExtraActionLib|SourceLevelDebugPkg/Library/PeCoffExtraActionLibDebug/PeCoffExtraActionLibDebug.inf
