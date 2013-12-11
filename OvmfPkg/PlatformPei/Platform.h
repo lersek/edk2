@@ -61,17 +61,17 @@ AddUntestedMemoryRangeHob (
 
 EFI_STATUS
 PublishPeiMemory (
-  VOID
+  BOOLEAN S3Resume
   );
 
 EFI_PHYSICAL_ADDRESS
 MemDetect (
-  VOID
+  BOOLEAN S3Resume
   );
 
 EFI_STATUS
 PeiFvInitialization (
-  VOID
+  BOOLEAN S3Resume
   );
 
 EFI_STATUS
