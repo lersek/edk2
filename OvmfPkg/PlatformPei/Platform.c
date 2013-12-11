@@ -409,9 +409,11 @@ InitializePlatform (
   IN CONST EFI_PEI_SERVICES     **PeiServices
   )
 {
+  BOOLEAN               S3Resume;
   EFI_PHYSICAL_ADDRESS  TopOfMemory;
   UINT32 XenLeaf;
 
+  S3Resume = FALSE;
   TopOfMemory = 0;
 
   DEBUG ((EFI_D_ERROR, "Platform PEIM Loaded\n"));
@@ -421,10 +423,10 @@ InitializePlatform (
   XenLeaf = XenDetect ();
 
   if (XenLeaf != 0) {
-    PublishPeiMemory ();
+    PublishPeiMemory (S3Resume);
     PcdSetBool (PcdPciDisableBusEnumeration, TRUE);
   } else {
-    TopOfMemory = MemDetect ();
+    TopOfMemory = MemDetect (S3Resume);
   }
 
   if (XenLeaf != 0) {
@@ -432,9 +434,11 @@ InitializePlatform (
     InitializeXen (XenLeaf);
   }
 
-  ReserveEmuVariableNvStore ();
+  if (!S3Resume) {
+    ReserveEmuVariableNvStore ();
+  }
 
-  PeiFvInitialization ();
+  PeiFvInitialization (S3Resume);
 
   if (XenLeaf != 0) {
     XenMemMapInitialization ();
