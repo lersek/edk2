@@ -17,6 +17,7 @@
 #include <Library/HobLib.h>
 #include <Library/PeiServicesLib.h>
 #include <Library/PcdLib.h>
+#include <Library/EmuNvramLib.h>
 
 
 /**
@@ -30,7 +31,7 @@
 **/
 EFI_STATUS
 PeiFvInitialization (
-  VOID
+  BOOLEAN S3Resume
   )
 {
   DEBUG ((EFI_D_ERROR, "Platform PEI Firmware Volume Initialization\n"));
@@ -53,6 +54,17 @@ PeiFvInitialization (
     EfiBootServicesData
     );
 
+  //
+  // Reserve the emulated NVRAM by covering it with a memory allocation HOB.
+  // During S3 Resume we don't need to reserve this range, we'll run the PEI
+  // core in a part of it.
+  //
+  if (!S3Resume && EmuNvramSize() != 0) {
+    BuildMemoryAllocationHob (EmuNvramBase(), EmuNvramSize(),
+      EfiACPIMemoryNVS);
+    DEBUG ((DEBUG_INFO, "Emulated NVRAM at 0x%08x, size 0x%08x\n",
+      EmuNvramBase(), EmuNvramSize()));
+  }
   return EFI_SUCCESS;
 }
 

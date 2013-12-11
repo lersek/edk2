@@ -31,6 +31,7 @@ Module Name:
 #include <Library/PeimEntryPoint.h>
 #include <Library/ResourcePublicationLib.h>
 #include <Library/MtrrLib.h>
+#include <Library/EmuNvramLib.h>
 
 #include "Platform.h"
 #include "Cmos.h"
@@ -91,7 +92,7 @@ GetSystemMemorySizeAbove4gb (
 **/
 EFI_STATUS
 PublishPeiMemory (
-  VOID
+  BOOLEAN S3Resume
   )
 {
   EFI_STATUS                  Status;
@@ -99,16 +100,26 @@ PublishPeiMemory (
   UINT64                      MemorySize;
   UINT64                      LowerMemorySize;
 
-  LowerMemorySize = GetSystemMemorySizeBelow4gb ();
-
   //
   // Determine the range of memory to use during PEI
   //
-  MemoryBase = PcdGet32 (PcdOvmfMemFvBase) + PcdGet32 (PcdOvmfMemFvSize);
-  MemorySize = LowerMemorySize - MemoryBase;
-  if (MemorySize > SIZE_64MB) {
-    MemoryBase = LowerMemorySize - SIZE_64MB;
-    MemorySize = SIZE_64MB;
+  if (S3Resume) {
+    MemorySize = EmuNvramS3ResumePoolSize ();
+    ASSERT (MemorySize != 0);
+    MemoryBase = EmuNvramS3ResumePoolBase ();
+  } else {
+    LowerMemorySize = GetSystemMemorySizeBelow4gb ();
+
+    if (EmuNvramSize () == 0) {
+      MemoryBase = PcdGet32 (PcdOvmfMemFvBase) + PcdGet32 (PcdOvmfMemFvSize);
+    } else {
+      MemoryBase = EmuNvramBase () + EmuNvramSize ();
+    }
+    MemorySize = LowerMemorySize - MemoryBase;
+    if (MemorySize > SIZE_64MB) {
+      MemoryBase = LowerMemorySize - SIZE_64MB;
+      MemorySize = SIZE_64MB;
+    }
   }
 
   //
@@ -129,6 +140,7 @@ PublishPeiMemory (
 **/
 EFI_PHYSICAL_ADDRESS
 MemDetect (
+  BOOLEAN S3Resume
   )
 {
   UINT64                      LowerMemorySize;
@@ -142,7 +154,7 @@ MemDetect (
   LowerMemorySize = GetSystemMemorySizeBelow4gb ();
   UpperMemorySize = GetSystemMemorySizeAbove4gb ();
 
-  PublishPeiMemory ();
+  PublishPeiMemory (S3Resume);
 
   //
   // Create memory HOBs
