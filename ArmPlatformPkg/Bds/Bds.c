@@ -18,6 +18,7 @@
 #include <Library/PerformanceLib.h>
 
 #include <Protocol/Bds.h>
+#include <Protocol/SimpleFileSystem.h>
 
 #include <Guid/Gpt.h>
 
@@ -212,6 +213,62 @@ InitializeConsole (
   return EFI_SUCCESS;
 }
 
+STATIC
+EFI_STATUS
+FindCandidate (
+  IN  EFI_HANDLE       Handle,
+  OUT EFI_DEVICE_PATH  **Candidate
+  )
+{
+  EFI_STATUS                      Status;
+  EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *FileSystem;
+  EFI_FILE_PROTOCOL               *RootDir;
+  CONST CHAR16 *CONST             *FileName;
+  CONST CHAR16 *CONST             Candidates[] = {
+    EFI_REMOVABLE_MEDIA_FILE_NAME,
+    L"\\Image",
+    L"\\EFI\\redhat\\grubaa64.efi",
+    NULL
+  };
+
+  Status = gBS->HandleProtocol (Handle, &gEfiSimpleFileSystemProtocolGuid,
+                  (VOID **) &FileSystem);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+  Status = FileSystem->OpenVolume (FileSystem, &RootDir);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  for (FileName = Candidates; *FileName != NULL; ++FileName) {
+    EFI_FILE_PROTOCOL *File;
+
+    Status = RootDir->Open (RootDir, &File, (CHAR16 *) *FileName,
+                        EFI_FILE_MODE_READ, 0);
+    if (!EFI_ERROR (Status)) {
+      File->Close (File);
+      break;
+    }
+  }
+  if (*FileName == NULL) {
+    Status = EFI_NOT_FOUND;
+    goto CloseRoot;
+  }
+
+  *Candidate = FileDevicePath (Handle, *FileName);
+  if (*Candidate == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto CloseRoot;
+  }
+
+  DEBUG ((EFI_D_INFO, "%a: found \"%s\"\n", __FUNCTION__, *FileName));
+
+CloseRoot:
+  RootDir->Close (RootDir);
+  return Status;
+}
+
 EFI_STATUS
 DefineDefaultBootEntries (
   VOID
@@ -244,10 +301,7 @@ DefineDefaultBootEntries (
                       &NrHandles, &Handles);
       if (!EFI_ERROR (Status)) {
         ASSERT (NrHandles > 0);
-        BootDevicePath = FileDevicePath (Handles[0], L"Image");
-        if (BootDevicePath == NULL) {
-          Status = EFI_OUT_OF_RESOURCES;
-        }
+        Status = FindCandidate (Handles[0], &BootDevicePath);
         FreePool (Handles);
       }
       if (EFI_ERROR (Status)) {
