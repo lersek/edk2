@@ -295,8 +295,9 @@
   #  DEBUG_EVENT     0x00080000  // Event messages
   #  DEBUG_GCD       0x00100000  // Global Coherency Database changes
   #  DEBUG_CACHE     0x00200000  // Memory range cachability changes
+  #  DEBUG_VERBOSE   0x00400000  // Detailed debug messages that may significantly impact boot performance
   #  DEBUG_ERROR     0x80000000  // Error
-  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000000F
+  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
 
   gEfiMdePkgTokenSpaceGuid.PcdReportStatusCodePropertyMask|0x07
 
