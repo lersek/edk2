@@ -56,6 +56,18 @@ PeiFvInitialization (
     EfiACPIMemoryNVS
     );
 
+#ifdef MDE_CPU_X64
+  //
+  // Reserve the six page frames hosting the initial page tables built
+  // by the reset vector code.
+  //
+  BuildMemoryAllocationHob (
+    BASE_512KB,
+    6 * EFI_PAGE_SIZE,
+    EfiACPIMemoryNVS
+    );
+#endif
+
   //
   // Cover the decompressed main firmware with a memory allocation that
   // prevents the OS from using it. At S3 resume we overwrite this area.
