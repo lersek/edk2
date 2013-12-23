@@ -1,0 +1,120 @@
+## @file
+#
+# Memory ranges used by the reset vector, SEC, and PEI phases.
+#
+# Copyright (C) 2013, Red Hat, Inc.
+#
+# This program and the accompanying materials are licensed and made available
+# under the terms and conditions of the BSD License which accompanies this
+# distribution. The full text of the license may be found at
+# http://opensource.org/licenses/bsd-license.php
+#
+# THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS, WITHOUT
+# WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+#
+##
+
+When a guest OS is suspended (S3) and resumed, it goes through the following
+phases:
+
+ 1. reset vector
+ 2. SEC
+ 3. PEI
+ 4. DXE (including SMM drivers)
+ 5. BDS
+ 6. runtime
+ 7. (suspended)
+ 8. reset vector
+ 9. SEC
+10. PEI
+11. OSPM resume vector
+12. runtime
+13. (suspended)
+14. ...
+
+The OVMF code running post-resume (reset vector, SEC, PEI; steps 8-10) must not
+overwrite OS data. To this end, the first incarnation of PEI after cold boot
+(step 3) reserves memory that the OS will steer clear of during runtime (step
+6). The post-resume OVMF code (steps 8-10) can then rewrite these areas without
+disturbing the OS.
+
+The following table details memory ranges that OVMF PEI reserves manually as
+EfiACPIMemoryNVS.
+
++---------+ 0 B
+| 448 KB  | 00000000  free
+|         |
++---------+ 448 KB
+|  32 KB  | 00070000  Early SEC/PEI heap, before migration to permanent PEI
+|         |           memory.
++---------+ 480 KB
+|         | 00078000  Early SEC/PEI stack, growing down. Size and end address
+|         |           (together with those of the early SEC/PEI heap) are
+|  32 KB  |           hard-coded in OvmfPkg/Sec/{Ia32,X64}/SecEntry.{asm,S} and
+|         |           SecCoreStartupWithStack() [OvmfPkg/Sec/SecMain.c].
+|         |           Reserved in PeiFvInitialization()
+|         |           [OvmfPkg/PlatformPei/Fv.c].
++---------+ 512 KB
+|         | 00080000  Initial page tables built by the reset vector code in
+|  24 KB  |           "OvmfPkg/ResetVector/Ia32/PageTables64.asm". Used only in
+|         |           X64 PEI, free otherwise. Reserved in
+|         |           PeiFvInitialization() [OvmfPkg/PlatformPei/Fv.c].
++---------+ 536 KB
+| 7656 KB | 00086000  free
+|         |
++---------+ 8 MB
+|         | 00800000  Decompressed firmware code. Base address
+|         |           (PcdOvmfMemFvBase) and size (PcdOvmfMemFvSize) are set in
+|  8 MB   |           OvmfPkg/Ovmf*.fdf. The area is populated in
+|         |           DecompressGuidedFv() [OvmfPkg/Sec/SecMain.c], and
+|         |           reserved in PeiFvInitialization()
+|         |           [OvmfPkg/PlatformPei/Fv.c].
++---------+ 16 MB
+|         | 01000000  Additional temporary / scratch buffers during firmware
+| 2112 KB |           decompression, populated and reserved in the same
+|         |           locations as described above.
++---------+ 18496 KB
+| 1984 KB | 01210000  free
+|         |
++---------+ 20 MB
+|         | 01400000  Emulated SMRAM for the SMM core and SMM drivers. The base
+|         |           address is determined in EmuNvramBase()
+|         |           [OvmfPkg/Library/EmuNvramLib/EmuNvramLib.c]. The size
+|  1 MB   |           (PcdEmuNvramSmramSize) is configured in
+|         |           OvmfPkg/OvmfPkg.dec. Reserved in PeiFvInitialization()
+|         |           [OvmfPkg/PlatformPei/Fv.c]. The area is exposed
+|         |           to DXE by OvmfPkg/EmuSmmDxe, and to post-resume PEI by
+|         |           OvmfPkg/EmuSmmPei.
++---------+ 21 MB
+|         | 01500000  Single page frame containing pointer to the SMST
+|         |           (system management system table), pointing into the
+|         |           emulated SMRAM above. The base address is determined in
+|         |           EmuNvramSmstPtrBase()
+|         |           [OvmfPkg/Library/EmuNvramLib/EmuNvramLib.c]. The size
+|  4 KB   |           comes from rounding up the pointer's size
+|         |           (PcdEmuNvramSmstPtrSize), the latter being set in
+|         |           OvmfPkg/OvmfPkg.dec. The area is used to pass information
+|         |           from pre-suspend DXE (SMM) to post-resume PEI
+|         |           (DiscloseSmstSmm to EmuSmmPei). Reserved together with
+|         |           the emulated SMRAM.
++---------+ 21508 KB
+|         | 01501000  Post-resume PEI permanent memory, functioning as early
+|         |           SEC/PEI stack/heap migration target, and as dynamic
+|         |           allocation pool for the entire PEI phase after S3 resume.
+|         |           The base address is determined in
+|  32 MB  |           EmuNvramS3ResumePoolBase()
+|         |           [OvmfPkg/Library/EmuNvramLib/EmuNvramLib.c]. The size
+|         |           (PcdEmuNvramS3ResumePoolSize) is set in
+|         |           OvmfPkg/OvmfPkg.dec. Reserved together with the emulated
+|         |           SMRAM.
++---------+ 54276 KB
+            03501000
+
+Additional areas are reserved during DXE / BDS, such as:
+- Boot Script Executor image (in EfiReservedMemoryType),
+- S3 Boot Script (in EfiACPIMemoryNVS),
+- ACPI S3 Context and related internals (in EfiReservedMemoryType),
+- ACPI FACS table (in EfiACPIMemoryNVS).
+
+These reservations occur "automatically" (as in, drivers perform them) and OVMF
+PEI doesn't need to handle them explicitly.
