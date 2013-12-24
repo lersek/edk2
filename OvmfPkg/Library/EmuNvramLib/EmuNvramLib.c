@@ -15,11 +15,34 @@
 #include <Library/PcdLib.h>
 #include <Library/DebugLib.h>
 #include <Library/EmuNvramLib.h>
+#include <Library/QemuFwCfgLib.h>
+
+/**
+  Detect if S3 support has been explicitly deactivated.
+
+  @retval  TRUE  if S3 explicitly disabled,
+  @retval  FALSE if firmware configuration unavailable, or S3 enabled.
+*/
+STATIC
+BOOLEAN
+EFIAPI
+IsS3Disabled (
+  VOID
+  )
+{
+  //
+  // Since this code can run in SEC, we must explicitly check for the
+  // availability of the firmware configuration interface.
+  //
+  return QemuFwCfgIsAvailable () && QemuFwCfgS3Disabled ();
+}
+
 
 /**
   Return the size of the NVRAM portion used as LockBox.
 
   @retval  0 if LockBox inside the NVRAM is disabled.
+             This includes the case when S3 has been explicitly disabled.
   @return  Size otherwise.
 */
 UINT32
@@ -28,6 +51,9 @@ EmuNvramLockBoxSize (
   VOID
   )
 {
+  if (IsS3Disabled ()) {
+    return 0;
+  }
   return PcdGet32 (PcdEmuNvramLockBoxSize);
 }
 
@@ -35,6 +61,7 @@ EmuNvramLockBoxSize (
   Return the size of the NVRAM portion used for S3 Resume Pool emulation.
 
   @retval  0 if S3 Resume Pool emulation inside the NVRAM is disabled.
+             This includes the case when S3 has been explicitly disabled.
   @return  Size otherwise.
 */
 UINT32
@@ -43,6 +70,9 @@ EmuNvramS3ResumePoolSize (
   VOID
   )
 {
+  if (IsS3Disabled ()) {
+    return 0;
+  }
   return PcdGet32 (PcdEmuNvramS3ResumePoolSize);
 }
 
@@ -50,6 +80,7 @@ EmuNvramS3ResumePoolSize (
   Return the full (cumulative) size of the emulated NVRAM.
 
   @retval  0 if NVRAM emulation is disabled.
+             This includes the case when S3 has been explicitly disabled.
   @return  Size otherwise.
 **/
 UINT32
