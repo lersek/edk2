@@ -18,6 +18,7 @@
 #include <Library/PeiServicesLib.h>
 #include <Library/PcdLib.h>
 #include <Library/EmuNvramLib.h>
+#include <Library/QemuFwCfgLib.h>
 
 
 /**
@@ -44,6 +45,19 @@ PeiFvInitialization (
     );
 
   BuildFvHob (PcdGet32 (PcdOvmfMemFvBase), PcdGet32 (PcdOvmfMemFvSize));
+
+  if (QemuFwCfgS3Disabled ()) {
+    //
+    // Cover only the decompressed main firmware with a memory allocation, and
+    // allow the OS to reuse the area.
+    //
+    BuildMemoryAllocationHob (
+      PcdGet32 (PcdOvmfMemFvBase),
+      PcdGet32 (PcdOvmfMemFvSize),
+      EfiBootServicesData
+      );
+    return EFI_SUCCESS;
+  }
 
   //
   // Cover the initial RAM area used as stack and temporary PEI heap. The base
