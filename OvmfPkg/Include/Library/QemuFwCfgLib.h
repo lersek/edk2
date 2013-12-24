@@ -1,6 +1,7 @@
 /** @file
   QEMU/KVM Firmware Configuration access
 
+  Copyright (C) 2013, Red Hat, Inc.
   Copyright (c) 2011 - 2013, Intel Corporation. All rights reserved.<BR>
   This program and the accompanying materials
   are licensed and made available under the terms and conditions of the BSD License
@@ -55,6 +56,8 @@ typedef enum {
 /**
   Returns a boolean indicating if the firmware configuration interface
   is available or not.
+
+  This function may change fw_cfg state.
 
   @retval    TRUE   The interface is available
   @retval    FALSE  The interface is not available
@@ -205,6 +208,22 @@ QemuFwCfgFindFile (
 RETURN_STATUS
 EFIAPI
 QemuFwCfgS3Disabled (
+  VOID
+  );
+
+
+/**
+  Returns a boolean indicating if the firmware configuration interface is
+  available for library-internal purposes.
+
+  This function never changes fw_cfg state.
+
+  @retval    TRUE   The interface is available internally.
+  @retval    FALSE  The interface is not available internally.
+**/
+BOOLEAN
+EFIAPI
+InternalQemuFwCfgIsAvailable (
   VOID
   );
 #endif
