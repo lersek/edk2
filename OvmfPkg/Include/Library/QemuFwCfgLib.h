@@ -193,5 +193,19 @@ QemuFwCfgFindFile (
   OUT  FIRMWARE_CONFIG_ITEM  *Item,
   OUT  UINTN                 *Size
   );
+
+
+/**
+  Determine if S3 support is explicitly disabled.
+
+  @retval  TRUE   if S3 support is explicitly disabled.
+           FALSE  otherwise. This includes unavailability of the firmware
+                  configuration interface.
+**/
+RETURN_STATUS
+EFIAPI
+QemuFwCfgS3Disabled (
+  VOID
+  );
 #endif
 
