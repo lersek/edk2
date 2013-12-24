@@ -346,3 +346,31 @@ QemuFwCfgFindFile (
 
   return RETURN_NOT_FOUND;
 }
+
+
+/**
+  Determine if S3 support is explicitly disabled.
+
+  @retval  TRUE   if S3 support is explicitly disabled.
+           FALSE  otherwise. This includes unavailability of the firmware
+                  configuration interface.
+**/
+RETURN_STATUS
+EFIAPI
+QemuFwCfgS3Disabled (
+  VOID
+  )
+{
+  RETURN_STATUS        Status;
+  FIRMWARE_CONFIG_ITEM FwCfgItem;
+  UINTN                FwCfgSize;
+  UINT8                SystemStates[6];
+
+  Status = QemuFwCfgFindFile ("etc/system-states", &FwCfgItem, &FwCfgSize);
+  if (Status != RETURN_SUCCESS || FwCfgSize != sizeof SystemStates) {
+    return FALSE;
+  }
+  QemuFwCfgSelectItem (FwCfgItem);
+  QemuFwCfgReadBytes (sizeof SystemStates, SystemStates);
+  return !(SystemStates[3] & BIT7);
+}
