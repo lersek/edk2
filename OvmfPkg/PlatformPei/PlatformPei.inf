@@ -57,6 +57,7 @@
   MtrrLib
   PcdLib
   EmuNvramLib
+  QemuFwCfgLib
 
 [Pcd]
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfMemFvBase

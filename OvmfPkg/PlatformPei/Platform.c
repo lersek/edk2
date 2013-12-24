@@ -38,6 +38,7 @@
 #include <IndustryStandard/E820.h>
 #include <Library/ResourcePublicationLib.h>
 #include <Library/MtrrLib.h>
+#include <Library/QemuFwCfgLib.h>
 
 #include "Platform.h"
 #include "Cmos.h"
@@ -422,6 +423,7 @@ InitializePlatform (
 
   DebugDumpCmos ();
   S3Resume = (CmosRead8 (0xF) == 0xFE);
+  ASSERT (!S3Resume || !QemuFwCfgS3Disabled ());
 
   XenLeaf = XenDetect ();
 
