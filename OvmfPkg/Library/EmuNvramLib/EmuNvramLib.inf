@@ -33,6 +33,7 @@
 [LibraryClasses]
   PcdLib
   DebugLib
+  QemuFwCfgLib
 
 [Pcd]
   gUefiOvmfPkgTokenSpaceGuid.PcdEmuNvramSmramSize
