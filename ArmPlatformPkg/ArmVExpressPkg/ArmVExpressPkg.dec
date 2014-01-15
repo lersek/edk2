@@ -55,3 +55,23 @@
   # Device path of block device on which Fastboot will flash partitions
   #
   gArmVExpressTokenSpaceGuid.PcdAndroidFastbootNvmDevicePath|""|VOID*|0x00000001
+
+  # These PCDs control the ArmFvpDxe driver.
+  #
+  # The driver will try to expose the first Count virtio-mmio transports. The
+  # Nth transport's MMIO range will start at (First + N * Size), for each N in
+  # [0..Count-1]. If Downward is set, then the respective range will start at
+  # (First - N * Size).
+  #
+  # When the installation of the Nth transport fails, then:
+  # - if AllRequired is TRUE, then all transports are rolled back completely
+  #   and the driver fails,
+  # - if AllRequired is FALSE, and at least one transport has been found, then
+  #   those are preserved and the driver stays in memory,
+  # - otherwise the driver fails.
+  #
+  gArmVExpressTokenSpaceGuid.PcdVirtioTransportCount|1|UINT32|0xA
+  gArmVExpressTokenSpaceGuid.PcdVirtioTransportFirst|0x1c130000|UINT64|0xB
+  gArmVExpressTokenSpaceGuid.PcdVirtioTransportSize|0x00000200|UINT32|0xC
+  gArmVExpressTokenSpaceGuid.PcdVirtioTransportDownward|FALSE|BOOLEAN|0xD
+  gArmVExpressTokenSpaceGuid.PcdVirtioTransportAllRequired|FALSE|BOOLEAN|0xE
