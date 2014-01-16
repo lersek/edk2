@@ -15,7 +15,7 @@
 [Defines]
   INF_VERSION                    = 0x00010006
   BASE_NAME                      = ArmFvpDxe
-  FILE_GUID                      = fe61bb5f-1b67-4c24-b346-73db42e873e5
+  FILE_GUID                      = C1E791A2-64CF-4B68-BDF1-1C31DABBDC84
   MODULE_TYPE                    = UEFI_DRIVER
   VERSION_STRING                 = 1.0
   ENTRY_POINT                    = ArmFvpInitialise
@@ -26,10 +26,20 @@
 [Packages]
   MdePkg/MdePkg.dec
   ArmPlatformPkg/ArmPlatformPkg.dec
+  ArmPlatformPkg/ArmVExpressPkg/ArmVExpressPkg.dec
   OvmfPkg/OvmfPkg.dec
 
 [LibraryClasses]
+  PcdLib
+  MemoryAllocationLib
   UefiDriverEntryPoint
   UefiBootServicesTableLib
   VirtioMmioDeviceLib
   BaseMemoryLib
+
+[Pcd]
+  gArmVExpressTokenSpaceGuid.PcdVirtioTransportCount       ## CONSUMES
+  gArmVExpressTokenSpaceGuid.PcdVirtioTransportFirst       ## CONSUMES
+  gArmVExpressTokenSpaceGuid.PcdVirtioTransportSize        ## CONSUMES
+  gArmVExpressTokenSpaceGuid.PcdVirtioTransportDownward    ## CONSUMES
+  gArmVExpressTokenSpaceGuid.PcdVirtioTransportAllRequired ## CONSUMES
