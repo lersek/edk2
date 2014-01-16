@@ -172,6 +172,16 @@
   # ARM Architectual Timer Frequency
   #
   gArmTokenSpaceGuid.PcdArmArchTimerFreqInHz|60000000
+
+  #
+  # ArmFvpDxe should try to install four virtio-mmio devices on QEMU, in order
+  # to accommodate eg. virtio-blk and virtio-net.
+  #
+!if $(EDK2_ARMVE_SUPPORT_QEMU) == 1
+  gArmVExpressTokenSpaceGuid.PcdVirtioTransportCount|4
+  gArmVExpressTokenSpaceGuid.PcdVirtioTransportFirst|0x1c130600
+  gArmVExpressTokenSpaceGuid.PcdVirtioTransportDownward|TRUE
+!endif
   
   
 ################################################################################
