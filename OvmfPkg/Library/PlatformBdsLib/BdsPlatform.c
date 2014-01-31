@@ -14,6 +14,7 @@
 
 #include "BdsPlatform.h"
 #include "QemuBootOrder.h"
+#include <Library/PlatformConfigLib.h>
 
 
 //
@@ -1027,6 +1028,36 @@ Returns:
 }
 
 
+/**
+  Read the preferred resolution from the platform configuration, and pass it to
+  GraphicsConsoleDxe via dynamic PCDs.
+
+  @retval EFI_SUCCESS            PCDs have been set.
+  @return                        Status codes from PlatformConfigLoad().
+**/
+STATIC
+EFI_STATUS
+EFIAPI
+SetPreferredResolution (
+  VOID
+  )
+{
+  EFI_STATUS      Status;
+  PLATFORM_CONFIG PlatformConfig;
+  UINT64          OptionalElements;
+
+  Status = PlatformConfigLoad (&PlatformConfig, &OptionalElements);
+  if (EFI_ERROR (Status)) {
+    DEBUG (((Status == EFI_NOT_FOUND) ? EFI_D_VERBOSE : EFI_D_ERROR,
+      "%a: failed to load platform config: %r\n", __FUNCTION__, Status));
+    return Status;
+  }
+  PcdSet32 (PcdVideoHorizontalResolution, PlatformConfig.HorizontalResolution);
+  PcdSet32 (PcdVideoVerticalResolution, PlatformConfig.VerticalResolution);
+  return EFI_SUCCESS;
+}
+
+
 VOID
 EFIAPI
 PlatformBdsPolicyBehavior (
@@ -1108,6 +1139,7 @@ Returns:
   //
   // Connect platform console
   //
+  SetPreferredResolution ();
   Status = PlatformBdsConnectConsole (gPlatformConsole);
   if (EFI_ERROR (Status)) {
     //
