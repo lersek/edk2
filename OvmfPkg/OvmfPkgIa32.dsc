@@ -545,3 +545,5 @@
   }
   OvmfPkg/SecureBootConfigDxe/SecureBootConfigDxe.inf
 !endif
+
+  OvmfPkg/PlatformConfigDxe/PlatformConfig.inf
