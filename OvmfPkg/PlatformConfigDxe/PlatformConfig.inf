@@ -34,15 +34,21 @@
   OvmfPkg/OvmfPkg.dec
 
 [LibraryClasses]
+  BaseLib
   DebugLib
   DevicePathLib
   HiiLib
   UefiBootServicesTableLib
+  UefiHiiServicesLib
   UefiDriverEntryPoint
 
 [Protocols]
   gEfiDevicePathProtocolGuid      ## PRODUCES
   gEfiHiiConfigAccessProtocolGuid ## PRODUCES
+
+[Guids]
+  gEfiIfrTianoGuid
+  gOvmfPlatformConfigGuid
 
 [Depex]
   TRUE
