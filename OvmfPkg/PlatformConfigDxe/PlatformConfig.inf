@@ -38,12 +38,15 @@
   DebugLib
   DevicePathLib
   HiiLib
+  MemoryAllocationLib
+  PrintLib
   UefiBootServicesTableLib
   UefiHiiServicesLib
   UefiDriverEntryPoint
 
 [Protocols]
   gEfiDevicePathProtocolGuid      ## PRODUCES
+  gEfiGraphicsOutputProtocolGuid  ## CONSUMES
   gEfiHiiConfigAccessProtocolGuid ## PRODUCES
 
 [Guids]
@@ -51,4 +54,4 @@
   gOvmfPlatformConfigGuid
 
 [Depex]
-  TRUE
+  gEfiGraphicsOutputProtocolGuid
