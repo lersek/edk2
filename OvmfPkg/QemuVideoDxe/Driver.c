@@ -532,6 +532,11 @@ QemuVideoControllerDriverStop (
         Private->Handle
         );
 
+  FreePool (Private->ModeData);
+  gBS->UninstallProtocolInterface (Private->Handle,
+         &gEfiDevicePathProtocolGuid, Private->GopDevicePath);
+  FreePool (Private->GopDevicePath);
+
   //
   // Free our instance data
   //
