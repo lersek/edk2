@@ -27,7 +27,7 @@
 //
 // Define the maximum debug and assert message length that this library supports
 //
-#define MAX_DEBUG_MESSAGE_LENGTH  0x100
+#define MAX_DEBUG_MESSAGE_LENGTH  0x200
 
 /**
   This constructor function does not have to do anything.
