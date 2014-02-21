@@ -14,10 +14,12 @@
 **/
 
 #include <Library/BaseLib.h>
+#include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
 #include <Library/DevicePathLib.h>
 #include <Library/HiiLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/PlatformConfigLib.h>
 #include <Library/PrintLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiHiiServicesLib.h>
@@ -112,6 +114,73 @@ STATIC GOP_MODE *mGopModes;
 
 
 /**
+  Load the persistent platform configuration and translate it to binary form
+  state.
+
+  If the platform configuration is missing, then the function fills in a
+  default state.
+
+  @param[out] MainFormState  Binary form/widget state after translation.
+
+  @retval EFI_SUCCESS  Form/widget state ready.
+  @return              Error codes from underlying functions.
+**/
+STATIC
+EFI_STATUS
+EFIAPI
+PlatformConfigToFormState (
+  OUT MAIN_FORM_STATE *MainFormState
+  )
+{
+  EFI_STATUS      Status;
+  PLATFORM_CONFIG PlatformConfig;
+  UINT64          OptionalElements;
+  UINTN           ModeNumber;
+
+  ZeroMem (MainFormState, sizeof *MainFormState);
+
+  Status = PlatformConfigLoad (&PlatformConfig, &OptionalElements);
+  switch (Status) {
+  case EFI_SUCCESS:
+    //
+    // Format the preferred resolution as text.
+    //
+    UnicodeSPrintAsciiFormat (
+      (CHAR16 *) MainFormState->CurrentPreferredResolution,
+      sizeof MainFormState->CurrentPreferredResolution,
+      "%Ldx%Ld",
+      (INT64) PlatformConfig.HorizontalResolution,
+      (INT64) PlatformConfig.VerticalResolution);
+
+    //
+    // Try to locate it in the drop-down list too. This may not succeed, but
+    // that's fine.
+    //
+    for (ModeNumber = 0; ModeNumber < mNumGopModes; ++ModeNumber) {
+      if (mGopModes[ModeNumber].X == PlatformConfig.HorizontalResolution &&
+          mGopModes[ModeNumber].Y == PlatformConfig.VerticalResolution) {
+        MainFormState->NextPreferredResolution = (UINT32) ModeNumber;
+        break;
+      }
+    }
+    break;
+
+  case EFI_NOT_FOUND:
+    UnicodeSPrintAsciiFormat (
+      (CHAR16 *) MainFormState->CurrentPreferredResolution,
+      sizeof MainFormState->CurrentPreferredResolution,
+      "Unset");
+    break;
+
+  default:
+    return Status;
+  }
+
+  return EFI_SUCCESS;
+}
+
+
+/**
   This function is called by the HII machinery when it fetches the form state.
 
   See the precise documentation in the UEFI spec.
@@ -128,7 +197,9 @@ STATIC GOP_MODE *mGopModes;
                         all values filled in for the names in the Request
                         string.
 
-  @return  Status codes from gHiiConfigRouting->BlockToConfig().
+  @retval EFI_SUCCESS  Extraction of form state in <MultiConfigAltResp>
+                       encoding successful.
+  @return              Status codes from underlying functions.
 
 **/
 STATIC
@@ -146,9 +217,15 @@ ExtractConfig (
 
   DEBUG ((EFI_D_VERBOSE, "%a: Request=\"%s\"\n", __FUNCTION__, Request));
 
-  StrnCpy ((CHAR16 *) MainFormState.CurrentPreferredResolution,
-           L"Unset", MAXSIZE_RES_CUR);
-  MainFormState.NextPreferredResolution = 0;
+  Status = PlatformConfigToFormState (&MainFormState);
+  if (EFI_ERROR (Status)) {
+    *Progress = Request;
+    return Status;
+  }
+
+  //
+  // Answer the textual request keying off the binary form state.
+  //
   Status = gHiiConfigRouting->BlockToConfig (gHiiConfigRouting, Request,
                                 (VOID *) &MainFormState, sizeof MainFormState,
                                 Results, Progress);
