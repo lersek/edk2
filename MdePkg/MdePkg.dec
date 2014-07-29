@@ -100,6 +100,10 @@
   ##
   PrintLib|Include/Library/PrintLib.h
 
+  ##  @libraryclass  Provides a red-black tree data structure for associative
+  ##                 containers and priority queues.
+  RbTreeLib|Include/Library/RbTreeLib.h
+
   ##  @libraryclass  Provides services to send progress/error codes to a POST card.
   PostCodeLib|Include/Library/PostCodeLib.h
 

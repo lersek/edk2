@@ -1,0 +1,38 @@
+## @file
+#  An RbTreeLib instance that allocates and releases tree nodes with
+#  MemoryAllocationLib.
+#
+#  Copyright (C) 2014, Red Hat, Inc.
+#
+#  This program and the accompanying materials are licensed and made available
+#  under the terms and conditions of the BSD License that accompanies this
+#  distribution. The full text of the license may be found at
+#  http://opensource.org/licenses/bsd-license.php.
+#
+#  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR
+#  IMPLIED.
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = BaseRbTreeLib
+  FILE_GUID                      = 699F73C3-0058-484C-A9E5-61189276A985
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = RbTreeLib
+
+#
+#  VALID_ARCHITECTURES           = IA32 X64 IPF EBC
+#
+
+[Sources]
+  BaseRbTreeLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+
+[LibraryClasses]
+  DebugLib
+  MemoryAllocationLib
