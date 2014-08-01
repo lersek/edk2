@@ -112,6 +112,16 @@
   AppPkg/Applications/Main/Main.inf          # Simple invocation. No other LibC functions.
   AppPkg/Applications/Enquire/Enquire.inf    #
 
+  AppPkg/Applications/RbTreeTest/RbTreeTest.inf { # A simple RbTreeLib fuzzer.
+    <LibraryClasses>
+      RbTreeLib|MdePkg/Library/BaseRbTreeLib/BaseRbTreeLib.inf
+      DebugLib|MdePkg/Library/UefiDebugLibConOut/UefiDebugLibConOut.inf
+      DebugPrintErrorLevelLib|MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib.inf
+    <PcdsFixedAtBuild>
+      gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x2F
+      gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80400040
+  }
+
 #### After extracting the Python distribution, un-comment the following line to build Python.
 #  AppPkg/Applications/Python/PythonCore.inf
 
