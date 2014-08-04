@@ -100,6 +100,9 @@
   ##
   PrintLib|Include/Library/PrintLib.h
 
+  ##  @libraryclass  Provides an ordered collection data structure.
+  OrderedCollectionLib|Include/Library/OrderedCollectionLib.h
+
   ##  @libraryclass  Provides services to send progress/error codes to a POST card.
   PostCodeLib|Include/Library/PostCodeLib.h
 
