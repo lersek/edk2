@@ -17,12 +17,15 @@
 
 #include "AcpiPlatform.h"
 #include "QemuLoader.h"
-#include <Library/BaseMemoryLib.h>
-#include <Library/MemoryAllocationLib.h>
-#include <Library/QemuFwCfgLib.h>
-#include <Library/DxeServicesTableLib.h>
-#include <Library/PcdLib.h>
-#include <IndustryStandard/Acpi.h>
+#include <Library/BaseMemoryLib.h>        // CopyMem()
+#include <Library/MemoryAllocationLib.h>  // AllocatePool()
+#include <Library/QemuFwCfgLib.h>         // QemuFwCfgFindFile()
+#include <Library/DxeServicesTableLib.h>  // gDS
+#include <Library/PcdLib.h>               // PcdGet16()
+#include <Library/UefiLib.h>              // EfiGetSystemConfigurationTable()
+#include <Library/OrderedCollectionLib.h> // OrderedCollectionInit()
+#include <IndustryStandard/Acpi.h>        // EFI_ACPI_DESCRIPTION_HEADER
+#include <Guid/Acpi.h>                    // gEfiAcpi10TableGuid
 
 BOOLEAN
 QemuDetected (
@@ -518,7 +521,8 @@ QemuInstallAcpiTable (
 
 
 /**
-  Check if an array of bytes starts with an RSD PTR structure.
+  Check if an array of bytes starts with an RSD PTR structure, and if so,
+  return the EFI ACPI table GUID that corresponds to its version.
 
   Checksum is ignored.
 
@@ -526,8 +530,9 @@ QemuInstallAcpiTable (
 
   @param[in] Size       Number of bytes in Buffer.
 
-  @param[out] RsdpSize  If the function returns EFI_SUCCESS, this parameter
-                        contains the size of the detected RSD PTR structure.
+  @param[out] AcpiTableGuid  On successful exit, pointer to the EFI ACPI table
+                             GUID in statically allocated storage that
+                             corresponds to the detected RSD PTR version.
 
   @retval  EFI_SUCCESS         RSD PTR structure detected at the beginning of
                                Buffer, and its advertised size does not exceed
@@ -545,7 +550,7 @@ EFI_STATUS
 CheckRsdp (
   IN  CONST VOID *Buffer,
   IN  UINTN      Size,
-  OUT UINTN      *RsdpSize
+  OUT EFI_GUID   **AcpiTableGuid
   )
 {
   CONST UINT64                                       *Signature;
@@ -574,7 +579,7 @@ CheckRsdp (
     //
     // ACPI 1.0 doesn't include the Length field
     //
-    *RsdpSize = sizeof *Rsdp1;
+    *AcpiTableGuid = &gEfiAcpi10TableGuid;
     return EFI_SUCCESS;
   }
 
@@ -587,27 +592,99 @@ CheckRsdp (
     return EFI_PROTOCOL_ERROR;
   }
 
-  *RsdpSize = Rsdp2->Length;
+  *AcpiTableGuid = &gEfiAcpi20TableGuid;
   return EFI_SUCCESS;
 }
 
+//
+// The user structure for the ordered collection that will track the fw_cfg
+// blobs under processing.
+//
+typedef struct {
+  UINT8 File[QEMU_LOADER_FNAME_SIZE]; // NUL-terminated name of the fw_cfg
+                                      // blob. This is the ordering / search
+                                      // key.
+  UINTN Size;                         // The number of bytes in this blob.
+  UINT8 *Base;                        // Pointer to the blob data.
+} BLOB;
+
 /**
-  Download all ACPI table data files from QEMU and interpret them.
+  Compare a standalone key against a user structure containing an embedded key.
 
-  @param[in] AcpiProtocol  The ACPI table protocol used to install tables.
+  @param[in] StandaloneKey  Pointer to the bare key.
 
-  @retval  EFI_UNSUPPORTED       Firmware configuration is unavailable.
+  @param[in] UserStruct     Pointer to the user structure with the embedded
+                            key.
+
+  @retval <0  If StandaloneKey compares less than UserStruct's key.
+
+  @retval  0  If StandaloneKey compares equal to UserStruct's key.
+
+  @retval >0  If StandaloneKey compares greater than UserStruct's key.
+**/
+STATIC
+INTN
+EFIAPI
+BlobKeyCompare (
+  IN CONST VOID *StandaloneKey,
+  IN CONST VOID *UserStruct
+  )
+{
+  CONST BLOB *Blob;
+
+  Blob = UserStruct;
+  return AsciiStrCmp (StandaloneKey, (CONST CHAR8 *)Blob->File);
+}
+
+/**
+  Comparator function for two user structures.
+
+  @param[in] UserStruct1  Pointer to the first user structure.
+
+  @param[in] UserStruct2  Pointer to the second user structure.
+
+  @retval <0  If UserStruct1 compares less than UserStruct2.
+
+  @retval  0  If UserStruct1 compares equal to UserStruct2.
+
+  @retval >0  If UserStruct1 compares greater than UserStruct2.
+**/
+STATIC
+INTN
+EFIAPI
+BlobCompare (
+  IN CONST VOID *UserStruct1,
+  IN CONST VOID *UserStruct2
+  )
+{
+  CONST BLOB *Blob1;
+
+  Blob1 = UserStruct1;
+  return BlobKeyCompare (Blob1->File, UserStruct2);
+}
+
+/**
+  Download, process, and install ACPI table data from the QEMU loader
+  interface.
+
+  @retval  EFI_UNSUPPORTED       Firmware configuration is unavailable, or QEMU
+                                 loader command with unsupported parameters
+                                 has been found.
 
   @retval  EFI_NOT_FOUND         The host doesn't export the required fw_cfg
                                  files.
 
-  @retval  EFI_OUT_OF_RESOURCES  Memory allocation failed, or more than
-                                 INSTALLED_TABLES_MAX tables found.
+  @retval  EFI_OUT_OF_RESOURCES  Memory allocation failed.
 
   @retval  EFI_PROTOCOL_ERROR    Found invalid fw_cfg contents.
 
-  @return                        Status codes returned by
-                                 AcpiProtocol->InstallAcpiTable().
+  @retval  EFI_ALREADY_STARTED   One of the ACPI TABLE GUIDs has been found in
+                                 the EFI Configuration Table, indicating the
+                                 presence of a preexistent RSD PTR table, and
+                                 therefore that of another module installing
+                                 ACPI tables.
+
+  @retval  EFI_SUCCESS           Installation of ACPI tables succeeded.
 
 **/
 
@@ -617,5 +694,303 @@ InstallAllQemuLinkedTables (
   VOID
   )
 {
-  return CheckRsdp (NULL, 0, NULL);
+  EFI_STATUS               Status;
+  FIRMWARE_CONFIG_ITEM     FwCfgItem;
+  UINTN                    FwCfgSize;
+  VOID                     *Rsdp;
+  UINTN                    RsdpBufferSize;
+  UINT8                    *Loader;
+  CONST QEMU_LOADER_ENTRY  *LoaderEntry, *LoaderEnd;
+  ORDERED_COLLECTION       *Tracker;
+  ORDERED_COLLECTION_ENTRY *TrackerEntry, *TrackerEntry2;
+  BLOB                     *Blob;
+  EFI_GUID                 *AcpiTableGuid;
+
+  //
+  // This function allocates memory on four levels. From lowest to highest:
+  // - Areas consisting of whole pages, of type EfiACPIMemoryNVS, for
+  //   (processed) ACPI payload,
+  // - BLOB structures referencing the above, tracking their names, sizes, and
+  //   addresses,
+  // - ORDERED_COLLECTION_ENTRY objects internal to OrderedCollectionLib,
+  //   linking the BLOB structures,
+  // - an ORDERED_COLLECTION organizing the ORDERED_COLLECTION_ENTRY entries.
+  //
+  // On exit, the last three levels are torn down unconditionally. If we exit
+  // with success, then the first (lowest) level is left in place, constituting
+  // the ACPI tables for the guest. If we exit with error, then even the first
+  // (lowest) level is torn down.
+  //
+
+  Status = QemuFwCfgFindFile ("etc/table-loader", &FwCfgItem, &FwCfgSize);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+  if (FwCfgSize % sizeof *LoaderEntry != 0) {
+    DEBUG ((EFI_D_ERROR, "%a: \"etc/table-loader\" has invalid size 0x%Lx\n",
+      __FUNCTION__, (UINT64)FwCfgSize));
+    return EFI_PROTOCOL_ERROR;
+  }
+
+  if (!EFI_ERROR (EfiGetSystemConfigurationTable (
+                    &gEfiAcpi10TableGuid, &Rsdp)) ||
+      !EFI_ERROR (EfiGetSystemConfigurationTable (
+                    &gEfiAcpi20TableGuid, &Rsdp))) {
+    DEBUG ((EFI_D_ERROR, "%a: RSD PTR already present\n", __FUNCTION__));
+    return EFI_ALREADY_STARTED;
+  }
+
+  Loader = AllocatePool (FwCfgSize);
+  if (Loader == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  QemuFwCfgSelectItem (FwCfgItem);
+  QemuFwCfgReadBytes (FwCfgSize, Loader);
+
+  Tracker = OrderedCollectionInit (BlobCompare, BlobKeyCompare);
+  if (Tracker == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto FreeLoader;
+  }
+
+  Rsdp           = NULL;
+  RsdpBufferSize = 0;
+
+  LoaderEntry = (QEMU_LOADER_ENTRY *)Loader;
+  LoaderEnd   = (QEMU_LOADER_ENTRY *)(Loader + FwCfgSize);
+  while (LoaderEntry < LoaderEnd) {
+    switch (LoaderEntry->Type) {
+    case QemuLoaderCmdAllocate: {
+      CONST QEMU_LOADER_ALLOCATE *Allocate;
+      UINTN                      NumPages;
+      EFI_PHYSICAL_ADDRESS       Address;
+
+      Allocate = &LoaderEntry->Command.Allocate;
+      if (Allocate->File[QEMU_LOADER_FNAME_SIZE - 1] != '\0') {
+        DEBUG ((EFI_D_ERROR, "%a: malformed file name in Allocate command\n",
+          __FUNCTION__));
+        Status = EFI_PROTOCOL_ERROR;
+        goto FreeTracker;
+      }
+      if (Allocate->Alignment > EFI_PAGE_SIZE) {
+        DEBUG ((EFI_D_ERROR, "%a: unsupported alignment 0x%x in Allocate "
+          "command\n", __FUNCTION__, Allocate->Alignment));
+        Status = EFI_UNSUPPORTED;
+        goto FreeTracker;
+      }
+      Status = QemuFwCfgFindFile ((CHAR8 *)Allocate->File, &FwCfgItem,
+                 &FwCfgSize);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((EFI_D_ERROR, "%a: nonexistent file \"%a\" in Allocate "
+          "command\n", __FUNCTION__, Allocate->File));
+        goto FreeTracker;
+      }
+
+      NumPages = EFI_SIZE_TO_PAGES (FwCfgSize);
+      Address = 0xFFFFFFFF;
+      Status = gBS->AllocatePages (AllocateMaxAddress, EfiACPIMemoryNVS,
+                      NumPages, &Address);
+      if (EFI_ERROR (Status)) {
+        goto FreeTracker;
+      }
+
+      Blob = AllocatePool (sizeof *Blob);
+      if (Blob == NULL) {
+        Status = EFI_OUT_OF_RESOURCES;
+        goto FreePages;
+      }
+      CopyMem (Blob->File, Allocate->File, QEMU_LOADER_FNAME_SIZE);
+      Blob->Size = FwCfgSize;
+      Blob->Base = (VOID *)(UINTN)Address;
+
+      if (Allocate->Zone == QemuLoaderAllocFSeg) {
+        if (Rsdp == NULL) {
+          Rsdp = Blob->Base;
+          RsdpBufferSize = Blob->Size;
+        } else {
+          DEBUG ((EFI_D_ERROR, "%a: duplicate RSD PTR candidate in Allocate "
+            "command\n", __FUNCTION__));
+          Status = EFI_PROTOCOL_ERROR;
+          goto FreeBlob;
+        }
+      }
+
+      Status = OrderedCollectionInsert (Tracker, NULL, Blob);
+      if (Status == RETURN_ALREADY_STARTED) {
+        DEBUG ((EFI_D_ERROR, "%a: duplicated file \"%a\" in Allocate "
+          "command\n", __FUNCTION__, Allocate->File));
+        Status = EFI_PROTOCOL_ERROR;
+        goto FreeBlob;
+      }
+      if (EFI_ERROR (Status)) {
+        goto FreeBlob;
+      }
+
+      QemuFwCfgSelectItem (FwCfgItem);
+      QemuFwCfgReadBytes (FwCfgSize, Blob->Base);
+      ZeroMem (Blob->Base + Blob->Size,
+        EFI_PAGES_TO_SIZE (NumPages) - Blob->Size);
+
+      DEBUG ((EFI_D_VERBOSE, "%a: Allocate: File=\"%a\" Alignment=0x%x "
+        "Zone=%d Size=0x%Lx Address=0x%Lx\n", __FUNCTION__, Allocate->File,
+        Allocate->Alignment, Allocate->Zone, (UINT64)Blob->Size,
+        (UINT64)(UINTN)Blob->Base));
+      break;
+
+FreeBlob:
+      FreePool (Blob);
+FreePages:
+      gBS->FreePages (Address, NumPages);
+      goto FreeTracker;
+    }
+
+    case QemuLoaderCmdAddPointer: {
+      CONST QEMU_LOADER_ADD_POINTER *AddPointer;
+      CONST BLOB                    *Blob2;
+      UINT8                         *PointerField;
+
+      AddPointer = &LoaderEntry->Command.AddPointer;
+      if (AddPointer->PointerFile[QEMU_LOADER_FNAME_SIZE - 1] != '\0' ||
+          AddPointer->PointeeFile[QEMU_LOADER_FNAME_SIZE - 1] != '\0') {
+        DEBUG ((EFI_D_ERROR, "%a: malformed file name in AddPointer command\n",
+          __FUNCTION__));
+        Status = EFI_PROTOCOL_ERROR;
+        goto FreeTracker;
+      }
+
+      TrackerEntry = OrderedCollectionFind (Tracker, AddPointer->PointerFile);
+      TrackerEntry2 = OrderedCollectionFind (Tracker, AddPointer->PointeeFile);
+      if (TrackerEntry == NULL || TrackerEntry2 == NULL) {
+        DEBUG ((EFI_D_ERROR, "%a: invalid blob reference(s) \"%a\" / \"%a\" "
+          "in AddPointer command\n", __FUNCTION__, AddPointer->PointerFile,
+          AddPointer->PointeeFile));
+        Status = EFI_PROTOCOL_ERROR;
+        goto FreeTracker;
+      }
+
+      Blob = OrderedCollectionUserStruct (TrackerEntry);
+      Blob2 = OrderedCollectionUserStruct (TrackerEntry2);
+      if ((AddPointer->PointerSize != 1 && AddPointer->PointerSize != 2 &&
+           AddPointer->PointerSize != 4 && AddPointer->PointerSize != 8) ||
+          Blob->Size < AddPointer->PointerSize ||
+          Blob->Size - AddPointer->PointerSize < AddPointer->PointerOffset) {
+        DEBUG ((EFI_D_ERROR, "%a: invalid pointer location in \"%a\" in "
+          "AddPointer command\n", __FUNCTION__, AddPointer->PointerFile));
+        Status = EFI_PROTOCOL_ERROR;
+        goto FreeTracker;
+      }
+
+      PointerField = Blob->Base + AddPointer->PointerOffset;
+      switch (AddPointer->PointerSize) {
+      case 1:
+        *PointerField += (UINT8)(UINTN)Blob2->Base;
+        break;
+
+      case 2:
+        *(UINT16 *)PointerField += (UINT16)(UINTN)Blob2->Base;
+        break;
+
+      case 4:
+        *(UINT32 *)PointerField += (UINT32)(UINTN)Blob2->Base;
+        break;
+
+      case 8:
+        *(UINT64 *)PointerField += (UINT64)(UINTN)Blob2->Base;
+        break;
+      }
+
+      DEBUG ((EFI_D_VERBOSE, "%a: AddPointer: PointerFile=\"%a\" "
+        "PointeeFile=\"%a\" PointerOffset=0x%x PointerSize=%d\n", __FUNCTION__,
+        AddPointer->PointerFile, AddPointer->PointeeFile,
+        AddPointer->PointerOffset, AddPointer->PointerSize));
+      break;
+    }
+
+    case QemuLoaderCmdAddChecksum: {
+      CONST QEMU_LOADER_ADD_CHECKSUM *AddChecksum;
+
+      AddChecksum = &LoaderEntry->Command.AddChecksum;
+      if (AddChecksum->File[QEMU_LOADER_FNAME_SIZE - 1] != '\0') {
+        DEBUG ((EFI_D_ERROR, "%a: malformed file name in AddChecksum "
+          "command\n", __FUNCTION__));
+        Status = EFI_PROTOCOL_ERROR;
+        goto FreeTracker;
+      }
+
+      TrackerEntry = OrderedCollectionFind (Tracker, AddChecksum->File);
+      if (TrackerEntry == NULL) {
+        DEBUG ((EFI_D_ERROR, "%a: invalid blob reference \"%a\" in "
+          "AddChecksum command\n", __FUNCTION__, AddChecksum->File));
+        Status = EFI_PROTOCOL_ERROR;
+        goto FreeTracker;
+      }
+
+      Blob = OrderedCollectionUserStruct (TrackerEntry);
+      if (Blob->Size <= AddChecksum->ResultOffset ||
+          Blob->Size < AddChecksum->Length ||
+          Blob->Size - AddChecksum->Length < AddChecksum->Start) {
+        DEBUG ((EFI_D_ERROR, "%a: invalid checksum location or range in "
+          "\"%a\" in AddChecksum command\n", __FUNCTION__, AddChecksum->File));
+        Status = EFI_PROTOCOL_ERROR;
+        goto FreeTracker;
+      }
+
+      Blob->Base[AddChecksum->ResultOffset] = CalculateCheckSum8 (
+                                               Blob->Base + AddChecksum->Start,
+                                               AddChecksum->Length
+                                               );
+      DEBUG ((EFI_D_VERBOSE, "%a: AddChecksum: File=\"%a\" ResultOffset=0x%x "
+        "Start=0x%x Length=0x%x\n", __FUNCTION__, AddChecksum->File,
+        AddChecksum->ResultOffset, AddChecksum->Start, AddChecksum->Length));
+      break;
+    }
+
+    default:
+      DEBUG ((EFI_D_VERBOSE, "%a: unknown loader command: 0x%x\n",
+        __FUNCTION__, LoaderEntry->Type));
+      break;
+    }
+
+    ++LoaderEntry;
+  }
+
+  if (Rsdp == NULL) {
+    DEBUG ((EFI_D_ERROR, "%a: no RSD PTR candidate\n", __FUNCTION__));
+    Status = EFI_PROTOCOL_ERROR;
+    goto FreeTracker;
+  }
+
+  AcpiTableGuid = NULL;
+  if (EFI_ERROR (CheckRsdp (Rsdp, RsdpBufferSize, &AcpiTableGuid))) {
+    DEBUG ((EFI_D_ERROR, "%a: RSD PTR not found in candidate\n",
+      __FUNCTION__));
+    Status = EFI_PROTOCOL_ERROR;
+    goto FreeTracker;
+  }
+
+  Status = gBS->InstallConfigurationTable (AcpiTableGuid, Rsdp);
+
+FreeTracker:
+  //
+  // Tear down the tracker structure, and if we're exiting with an error, the
+  // pages holding the blob data (ie. the processed ACPI payload) as well.
+  //
+  for (TrackerEntry = OrderedCollectionMin (Tracker); TrackerEntry != NULL;
+       TrackerEntry = TrackerEntry2) {
+    VOID *UserStruct;
+
+    TrackerEntry2 = OrderedCollectionNext (TrackerEntry);
+    OrderedCollectionDelete (Tracker, TrackerEntry, &UserStruct);
+    if (EFI_ERROR (Status)) {
+      Blob = UserStruct;
+      gBS->FreePages ((UINTN)Blob->Base, EFI_SIZE_TO_PAGES (Blob->Size));
+    }
+    FreePool (UserStruct);
+  }
+  OrderedCollectionUninit (Tracker);
+
+FreeLoader:
+  FreePool (Loader);
+  return Status;
 }

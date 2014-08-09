@@ -51,12 +51,15 @@
   MemoryAllocationLib
   BaseLib
   DxeServicesTableLib
+  OrderedCollectionLib
 
 [Protocols]
   gEfiAcpiTableProtocolGuid                     # PROTOCOL ALWAYS_CONSUMED
 
 [Guids]
   gEfiXenInfoGuid
+  gEfiAcpi10TableGuid
+  gEfiAcpi20TableGuid
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdAcpiTableStorageFile
