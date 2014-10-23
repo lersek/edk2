@@ -868,6 +868,46 @@ WaitForSingleEvent (
   return Status;
 }
 
+
+/**
+  Assuming that the user pressed a key, process that key.
+
+  @retval EFI_TIMEOUT  User pressed "Enter", which is equivalent to selecting
+                       "Continue".
+
+  @retval EFI_SUCCESS  User pressed a key different from "Enter".
+
+                       In addition, this value is returned (without looking at
+                       gST->ConIn) when PcdConInConnectOnDemand is TRUE.
+
+  @return              Error codes from gST->ConIn->ReadKeyStroke().
+**/
+EFI_STATUS
+HandleKeyPress (
+  VOID
+  )
+{
+  EFI_STATUS                    Status;
+  EFI_INPUT_KEY                 Key;
+
+  if (!PcdGetBool (PcdConInConnectOnDemand)) {
+    Status = gST->ConIn->ReadKeyStroke (gST->ConIn, &Key);
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+
+    if (Key.UnicodeChar == CHAR_CARRIAGE_RETURN) {
+      //
+      // User pressed enter, equivalent to select "continue"
+      //
+      return EFI_TIMEOUT;
+    }
+  }
+
+  return EFI_SUCCESS;
+}
+
+
 /**
   Function show progress bar to wait for user input.
 
@@ -886,7 +926,6 @@ ShowProgress (
   CHAR16                        *TmpStr;
   UINT16                        TimeoutRemain;
   EFI_STATUS                    Status;
-  EFI_INPUT_KEY                 Key;
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL Foreground;
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL Background;
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL Color;
@@ -954,21 +993,7 @@ ShowProgress (
   //
   // User pressed some key
   //
-  if (!PcdGetBool (PcdConInConnectOnDemand)) {
-    Status = gST->ConIn->ReadKeyStroke (gST->ConIn, &Key);
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-
-    if (Key.UnicodeChar == CHAR_CARRIAGE_RETURN) {
-      //
-      // User pressed enter, equivalent to select "continue"
-      //
-      return EFI_TIMEOUT;
-    }
-  }
-
-  return EFI_SUCCESS;
+  return HandleKeyPress ();
 }
 
 /**
