@@ -931,7 +931,15 @@ ShowProgress (
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL Color;
 
   if (TimeoutDefault == 0) {
-    return EFI_TIMEOUT;
+    //
+    // this amounts to a poll -- 1 * 100ns timeout
+    //
+    Status = WaitForSingleEvent (gST->ConIn->WaitForKey, 1);
+
+    if (Status == EFI_TIMEOUT) {
+      return EFI_TIMEOUT;
+    }
+    return HandleKeyPress ();
   }
 
   DEBUG ((EFI_D_INFO, "\n\nStart showing progress bar... Press any key to stop it! ...Zzz....\n"));
