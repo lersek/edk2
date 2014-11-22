@@ -930,7 +930,9 @@ ScsiRead10Command (
   ScsiIo->GetDeviceLocation (ScsiIo, &Target, &Lun);
 
   Cdb[0]                        = EFI_SCSI_OP_READ10;
-  Cdb[1]                        = (UINT8) (LShiftU64 (Lun, 5) & EFI_SCSI_LOGICAL_UNIT_NUMBER_MASK);
+  if (FeaturePcdGet (PcdScsiReadWriteVerifyCdbLunEncoding)) {
+    Cdb[1]                      = (UINT8) (LShiftU64 (Lun, 5) & EFI_SCSI_LOGICAL_UNIT_NUMBER_MASK);
+  }
   WriteUnaligned32 ((UINT32 *)&Cdb[2], SwapBytes32 (StartLba));
   WriteUnaligned16 ((UINT16 *)&Cdb[7], SwapBytes16 ((UINT16) SectorSize));
 
@@ -1028,7 +1030,9 @@ ScsiWrite10Command (
   ScsiIo->GetDeviceLocation (ScsiIo, &Target, &Lun);
 
   Cdb[0]                        = EFI_SCSI_OP_WRITE10;
-  Cdb[1]                        = (UINT8) (LShiftU64 (Lun, 5) & EFI_SCSI_LOGICAL_UNIT_NUMBER_MASK);
+  if (FeaturePcdGet (PcdScsiReadWriteVerifyCdbLunEncoding)) {
+    Cdb[1]                      = (UINT8) (LShiftU64 (Lun, 5) & EFI_SCSI_LOGICAL_UNIT_NUMBER_MASK);
+  }
   WriteUnaligned32 ((UINT32 *)&Cdb[2], SwapBytes32 (StartLba));
   WriteUnaligned16 ((UINT16 *)&Cdb[7], SwapBytes16 ((UINT16) SectorSize));
 
@@ -1126,7 +1130,9 @@ ScsiRead16Command (
   ScsiIo->GetDeviceLocation (ScsiIo, &Target, &Lun);
 
   Cdb[0]                        = EFI_SCSI_OP_READ16;
-  Cdb[1]                        = (UINT8) (LShiftU64 (Lun, 5) & EFI_SCSI_LOGICAL_UNIT_NUMBER_MASK);
+  if (FeaturePcdGet (PcdScsiReadWriteVerifyCdbLunEncoding)) {
+    Cdb[1]                      = (UINT8) (LShiftU64 (Lun, 5) & EFI_SCSI_LOGICAL_UNIT_NUMBER_MASK);
+  }
   WriteUnaligned64 ((UINT64 *)&Cdb[2], SwapBytes64 (StartLba));
   WriteUnaligned32 ((UINT32 *)&Cdb[10], SwapBytes32 (SectorSize));
 
@@ -1224,7 +1230,9 @@ ScsiWrite16Command (
   ScsiIo->GetDeviceLocation (ScsiIo, &Target, &Lun);
 
   Cdb[0]                        = EFI_SCSI_OP_WRITE16;
-  Cdb[1]                        = (UINT8) (LShiftU64 (Lun, 5) & EFI_SCSI_LOGICAL_UNIT_NUMBER_MASK);
+  if (FeaturePcdGet (PcdScsiReadWriteVerifyCdbLunEncoding)) {
+    Cdb[1]                      = (UINT8) (LShiftU64 (Lun, 5) & EFI_SCSI_LOGICAL_UNIT_NUMBER_MASK);
+  }
   WriteUnaligned64 ((UINT64 *)&Cdb[2], SwapBytes64 (StartLba));
   WriteUnaligned32 ((UINT32 *)&Cdb[10], SwapBytes32 (SectorSize));
 

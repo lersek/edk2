@@ -1428,6 +1428,15 @@
   # @Prompt Validate ORDERED_COLLECTION structure
   gEfiMdePkgTokenSpaceGuid.PcdValidateOrderedCollection|FALSE|BOOLEAN|0x0000002a
 
+  ## Determines if UefiScsiLib encodes the Logical Unit Number (LUN) in bits
+  #  [7:5] in byte 1 of the Command Descriptor Block (CDB) for the the READ,
+  #  WRITE, VERIFY commands.<BR><BR>
+  #   TRUE  - Encode the LUN in bits [7:5] of Cdb[1] for READ, WRITE, VERIFY.<BR>
+  #   FALSE - Do not encode the LUN in bits [7:5] of Cdb[1] for READ, WRITE,
+  #           VERIFY.<BR>
+  # @Prompt Encode LUN in CDB for READ, WRITE, VERIFY.
+  gEfiMdePkgTokenSpaceGuid.PcdScsiReadWriteVerifyCdbLunEncoding|TRUE|BOOLEAN|0x0000002b
+
 [PcdsFixedAtBuild]
   ## Status code value for indicating a watchdog timer has expired.
   # EFI_COMPUTING_UNIT_HOST_PROCESSOR | EFI_CU_HP_EC_TIMER_EXPIRED

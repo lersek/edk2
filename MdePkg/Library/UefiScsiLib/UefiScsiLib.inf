@@ -43,3 +43,5 @@
   DebugLib
   BaseLib
 
+[FeaturePcd]
+  gEfiMdePkgTokenSpaceGuid.PcdScsiReadWriteVerifyCdbLunEncoding ## CONSUMES
