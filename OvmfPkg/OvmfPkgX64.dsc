@@ -295,6 +295,7 @@
 !if $(SECURE_BOOT_ENABLE) == TRUE
   gUefiOvmfPkgTokenSpaceGuid.PcdSecureBootEnable|TRUE
 !endif
+  gEfiMdePkgTokenSpaceGuid.PcdScsiReadWriteVerifyCdbLunEncoding|FALSE
 
 [PcdsFixedAtBuild]
   gEfiMdeModulePkgTokenSpaceGuid.PcdStatusCodeMemorySize|1
