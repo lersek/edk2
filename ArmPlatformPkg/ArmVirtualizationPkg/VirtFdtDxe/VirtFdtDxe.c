@@ -44,6 +44,7 @@ typedef enum {
   PropertyTypeUart,
   PropertyTypeTimer,
   PropertyTypePsci,
+  PropertyTypeFwCfg,
 } PROPERTY_TYPE;
 
 typedef struct {
@@ -59,6 +60,7 @@ STATIC CONST PROPERTY CompatibleProperties[] = {
   { PropertyTypeTimer,   "arm,armv7-timer"     },
   { PropertyTypeTimer,   "arm,armv8-timer"     },
   { PropertyTypePsci,    "arm,psci-0.2"        },
+  { PropertyTypeFwCfg,   "fw-cfg,mmio"         },
   { PropertyTypeUnknown, ""                    }
 };
 
@@ -115,6 +117,10 @@ InitializeVirtFdtDxe (
   CONST INTERRUPT_PROPERTY       *InterruptProp;
   INT32                          SecIntrNum, IntrNum, VirtIntrNum, HypIntrNum;
   CONST CHAR8                    *PsciMethod;
+  UINT64                         FwCfgSelectorAddress;
+  UINT64                         FwCfgSelectorSize;
+  UINT64                         FwCfgDataAddress;
+  UINT64                         FwCfgDataSize;
 
   DeviceTreeBase = (VOID *)(UINTN)PcdGet64 (PcdDeviceTreeBaseAddress);
   ASSERT (DeviceTreeBase != NULL);
@@ -160,6 +166,26 @@ InitializeVirtFdtDxe (
       (PropType == PropertyTypePsci));
 
     switch (PropType) {
+    case PropertyTypeFwCfg:
+      ASSERT (Len == 4 * sizeof (UINT64));
+
+      FwCfgSelectorAddress = fdt64_to_cpu (((UINT64 *)RegProp)[0]);
+      FwCfgSelectorSize    = fdt64_to_cpu (((UINT64 *)RegProp)[1]);
+      FwCfgDataAddress     = fdt64_to_cpu (((UINT64 *)RegProp)[2]);
+      FwCfgDataSize        = fdt64_to_cpu (((UINT64 *)RegProp)[3]);
+
+      ASSERT (FwCfgSelectorSize == 2);
+      ASSERT (FwCfgDataSize     == 1);
+      ASSERT (FwCfgSelectorAddress <= MAX_UINTN - FwCfgSelectorSize + 1);
+      ASSERT (FwCfgDataAddress     <= MAX_UINTN - FwCfgDataSize     + 1);
+
+      PcdSet64 (PcdFwCfgSelectorAddress, FwCfgSelectorAddress);
+      PcdSet64 (PcdFwCfgDataAddress,     FwCfgDataAddress);
+
+      DEBUG ((EFI_D_INFO, "Found FwCfg @ 0x%Lx/0x%Lx\n", FwCfgSelectorAddress,
+        FwCfgDataAddress));
+      break;
+
     case PropertyTypeVirtio:
       ASSERT (Len == 16);
       //
