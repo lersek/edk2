@@ -43,6 +43,7 @@
   VirtioLib|OvmfPkg/Library/VirtioLib/VirtioLib.inf
   VirtioMmioDeviceLib|OvmfPkg/Library/VirtioMmioDeviceLib/VirtioMmioDeviceLib.inf
   QemuFwCfgLib|ArmPlatformPkg/ArmVirtualizationPkg/Library/QemuFwCfgLib/QemuFwCfgLib.inf
+  QemuLoaderLib|OvmfPkg/Library/QemuLoaderLib/QemuLoaderLib.inf
 
   ArmPlatformLib|ArmPlatformPkg/ArmVirtualizationPkg/Library/ArmVirtualizationPlatformLib/ArmVirtualizationPlatformLib.inf
   ArmPlatformSysConfigLib|ArmPlatformPkg/Library/ArmPlatformSysConfigLibNull/ArmPlatformSysConfigLibNull.inf
@@ -280,3 +281,9 @@
   #
   MdeModulePkg/Bus/Scsi/ScsiBusDxe/ScsiBusDxe.inf
   MdeModulePkg/Bus/Scsi/ScsiDiskDxe/ScsiDiskDxe.inf
+
+  #
+  # ACPI Support
+  #
+  MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
+  ArmPlatformPkg/ArmVirtualizationPkg/AcpiPlatformDxe/AcpiPlatformDxe.inf
