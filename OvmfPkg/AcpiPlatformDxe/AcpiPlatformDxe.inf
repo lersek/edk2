@@ -51,7 +51,7 @@
   MemoryAllocationLib
   BaseLib
   DxeServicesTableLib
-  OrderedCollectionLib
+  QemuLoaderLib
 
 [Protocols]
   gEfiAcpiTableProtocolGuid                     # PROTOCOL ALWAYS_CONSUMED

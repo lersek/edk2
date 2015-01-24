@@ -24,6 +24,7 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/DebugLib.h>
 #include <Library/PcdLib.h>
+#include <Library/QemuLoaderLib.h>
 
 #include <IndustryStandard/Acpi.h>
 
@@ -58,12 +59,6 @@ XenDetected (
 EFI_STATUS
 EFIAPI
 InstallXenTables (
-  IN   EFI_ACPI_TABLE_PROTOCOL       *AcpiProtocol
-  );
-
-EFI_STATUS
-EFIAPI
-InstallAllQemuLinkedTables (
   IN   EFI_ACPI_TABLE_PROTOCOL       *AcpiProtocol
   );
 #endif
