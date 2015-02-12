@@ -24,6 +24,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   ArmPlatformPkg/ArmVirtualizationPkg/ArmVirtualizationPkg.dec
+  OvmfPkg/OvmfPkg.dec
 
 [LibraryClasses]
   UefiDriverEntryPoint
@@ -49,6 +50,7 @@
   gEfiPciRootBridgeIoProtocolGuid                       ## PRODUCES
   gEfiMetronomeArchProtocolGuid                         ## CONSUMES
   gEfiDevicePathProtocolGuid                            ## PRODUCES
+  gOvmfAcpiPlatformNoPciEnumerationProtocolGuid         ## SOMETIMES_PRODUCES
 
 [Pcd]
   gArmVirtualizationTokenSpaceGuid.PcdPciBusMin
@@ -59,6 +61,7 @@
   gArmVirtualizationTokenSpaceGuid.PcdPciMmioBase
   gArmVirtualizationTokenSpaceGuid.PcdPciMmioSize
   gArmVirtualizationTokenSpaceGuid.PcdPciMmioTranslation
+  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress
 
 [depex]
   gEfiMetronomeArchProtocolGuid
