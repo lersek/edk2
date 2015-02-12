@@ -56,3 +56,23 @@
 
   gArmVirtualizationTokenSpaceGuid.PcdFwCfgSelectorAddress|0x0|UINT64|0x00000004
   gArmVirtualizationTokenSpaceGuid.PcdFwCfgDataAddress|0x0|UINT64|0x00000005
+
+  #
+  # Inclusive range of allowed PCI buses.
+  #
+  gArmVirtualizationTokenSpaceGuid.PcdPciBusMin|0x0|UINT32|0x00000006
+  gArmVirtualizationTokenSpaceGuid.PcdPciBusMax|0x0|UINT32|0x00000007
+
+  #
+  # Bases, sizes and translation offsets of IO and MMIO spaces, respectively.
+  # Note that "IO" is just another MMIO range that simulates IO space, there
+  # are no special instructions to access it. In addition, the base addresses
+  # are address space relative; in order to get the physical address for the
+  # CPU, the translation value has to be added.
+  #
+  gArmVirtualizationTokenSpaceGuid.PcdPciIoBase|0x0|UINT64|0x00000008
+  gArmVirtualizationTokenSpaceGuid.PcdPciIoSize|0x0|UINT64|0x00000009
+  gArmVirtualizationTokenSpaceGuid.PcdPciIoTranslation|0x0|UINT64|0x0000000a
+  gArmVirtualizationTokenSpaceGuid.PcdPciMmioBase|0x0|UINT64|0x0000000b
+  gArmVirtualizationTokenSpaceGuid.PcdPciMmioSize|0x0|UINT64|0x0000000c
+  gArmVirtualizationTokenSpaceGuid.PcdPciMmioTranslation|0x0|UINT64|0x0000000d

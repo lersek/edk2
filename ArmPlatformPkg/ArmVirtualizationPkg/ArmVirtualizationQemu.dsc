@@ -181,6 +181,15 @@
 
   gArmVirtualizationTokenSpaceGuid.PcdFwCfgSelectorAddress|0x0
   gArmVirtualizationTokenSpaceGuid.PcdFwCfgDataAddress|0x0
+  gArmVirtualizationTokenSpaceGuid.PcdPciBusMin|0x0
+  gArmVirtualizationTokenSpaceGuid.PcdPciBusMax|0x0
+  gArmVirtualizationTokenSpaceGuid.PcdPciIoBase|0x0
+  gArmVirtualizationTokenSpaceGuid.PcdPciIoSize|0x0
+  gArmVirtualizationTokenSpaceGuid.PcdPciIoTranslation|0x0
+  gArmVirtualizationTokenSpaceGuid.PcdPciMmioBase|0x0
+  gArmVirtualizationTokenSpaceGuid.PcdPciMmioSize|0x0
+  gArmVirtualizationTokenSpaceGuid.PcdPciMmioTranslation|0x0
+  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress|0x0
 
   gEfiIntelFrameworkModulePkgTokenSpaceGuid.PcdPlatformBootTimeOut|3
 

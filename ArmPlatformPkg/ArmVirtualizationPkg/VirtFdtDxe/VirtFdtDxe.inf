@@ -50,6 +50,15 @@
   gArmVirtualizationTokenSpaceGuid.PcdArmPsciMethod
   gArmVirtualizationTokenSpaceGuid.PcdFwCfgSelectorAddress
   gArmVirtualizationTokenSpaceGuid.PcdFwCfgDataAddress
+  gArmVirtualizationTokenSpaceGuid.PcdPciBusMin
+  gArmVirtualizationTokenSpaceGuid.PcdPciBusMax
+  gArmVirtualizationTokenSpaceGuid.PcdPciIoBase
+  gArmVirtualizationTokenSpaceGuid.PcdPciIoSize
+  gArmVirtualizationTokenSpaceGuid.PcdPciIoTranslation
+  gArmVirtualizationTokenSpaceGuid.PcdPciMmioBase
+  gArmVirtualizationTokenSpaceGuid.PcdPciMmioSize
+  gArmVirtualizationTokenSpaceGuid.PcdPciMmioTranslation
+  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress
   gArmTokenSpaceGuid.PcdGicDistributorBase
   gArmTokenSpaceGuid.PcdGicInterruptInterfaceBase
   gArmTokenSpaceGuid.PcdArmArchTimerSecIntrNum
