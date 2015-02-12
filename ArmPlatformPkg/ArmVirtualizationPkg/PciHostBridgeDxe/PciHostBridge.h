@@ -36,6 +36,7 @@
 #include <Library/DevicePathLib.h>
 #include <Library/IoLib.h>
 #include <Library/PciLib.h>
+#include <Library/PcdLib.h>
 
 //
 // Hard code the host bridge number in the platform.
@@ -400,9 +401,11 @@ typedef struct {
   
   UINT64          MemBase;     
   UINT64          MemLimit;    
+  UINT64          MemTranslation;
   
   UINT64          IoBase; 
   UINT64          IoLimit;     
+  UINT64          IoTranslation;
 } PCI_ROOT_BRIDGE_RESOURCE_APERTURE;
 
 typedef enum {
