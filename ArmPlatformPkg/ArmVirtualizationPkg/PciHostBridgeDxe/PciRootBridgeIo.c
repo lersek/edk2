@@ -640,11 +640,12 @@ RootBridgeConstructor (
   PrivateData = DRIVER_INSTANCE_FROM_PCI_ROOT_BRIDGE_IO_THIS (Protocol);
 
   //
-  // The host to pci bridge, the host memory and io addresses are
-  // direct mapped to pci addresses, so no need translate, set bases to 0.
+  // The host to pci bridge.
   //
-  PrivateData->MemBase = ResAperture->MemBase;
-  PrivateData->IoBase  = ResAperture->IoBase;
+  PrivateData->MemBase        = ResAperture->MemBase;
+  PrivateData->MemTranslation = ResAperture->MemTranslation;
+  PrivateData->IoBase         = ResAperture->IoBase;
+  PrivateData->IoTranslation  = ResAperture->IoTranslation;
 
   //
   // The host bridge only supports 32bit addressing for memory
@@ -886,6 +887,7 @@ RootBridgeIoMemRW (
   )
 {
   EFI_STATUS                             Status;
+  PCI_ROOT_BRIDGE_INSTANCE               *PrivateData;
   UINT8                                  InStride;
   UINT8                                  OutStride;
   EFI_PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH  OperationWidth;
@@ -895,6 +897,9 @@ RootBridgeIoMemRW (
   if (EFI_ERROR (Status)) {
     return Status;
   }
+
+  PrivateData = DRIVER_INSTANCE_FROM_PCI_ROOT_BRIDGE_IO_THIS (This);
+  Address += PrivateData->MemTranslation;
 
   InStride = mInStride[Width];
   OutStride = mOutStride[Width];
@@ -978,6 +983,7 @@ RootBridgeIoIoRW (
   )
 {
   EFI_STATUS                             Status;
+  PCI_ROOT_BRIDGE_INSTANCE               *PrivateData;
   UINT8                                  InStride;
   UINT8                                  OutStride;
   EFI_PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH  OperationWidth;
@@ -987,6 +993,9 @@ RootBridgeIoIoRW (
   if (EFI_ERROR (Status)) {
     return Status;
   }
+
+  PrivateData = DRIVER_INSTANCE_FROM_PCI_ROOT_BRIDGE_IO_THIS (This);
+  Address += PrivateData->IoTranslation;
 
   InStride = mInStride[Width];
   OutStride = mOutStride[Width];
