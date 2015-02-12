@@ -59,6 +59,7 @@
   gArmPlatformTokenSpaceGuid.PcdPciMmioBase
   gArmPlatformTokenSpaceGuid.PcdPciMmioSize
   gArmPlatformTokenSpaceGuid.PcdPciMmioTranslation
+  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress
 
 [depex]
   gEfiMetronomeArchProtocolGuid
