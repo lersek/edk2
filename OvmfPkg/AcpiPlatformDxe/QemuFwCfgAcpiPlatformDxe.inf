@@ -47,7 +47,7 @@
   gEfiAcpiTableProtocolGuid                     # PROTOCOL ALWAYS_CONSUMED
 
 [Depex]
-  gEfiAcpiTableProtocolGuid
-
-[Depex.IA32, Depex.X64]
-  gEfiPciEnumerationCompleteProtocolGuid
+  gEfiAcpiTableProtocolGuid AND
+  ( gEfiPciEnumerationCompleteProtocolGuid OR
+    gOvmfAcpiPlatformNoPciEnumerationProtocolGuid
+    )
