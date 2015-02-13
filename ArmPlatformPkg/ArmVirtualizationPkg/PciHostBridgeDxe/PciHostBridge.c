@@ -416,8 +416,9 @@ NotifyPhase(
                   BitsOfAlignment = 0;
                 }
                   
+                BaseAddress = mResAperture[0][0].MemLimit;
                 Status = gDS->AllocateMemorySpace (
-                                EfiGcdAllocateAnySearchBottomUp, 
+                                EfiGcdAllocateMaxAddressSearchTopDown,
                                 EfiGcdMemoryTypeMemoryMappedIo, 
                                 BitsOfAlignment,
                                 AddrLen,
