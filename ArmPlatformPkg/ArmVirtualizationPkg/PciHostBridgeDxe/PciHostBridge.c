@@ -97,6 +97,7 @@ InitializePciHostBridge (
   IN EFI_SYSTEM_TABLE  *SystemTable
   )
 {
+  UINT64                      MmioAttributes;
   EFI_STATUS                  Status;
   UINTN                       Loop1;
   UINTN                       Loop2;
@@ -134,11 +135,21 @@ InitializePciHostBridge (
                   );
   ASSERT_EFI_ERROR (Status);
 
+  MmioAttributes = FeaturePcdGet (PcdKludgeMapPciMmioAsCached) ?
+                   EFI_MEMORY_WB : EFI_MEMORY_UC;
+
   Status = gDS->AddMemorySpace (
                   EfiGcdMemoryTypeMemoryMappedIo,
                   PcdGet64 (PcdPciMmioBase),
                   PcdGet64 (PcdPciMmioSize),
-                  EFI_MEMORY_UC
+                  MmioAttributes
+                  );
+  ASSERT_EFI_ERROR (Status);
+
+  Status = gDS->SetMemorySpaceAttributes (
+                  PcdGet64 (PcdPciMmioBase),
+                  PcdGet64 (PcdPciMmioSize),
+                  MmioAttributes
                   );
   ASSERT_EFI_ERROR (Status);
 
