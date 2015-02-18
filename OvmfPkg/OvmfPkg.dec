@@ -106,3 +106,9 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdSecureBootEnable|FALSE|BOOLEAN|3
   gUefiOvmfPkgTokenSpaceGuid.PcdQemuBootOrderPciTranslation|TRUE|BOOLEAN|0x1c
   gUefiOvmfPkgTokenSpaceGuid.PcdQemuBootOrderMmioTranslation|FALSE|BOOLEAN|0x1d
+
+[PcdsFixedAtBuild, PcdsDynamic, PcdsDynamicEx]
+  ## Setting this to FALSE indicates for OvmfPkg modules that the platform
+  #  described by the DSC file -- which falls outside of OvmfPkg/ and includes
+  #  those modules -- does not support PCI (ie. there is no host bridge).
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPciEnabled|TRUE|BOOLEAN|0x1e

@@ -302,6 +302,7 @@
 !endif
 
 [PcdsFixedAtBuild]
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPciEnabled|TRUE
   gEfiMdeModulePkgTokenSpaceGuid.PcdStatusCodeMemorySize|1
   gEfiMdeModulePkgTokenSpaceGuid.PcdResetOnMemoryTypeInformationChange|FALSE
   gEfiMdePkgTokenSpaceGuid.PcdMaximumGuidedExtractHandler|0x10
