@@ -152,6 +152,48 @@
   gArmPlatformTokenSpaceGuid.PcdPL031RtcBase|0x0|UINT32|0x00000024
   gArmPlatformTokenSpaceGuid.PcdPL031RtcPpmAccuracy|300000000|UINT32|0x00000022
 
+  #
+  # Inclusive range of allowed PCI buses.
+  #
+  gArmPlatformTokenSpaceGuid.PcdPciBusMin|0x0|UINT32|0x0000003E
+  gArmPlatformTokenSpaceGuid.PcdPciBusMax|0x0|UINT32|0x0000003F
+
+  #
+  # Bases, sizes and translation offsets of IO and MMIO spaces, respectively.
+  # Note that "IO" is just another MMIO range that simulates IO space; there
+  # are no special instructions to access it.
+  #
+  # The base addresses PcdPciIoBase and PcdPciMmioBase are specific to their
+  # containing address spaces. In order to get the physical address for the
+  # CPU, for a given access, the respective translation value has to be added.
+  #
+  # The translations always have to be initialized like this, using UINT64:
+  #
+  #   PcdPciIoTranslation   = (UINT64)IoCpuBase   - PcdPciIoBase;
+  #   PcdPciMmioTranslation = (UINT64)MmioCpuBase - PcdPciMmioBase;
+  #
+  # because the translation values are meant as offsets for *modular*
+  # arithmetic. Accordingly, the translation itself needs to be implemented as:
+  #
+  #   UINT64 UntranslatedIoAddress;   // input parameter
+  #   UINT64 TranslatedIoAddress;     // output parameter
+  #   UINT64 UntranslatedMmioAddress; // input parameter
+  #   UINT64 TranslatedMmioAddress;   // output parameter
+  #
+  #   TranslatedIoAddress   = UntranslatedIoAddress   + PcdPciIoTranslation;
+  #   TranslatedMmioAddress = UntranslatedMmioAddress + PcdPciMmioTranslation;
+  #
+  #  The modular arithmetic performed in UINT64 ensures that the translation
+  #  works correctly regardless of the relation between IoCpuBase and
+  #  PcdPciIoBase, and between MmioCpuBase and PcdPciMmioBase.
+  #
+  gArmPlatformTokenSpaceGuid.PcdPciIoBase|0x0|UINT64|0x00000040
+  gArmPlatformTokenSpaceGuid.PcdPciIoSize|0x0|UINT64|0x00000041
+  gArmPlatformTokenSpaceGuid.PcdPciIoTranslation|0x0|UINT64|0x00000042
+  gArmPlatformTokenSpaceGuid.PcdPciMmioBase|0x0|UINT64|0x00000043
+  gArmPlatformTokenSpaceGuid.PcdPciMmioSize|0x0|UINT64|0x00000044
+  gArmPlatformTokenSpaceGuid.PcdPciMmioTranslation|0x0|UINT64|0x00000045
+
 [PcdsFixedAtBuild.ARM]
   # Stack for CPU Cores in Secure Monitor Mode
   gArmPlatformTokenSpaceGuid.PcdCPUCoresSecMonStackBase|0|UINT32|0x00000007
