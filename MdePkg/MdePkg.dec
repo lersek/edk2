@@ -1543,6 +1543,19 @@
   # @Prompt Validate ORDERED_COLLECTION structure
   gEfiMdePkgTokenSpaceGuid.PcdValidateOrderedCollection|FALSE|BOOLEAN|0x0000002a
 
+  ## If TRUE, then the constructor of BaseExtractGuidedSectionLib will force a
+  #  reinitialization of the table of GUIDed section handlers, located at
+  #  PcdGuidedExtractHandlerTableAddress. This is useful when
+  #  BaseExtractGuidedSectionLib is linked into a SEC module that runs with RAM
+  #  ready, and the prior memory contents at
+  #  PcdGuidedExtractHandlerTableAddress are untrusted.
+  #
+  #  The PCD should be left at FALSE generally, and overridden only for
+  #  individual SEC modules, with <PcdsFeatureFlag> stanzas in the [Components]
+  #  sections of DSC files.
+  #  @Prompt Force table initialization in BaseExtractGuidedSectionLib
+  gEfiMdePkgTokenSpaceGuid.PcdBaseExtractGuidedSectionLibForceInit|FALSE|BOOLEAN|0x0000002d
+
 [PcdsFixedAtBuild]
   ## Status code value for indicating a watchdog timer has expired.
   # EFI_COMPUTING_UNIT_HOST_PROCESSOR | EFI_CU_HP_EC_TIMER_EXPIRED

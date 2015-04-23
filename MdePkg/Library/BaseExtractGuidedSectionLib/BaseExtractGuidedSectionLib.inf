@@ -8,6 +8,7 @@
 #  the implementation of runtime services, because this BASE library instance doesn't 
 #  convert the address pointed by PcdGuidedExtractHandlerTableAddress to the virtual address.
 #  
+#  Copyright (C) 2015, Red Hat, Inc.<BR>
 #  Copyright (c) 2007 - 2014, Intel Corporation. All rights reserved.<BR>
 #
 #  This program and the accompanying materials
@@ -27,6 +28,7 @@
   MODULE_TYPE                    = BASE
   VERSION_STRING                 = 1.0
   LIBRARY_CLASS                  = ExtractGuidedSectionLib
+  CONSTRUCTOR                    = BaseExtractGuidedSectionLibInit
 
 #
 # The following information is for reference only and not required by the build tools.
@@ -49,3 +51,5 @@
   gEfiMdePkgTokenSpaceGuid.PcdMaximumGuidedExtractHandler         ## CONSUMES
   gEfiMdePkgTokenSpaceGuid.PcdGuidedExtractHandlerTableAddress    ## CONSUMES
 
+[FeaturePcd]
+  gEfiMdePkgTokenSpaceGuid.PcdBaseExtractGuidedSectionLibForceInit ## CONSUMES
