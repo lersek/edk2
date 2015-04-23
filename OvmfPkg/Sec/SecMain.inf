@@ -67,3 +67,4 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfSecPageTablesBase
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfSecPeiTempRamBase
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfSecPeiTempRamSize
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfDecomprScratchEnd
