@@ -1,6 +1,7 @@
 /** @file
   Provide generic extract guided section functions.
 
+  Copyright (C) 2015, Red Hat, Inc.<BR>
   Copyright (c) 2007 - 2011, Intel Corporation. All rights reserved.<BR>
   This program and the accompanying materials
   are licensed and made available under the terms and conditions of the BSD License
@@ -28,6 +29,36 @@ typedef struct {
   EXTRACT_GUIDED_SECTION_DECODE_HANDLER   *ExtractDecodeHandlerTable;
   EXTRACT_GUIDED_SECTION_GET_INFO_HANDLER *ExtractGetInfoHandlerTable;
 } EXTRACT_GUIDED_SECTION_HANDLER_INFO;
+
+/**
+  The library constructor is generally a no-op. However, when linked into a SEC
+  module that runs with RAM available, the platform description file should
+  enable the constructor to force a table reinitialization in
+  GetExtractGuidedSectionHandlerInfo() below, if the memory that SEC runs on is
+  not trusted.
+**/
+RETURN_STATUS
+EFIAPI
+BaseExtractGuidedSectionLibInit (
+  VOID
+  )
+{
+  EXTRACT_GUIDED_SECTION_HANDLER_INFO *HandlerInfo;
+
+  if (!FeaturePcdGet (PcdBaseExtractGuidedSectionLibForceInit)) {
+    return RETURN_SUCCESS;
+  }
+
+  HandlerInfo = (VOID*)(UINTN)PcdGet64 (PcdGuidedExtractHandlerTableAddress);
+  if (HandlerInfo == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  HandlerInfo->Signature = 0;
+  DEBUG ((DEBUG_VERBOSE, "%a: cleared handler table signature\n",
+    __FUNCTION__));
+  return RETURN_SUCCESS;
+}
 
 /**
   HandlerInfo table address is set by PcdGuidedExtractHandlerTableAddress, which is used to store 
