@@ -76,6 +76,7 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdGuidedExtractHandlerTableSize
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfHostBridgePciDevId
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfDecomprScratchEnd
+  gUefiOvmfPkgTokenSpaceGuid.PcdQ35TsegMbytes
   gEfiIntelFrameworkModulePkgTokenSpaceGuid.PcdS3AcpiReservedMemorySize
   gEfiMdePkgTokenSpaceGuid.PcdGuidedExtractHandlerTableAddress
   gEfiMdeModulePkgTokenSpaceGuid.PcdVariableStoreSize
