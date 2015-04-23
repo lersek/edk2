@@ -387,6 +387,10 @@
   OvmfPkg/Sec/SecMain.inf {
     <LibraryClasses>
       NULL|IntelFrameworkModulePkg/Library/LzmaCustomDecompressLib/LzmaCustomDecompressLib.inf
+!if $(SMM_REQUIRE) == TRUE
+    <PcdsFeatureFlag>
+      gEfiMdePkgTokenSpaceGuid.PcdBaseExtractGuidedSectionLibForceInit|TRUE
+!endif
   }
 
   #
