@@ -105,6 +105,12 @@ PublishPeiMemory (
     MemorySize = PcdGet32 (PcdS3AcpiReservedMemorySize);
   } else {
     LowerMemorySize = GetSystemMemorySizeBelow4gb ();
+    if (FeaturePcdGet (PcdSmmSmramRequire)) {
+      //
+      // TSEG is chipped from the end of low RAM
+      //
+      LowerMemorySize -= FixedPcdGet8 (PcdQ35TsegMbytes) * SIZE_1MB;
+    }
 
     //
     // Determine the range of memory to use during PEI
@@ -161,7 +167,17 @@ QemuInitializeRam (
     //
     // Create memory HOBs
     //
-    AddMemoryRangeHob (BASE_1MB, LowerMemorySize);
+    if (FeaturePcdGet (PcdSmmSmramRequire)) {
+      UINT32 TsegSize;
+
+      TsegSize = FixedPcdGet8 (PcdQ35TsegMbytes) * SIZE_1MB;
+      AddMemoryRangeHob (BASE_1MB, LowerMemorySize - TsegSize);
+      AddReservedMemoryBaseSizeHob (LowerMemorySize - TsegSize, TsegSize,
+        TRUE);
+    } else {
+      AddMemoryRangeHob (BASE_1MB, LowerMemorySize);
+    }
+
     AddMemoryRangeHob (0, BASE_512KB + BASE_128KB);
   }
 
@@ -258,5 +274,20 @@ InitializeRamRegions (
       (UINT64)(UINTN) PcdGet32 (PcdOvmfLockBoxStorageSize),
       mS3Supported ? EfiACPIMemoryNVS : EfiBootServicesData
       );
+
+    if (FeaturePcdGet (PcdSmmSmramRequire)) {
+      UINT32 TsegSize;
+
+      //
+      // Make sure the TSEG area that we reported as a reserved memory resource
+      // cannot be used for reserved memory allocations.
+      //
+      TsegSize = FixedPcdGet8 (PcdQ35TsegMbytes) * SIZE_1MB;
+      BuildMemoryAllocationHob (
+        GetSystemMemorySizeBelow4gb() - TsegSize,
+        TsegSize,
+        EfiReservedMemoryType
+        );
+    }
   }
 }
