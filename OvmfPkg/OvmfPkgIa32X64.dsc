@@ -35,6 +35,7 @@
   #
   DEFINE SECURE_BOOT_ENABLE      = FALSE
   DEFINE NETWORK_IP6_ENABLE      = FALSE
+  DEFINE SMM_REQUIRE             = FALSE
 
 [BuildOptions]
   GCC:*_UNIXGCC_*_CC_FLAGS             = -DMDEPKG_NDEBUG
@@ -300,6 +301,9 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutUgaSupport|FALSE
 !if $(SECURE_BOOT_ENABLE) == TRUE
   gUefiOvmfPkgTokenSpaceGuid.PcdSecureBootEnable|TRUE
+!endif
+!if $(SMM_REQUIRE) == TRUE
+  gUefiOvmfPkgTokenSpaceGuid.PcdSmmSmramRequire|TRUE
 !endif
 
 [PcdsFixedAtBuild]
