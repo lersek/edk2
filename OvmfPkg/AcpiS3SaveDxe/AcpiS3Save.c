@@ -603,7 +603,8 @@ InstallAcpiS3Save (
   Status = gBS->InstallMultipleProtocolInterfaces (
                   &ImageHandle,
                   &gEfiAcpiS3SaveProtocolGuid, &mS3Save,
-                  &gEfiLockBoxProtocolGuid, NULL,
+                  (FeaturePcdGet (PcdSmmSmramRequire) ?
+                   NULL : &gEfiLockBoxProtocolGuid), NULL,
                   NULL
                   );
   ASSERT_EFI_ERROR (Status);

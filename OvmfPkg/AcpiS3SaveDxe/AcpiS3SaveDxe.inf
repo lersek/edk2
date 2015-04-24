@@ -61,7 +61,7 @@
 
 [Protocols]
   gEfiAcpiS3SaveProtocolGuid                    # PROTOCOL ALWAYS_PRODUCED
-  gEfiLockBoxProtocolGuid                       # PROTOCOL ALWAYS_PRODUCED
+  gEfiLockBoxProtocolGuid                       # PROTOCOL SOMETIMES_PRODUCED
   gEfiLegacyBiosProtocolGuid                    # PROTOCOL ALWAYS_CONSUMED
   gEfiLegacyRegion2ProtocolGuid                 # PROTOCOL SOMETIMES_CONSUMED
   gFrameworkEfiMpServiceProtocolGuid            # PROTOCOL SOMETIMES_CONSUMED
@@ -76,6 +76,7 @@
   gEfiIntelFrameworkModulePkgTokenSpaceGuid.PcdS3AcpiReservedMemorySize    ## CONSUMES
   gEfiIntelFrameworkModulePkgTokenSpaceGuid.PcdS3BootScriptStackSize       ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdUse1GPageTable
+  gUefiOvmfPkgTokenSpaceGuid.PcdSmmSmramRequire                            ## CONSUMES
 
 [Depex]
   gEfiVariableArchProtocolGuid AND gEfiVariableWriteArchProtocolGuid AND gEfiS3SaveStateProtocolGuid
