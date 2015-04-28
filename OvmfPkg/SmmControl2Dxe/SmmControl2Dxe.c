@@ -195,12 +195,14 @@ SmmControl2DxeEntryPoint (
   // If we can clear GBL_SMI_EN now, that means QEMU's SMI support is not
   // appropriate.
   //
+#if 0
   IoWrite32 (SmiEnable, SmiEnableVal & ~(UINT32)ICH9_SMI_EN_GBL_SMI_EN);
   if (IoRead32 (SmiEnable) != SmiEnableVal) {
     DEBUG ((EFI_D_ERROR, "%a: failed to lock down GBL_SMI_EN\n",
       __FUNCTION__));
     goto WrongConfig;
   }
+#endif
 
   //
   // We're done.
