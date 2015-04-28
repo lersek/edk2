@@ -73,6 +73,16 @@ SmmControl2DxeTrigger (
   }
 
   //
+  // These steps are explained in detail in the entry point. We need to repeat
+  // them here because SMI_LOCK doesn't lock APMC_EN.
+  //
+  IoOr32 (
+    ((PciRead32 (POWER_MGMT_REGISTER_Q35 (ICH9_PMBASE)) & ICH9_PMBASE_MASK) +
+     ICH9_PMBASE_OFS_SMI_EN),
+    ICH9_SMI_EN_APMC_EN
+    );
+
+  //
   // The so-called "Advanced Power Management Status Port Register" is in fact
   // a generic data passing register, between the caller and the SMI
   // dispatcher. The ICH9 spec calls it "scratchpad register" --  calling it
