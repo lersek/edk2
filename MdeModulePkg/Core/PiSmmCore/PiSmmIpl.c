@@ -1213,12 +1213,14 @@ SmmIplEntry (
       // Attempt to reset SMRAM cacheability to UC
       //
       if (CpuArch != NULL) {
-        Status = gDS->SetMemorySpaceAttributes(
-                        mSmramCacheBase, 
-                        mSmramCacheSize,
-                        EFI_MEMORY_UC
-                        );
-        if (EFI_ERROR (Status)) {
+        EFI_STATUS SetAttrStatus;
+
+        SetAttrStatus = gDS->SetMemorySpaceAttributes(
+                               mSmramCacheBase,
+                               mSmramCacheSize,
+                               EFI_MEMORY_UC
+                               );
+        if (EFI_ERROR (SetAttrStatus)) {
           DEBUG ((DEBUG_WARN, "SMM IPL failed to reset SMRAM window to EFI_MEMORY_UC\n"));
         }  
       }
