@@ -613,3 +613,7 @@
 !endif
 
   OvmfPkg/PlatformDxe/Platform.inf
+
+!if $(SMM_REQUIRE) == TRUE
+  OvmfPkg/SmmAccess/SmmAccess2Dxe.inf
+!endif
