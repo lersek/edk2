@@ -21,8 +21,19 @@
 
 [Includes]
   Include
+  QuarkPort/Include
 
 [LibraryClasses]
+  ## Library classes imported from "Quark_EDKII_v1.1.0/IA32FamilyCpuBasePkg/"
+  #  follow.
+
+  ##  @libraryclass  CPU Configuration Library
+  #
+  CpuConfigLib|QuarkPort/Include/Library/CpuConfigLib.h
+
+  ## OvmfPkg's own library classes are listed below.
+  #
+
   ##  @libraryclass  Loads and boots a Linux kernel image
   #
   LoadLinuxLib|Include/Library/LoadLinuxLib.h
