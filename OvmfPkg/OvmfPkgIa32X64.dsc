@@ -333,6 +333,10 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdSmmSmramRequire|TRUE
 !endif
 
+  ## Feature PCDs imported from
+  #  "Quark_EDKII_v1.1.0/IA32FamilyCpuBasePkg/IA32FamilyCpuBasePkg.dsc" follow.
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmEnableBspElection|FALSE
+
 [PcdsFixedAtBuild]
   gEfiMdeModulePkgTokenSpaceGuid.PcdStatusCodeMemorySize|1
   gEfiMdeModulePkgTokenSpaceGuid.PcdResetOnMemoryTypeInformationChange|FALSE
@@ -393,6 +397,11 @@
   # Set video resolution for text setup.
   gEfiIntelFrameworkModulePkgTokenSpaceGuid.PcdSetupVideoHorizontalResolution|640
   gEfiIntelFrameworkModulePkgTokenSpaceGuid.PcdSetupVideoVerticalResolution|480
+
+  ## Dynamic PCD defaults imported from
+  #  "Quark_EDKII_v1.1.0/IA32FamilyCpuBasePkg/IA32FamilyCpuBasePkg.dsc" follow.
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuConfigContextBuffer|0
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuCallbackSignal|0
 
 ################################################################################
 #

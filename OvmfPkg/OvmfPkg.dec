@@ -117,6 +117,17 @@
   #  This PCD is only consulted if PcdSmmSmramRequire is TRUE (see below).
   gUefiOvmfPkgTokenSpaceGuid.PcdQ35TsegMbytes|1|UINT8|0x20
 
+  ## Fixed PCDs imported from
+  #  "Quark_EDKII_v1.1.0/IA32FamilyCpuBasePkg/IA32FamilyCpuBasePkg.dec" follow.
+
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmApSyncTimeout|1000000|UINT64|0x32132104
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmStackSize|0x2000|UINT32|0x32132105
+  ##
+  #  The PCD is used to specify memory size with bytes to save SMM profile
+  #  data. The value should be a multiple of 4KB.
+  ##
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmProfileSize|0x200000|UINT32|0x32132107
+
 [PcdsFixedAtBuild]
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashNvStorageEventLogBase|0x0|UINT32|0x8
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashNvStorageEventLogSize|0x0|UINT32|0x9
@@ -141,6 +152,13 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashVariablesEnable|FALSE|BOOLEAN|0x10
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfHostBridgePciDevId|0|UINT16|0x1b
 
+  ## Dynamic(Ex) PCDs imported from
+  #  "Quark_EDKII_v1.1.0/IA32FamilyCpuBasePkg/IA32FamilyCpuBasePkg.dec" follow.
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuConfigContextBuffer|0x0|UINT64|0x50000001
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuCallbackSignal|0x0|UINT8|0x50000002
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuS3DataAddress|0x0|UINT64|0x60000010
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuHotPlugDataAddress|0x0|UINT64|0x60000011
+
 [PcdsFeatureFlag]
   gUefiOvmfPkgTokenSpaceGuid.PcdSecureBootEnable|FALSE|BOOLEAN|3
   gUefiOvmfPkgTokenSpaceGuid.PcdQemuBootOrderPciTranslation|TRUE|BOOLEAN|0x1c
@@ -155,3 +173,20 @@
   #  runtime OS from tampering with firmware structures (special memory ranges
   #  used by OVMF, the varstore pflash chip, LockBox etc).
   gUefiOvmfPkgTokenSpaceGuid.PcdSmmSmramRequire|FALSE|BOOLEAN|0x1e
+
+  ## Feature PCDs imported from
+  #  "Quark_EDKII_v1.1.0/IA32FamilyCpuBasePkg/IA32FamilyCpuBasePkg.dec" follow.
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmEnableBspElection|TRUE|BOOLEAN|0x32132106
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmDebug|FALSE|BOOLEAN|0x1000001B
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmStackGuard|FALSE|BOOLEAN|0x1000001C
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmBlockStartupThisAp|FALSE|BOOLEAN|0x32132108
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmProfileEnable|FALSE|BOOLEAN|0x32132109
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmProfileRingBuffer|FALSE|BOOLEAN|0x3213210a
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmUncacheCpuSyncData|FALSE|BOOLEAN|0x3213210D
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuHotPlugSupport|FALSE|BOOLEAN|0x3213210C
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmFeatureControlMsrLock|TRUE|BOOLEAN|0x3213210B
+
+[PcdsFixedAtBuild, PcdsPatchableInModule, PcdsDynamic, PcdsDynamicEx]
+  ## Fixed / Patchable / Dynamic(Ex) PCDs imported from
+  #  "Quark_EDKII_v1.1.0/IA32FamilyCpuBasePkg/IA32FamilyCpuBasePkg.dec" follow.
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmCodeAccessCheckEnable|TRUE|BOOLEAN|0x60000013
