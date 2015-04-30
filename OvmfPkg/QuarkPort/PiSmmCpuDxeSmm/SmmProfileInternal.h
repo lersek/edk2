@@ -42,7 +42,7 @@
 #include <Library/CpuLib.h>
 #include <IndustryStandard/Acpi.h>
 
-#include "SmmProfileArch.h"
+#include "Ia32/SmmProfileArch.h"
 
 //
 // Config the SMM_PROFILE DTS region size
