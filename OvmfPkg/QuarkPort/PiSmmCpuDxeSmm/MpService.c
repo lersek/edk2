@@ -456,13 +456,6 @@ BSPHandler (
   }
 
   //
-  // Set the EOS bit before SMI resume.
-  //
-  // BUGBUG: The following is a chipset specific action from a CPU module.
-  //
-  ClearSmi();
-
-  //
   // If Relaxed-AP Sync Mode: gather all available APs after BSP SMM handlers are done, and
   // make those APs to exit SMI synchronously. APs which arrive later will be excluded and 
   // will run through freely.

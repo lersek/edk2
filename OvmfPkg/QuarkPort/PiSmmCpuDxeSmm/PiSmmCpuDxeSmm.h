@@ -50,7 +50,6 @@
 #include <Library/BaseLib.h>
 #include <Library/IoLib.h>
 #include <Library/TimerLib.h>
-#include <Library/SmmLib.h>
 #include <Library/SynchronizationLib.h>
 #include <Library/DebugLib.h>
 #include <Library/BaseMemoryLib.h>
