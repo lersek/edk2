@@ -61,5 +61,5 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-  IA32FamilyCpuBasePkg/IA32FamilyCpuBasePkg.dec
+  OvmfPkg/OvmfPkg.dec
 
