@@ -82,7 +82,7 @@
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   UefiCpuPkg/UefiCpuPkg.dec
-  IA32FamilyCpuBasePkg/IA32FamilyCpuBasePkg.dec
+  OvmfPkg/OvmfPkg.dec
   IntelFrameworkPkg/IntelFrameworkPkg.dec
 
 [LibraryClasses]
