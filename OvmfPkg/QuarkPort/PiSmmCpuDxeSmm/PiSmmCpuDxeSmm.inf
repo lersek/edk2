@@ -140,7 +140,7 @@
   gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmFeatureControlMsrLock
 
 [FixedPcd]
-  gQuarkPortCpuTokenSpaceGuid.PcdCpuMaxLogicalProcessorNumber
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuMaxLogicalProcessorNumber
   gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmProfileSize
   
 [Pcd]
