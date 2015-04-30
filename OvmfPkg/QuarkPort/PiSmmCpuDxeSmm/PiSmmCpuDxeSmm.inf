@@ -129,26 +129,26 @@
   
 [FeaturePcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdFrameworkCompatibilitySupport
-  gEfiCpuTokenSpaceGuid.PcdCpuSmmBlockStartupThisAp
-  gEfiCpuTokenSpaceGuid.PcdCpuSmmEnableBspElection
-  gEfiCpuTokenSpaceGuid.PcdCpuSmmDebug
-  gEfiCpuTokenSpaceGuid.PcdCpuSmmUncacheCpuSyncData
-  gEfiCpuTokenSpaceGuid.PcdCpuHotPlugSupport
-  gEfiCpuTokenSpaceGuid.PcdCpuSmmStackGuard
-  gEfiCpuTokenSpaceGuid.PcdCpuSmmProfileEnable  
-  gEfiCpuTokenSpaceGuid.PcdCpuSmmProfileRingBuffer
-  gEfiCpuTokenSpaceGuid.PcdCpuSmmFeatureControlMsrLock
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmBlockStartupThisAp
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmEnableBspElection
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmDebug
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmUncacheCpuSyncData
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuHotPlugSupport
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmStackGuard
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmProfileEnable  
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmProfileRingBuffer
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmFeatureControlMsrLock
 
 [FixedPcd]
-  gEfiCpuTokenSpaceGuid.PcdCpuMaxLogicalProcessorNumber
-  gEfiCpuTokenSpaceGuid.PcdCpuSmmProfileSize
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuMaxLogicalProcessorNumber
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmProfileSize
   
 [Pcd]
-  gEfiCpuTokenSpaceGuid.PcdCpuSmmStackSize
-  gEfiCpuTokenSpaceGuid.PcdCpuSmmApSyncTimeout
-  gEfiCpuTokenSpaceGuid.PcdCpuS3DataAddress
-  gEfiCpuTokenSpaceGuid.PcdCpuHotPlugDataAddress
-  gEfiCpuTokenSpaceGuid.PcdCpuSmmCodeAccessCheckEnable
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmStackSize
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmApSyncTimeout
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuS3DataAddress
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuHotPlugDataAddress
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuSmmCodeAccessCheckEnable
 
 [Depex]
   gEfiMpServiceProtocolGuid
