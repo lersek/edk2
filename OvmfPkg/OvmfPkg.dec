@@ -36,6 +36,10 @@
   #
   Socket775LgaLib|QuarkPort/Include/Library/SocketLga775Lib.h
 
+  ##  @libraryclass  SMM CPU Platform Hook Library
+  #
+  SmmCpuPlatformHookLib|QuarkPort/Include/Library/SmmCpuPlatformHookLib.h
+
   ## OvmfPkg's own library classes are listed below.
   #
 
