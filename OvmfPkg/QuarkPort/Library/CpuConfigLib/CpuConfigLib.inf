@@ -69,6 +69,6 @@
 
 
 [Pcd]
-  gEfiCpuTokenSpaceGuid.PcdCpuCallbackSignal
-  gEfiCpuTokenSpaceGuid.PcdCpuConfigContextBuffer
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuCallbackSignal
+  gQuarkPortCpuTokenSpaceGuid.PcdCpuConfigContextBuffer
 
