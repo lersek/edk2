@@ -184,7 +184,7 @@ GetSourceFromDestinationOnBts (
   
   FirstMatch = FALSE;
 
-  CurrentBTSRecord = (BRANCH_TRACE_RECORD *)mMsrDsArea[CpuIndex]->BTSIndex;
+  CurrentBTSRecord = (BRANCH_TRACE_RECORD *)(UINTN)mMsrDsArea[CpuIndex]->BTSIndex;
   for (Index = 0; Index < mBTSRecordNumber; Index++) {
     if ((UINTN)CurrentBTSRecord < (UINTN)mMsrBTSRecord[CpuIndex]) {
       //
