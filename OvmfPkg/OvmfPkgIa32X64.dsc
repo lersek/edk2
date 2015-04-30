@@ -682,4 +682,9 @@
     <LibraryClasses>
       LockBoxLib|MdeModulePkg/Library/SmmLockBoxLib/SmmLockBoxSmmLib.inf
   }
+  OvmfPkg/QuarkPort/PiSmmCpuDxeSmm/PiSmmCpuDxeSmm.inf {
+    <LibraryClasses>
+      CpuConfigLib|OvmfPkg/QuarkPort/Library/CpuConfigLib/CpuConfigLib.inf
+      SmmCpuPlatformHookLib|OvmfPkg/QuarkPort/Library/SmmCpuPlatformHookLibNull/SmmCpuPlatformHookLibNull.inf
+  }
 !endif
