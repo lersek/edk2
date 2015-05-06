@@ -202,6 +202,21 @@ SaveCpuS3Data (
   //
   mAcpiCpuData                 = &(MpCpuSavedData->AcpiCpuData);
   mAcpiCpuData->StartupVector  = mStartupVector;
+  mAcpiCpuData->GdtrProfile    =
+    (EFI_PHYSICAL_ADDRESS) (UINTN) &(MpCpuSavedData->GdtrProfile);
+  mAcpiCpuData->IdtrProfile    =
+    (EFI_PHYSICAL_ADDRESS) (UINTN) &(MpCpuSavedData->IdtrProfile);
+
+  mAcpiCpuData->ApMachineCheckHandlerBase = mApMachineCheckHandlerBase;
+  mAcpiCpuData->ApMachineCheckHandlerSize = mApMachineCheckHandlerSize;
+
+  //
+  // Copy GDTR and IDTR profiles
+  //
+  CopyMem ((VOID *) (UINTN) mAcpiCpuData->GdtrProfile,
+    (VOID *) (UINTN) &mExchangeInfo->GdtrProfile, sizeof (IA32_DESCRIPTOR));
+  CopyMem ((VOID *) (UINTN) mAcpiCpuData->IdtrProfile,
+    (VOID *) (UINTN) &mExchangeInfo->IdtrProfile, sizeof (IA32_DESCRIPTOR));
 
   //
   // Set the base address of CPU S3 data to PcdCpuS3DataAddress

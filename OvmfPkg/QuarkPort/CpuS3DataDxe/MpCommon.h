@@ -40,6 +40,7 @@
 
 #include <Library/BaseLib.h>
 
+#include "ArchSpecificDef.h"
 #include <AcpiCpuData.h>
 
 #include <Protocol/LegacyBios.h>
@@ -50,6 +51,30 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+
+#define INTERRUPT_HANDLER_MACHINE_CHECK       0x12
+
+#pragma pack(1)
+
+typedef  struct {
+  UINT16  LimitLow;
+  UINT16  BaseLow;
+  UINT8   BaseMiddle;
+  UINT8   Attributes1;
+  UINT8	  Attributes2;	
+  UINT8   BaseHigh;
+} SEGMENT_DESCRIPTOR;
+
+#pragma pack()
+
+typedef struct {
+  IA32_DESCRIPTOR   GdtrProfile;
+  IA32_DESCRIPTOR   IdtrProfile;
+} MP_CPU_EXCHANGE_INFO;
+
+extern MP_CPU_EXCHANGE_INFO        *mExchangeInfo;
+extern EFI_PHYSICAL_ADDRESS        mApMachineCheckHandlerBase;
+extern UINT32                      mApMachineCheckHandlerSize;
 
 /**
   Allocates startup vector for APs.
@@ -65,6 +90,38 @@ AllocateStartupVector (
   );
 
 /**
+  Creates a copy of GDT and IDT for all APs.
+
+  This function creates a copy of GDT and IDT for all APs.
+
+  @param  Gdtr   Base and limit of GDT for AP
+  @param  Idtr   Base and limit of IDT for AP
+
+**/
+VOID
+PrepareGdtIdtForAP (
+  OUT IA32_DESCRIPTOR  *Gdtr,
+  OUT IA32_DESCRIPTOR  *Idtr
+  );
+
+/**
+  Allocate aligned ACPI NVS memory below 4G.
+  
+  This function allocates aligned ACPI NVS memory below 4G.
+
+  @param  Size       Size of memory region to allocate
+  @param  Alignment  Alignment in bytes
+  
+  @return Base address of the allocated region
+
+**/
+VOID*
+AllocateAlignedAcpiNvsMemory (
+  IN  UINTN         Size,
+  IN  UINTN         Alignment
+  );
+
+/**
   Prepares Startup Vector for APs.
 
   This function prepares Startup Vector for APs.
@@ -73,6 +130,23 @@ AllocateStartupVector (
 VOID
 PrepareAPStartupVector (
   VOID
+  );
+
+/**
+  Sets specified IDT entry with given function pointer.
+
+  This function sets specified IDT entry with given function pointer.
+
+  @param  FunctionPointer  Function pointer for IDT entry.
+  @param  IdtEntry         The IDT entry to update.
+
+  @return The original IDT entry value.
+
+**/
+UINTN
+SetIdtEntry (
+  IN  UINTN                       FunctionPointer,
+  OUT INTERRUPT_GATE_DESCRIPTOR   *IdtEntry
   );
 
 /**
