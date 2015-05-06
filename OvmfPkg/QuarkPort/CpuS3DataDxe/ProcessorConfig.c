@@ -37,6 +37,7 @@
 #include "MpService.h"
 #include "Cpu.h"
 
+EFI_PHYSICAL_ADDRESS                mStartupVector;
 ACPI_CPU_DATA                       *mAcpiCpuData;
 EFI_EVENT                           mSmmConfigurationNotificationEvent;
 EFI_HANDLE                          mImageHandle;
@@ -60,6 +61,7 @@ SmmConfigurationEventNotify (
   )
 {
   EFI_STATUS    Status;
+  VOID  *Registration;
   EFI_SMM_CONFIGURATION_PROTOCOL  *SmmConfiguration;
 
   //
@@ -75,6 +77,40 @@ SmmConfigurationEventNotify (
   // Save CPU S3 data
   //
   SaveCpuS3Data (mImageHandle);
+
+  //
+  // Setup notification on Legacy BIOS Protocol to reallocate AP wakeup
+  //
+  EfiCreateProtocolNotifyEvent (
+    &gEfiLegacyBiosProtocolGuid,
+    TPL_CALLBACK,
+    ReAllocateMemoryForAP,
+    NULL,
+    &Registration
+    );
+}
+
+/**
+  First phase MP initialization before SMM initialization.
+  
+  @retval EFI_SUCCESS      First phase MP initialization was done successfully.
+  @retval EFI_UNSUPPORTED  There is legacy APIC ID conflict and can't be
+                           rsolved in xAPIC mode.
+
+**/
+EFI_STATUS
+ProcessorConfiguration (
+  VOID
+  )
+{
+  //
+  // Wakeup APs for the first time, BSP stalls for arbitrary
+  // time for APs' completion. BSP then collects the number
+  // and BIST information of APs.
+  //
+  WakeupAPAndCollectBist ();
+
+  return EFI_SUCCESS;
 }
 
 /**
@@ -96,9 +132,17 @@ CpuS3DataInitialize (
   IN EFI_SYSTEM_TABLE                      *SystemTable
   )
 {
+  EFI_STATUS  Status;
   VOID        *Registration;
 
   mImageHandle = ImageHandle;
+  //
+  // Configure processors with three-phase architecture
+  //
+  Status = ProcessorConfiguration ();
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
 
   //
   // Install notification callback on SMM Configuration Protocol
@@ -112,6 +156,24 @@ CpuS3DataInitialize (
                                          );
 
   return EFI_SUCCESS;
+}
+
+/**
+  Wakes up APs for the first time to count their number and collect BIST data.
+
+  This function wakes up APs for the first time to count their number and
+  collect BIST data.
+
+**/
+VOID
+WakeupAPAndCollectBist (
+  VOID
+  )
+{
+  //
+  // Prepare code and data for APs' startup vector
+  //
+  PrepareAPStartupVector ();
 }
 
 /**
@@ -139,6 +201,7 @@ SaveCpuS3Data (
   // Set the value for CPU data
   //
   mAcpiCpuData                 = &(MpCpuSavedData->AcpiCpuData);
+  mAcpiCpuData->StartupVector  = mStartupVector;
 
   //
   // Set the base address of CPU S3 data to PcdCpuS3DataAddress
