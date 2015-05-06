@@ -1,6 +1,6 @@
 /** @file
 
-  Include file for CPU DXE Module
+  Memory Operation Functions for IA32 Architecture.
 
   Copyright (C) 2015, Red Hat, Inc.
   Copyright (c) 2013-2015 Intel Corporation.
@@ -31,43 +31,27 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-  Module Name:  Cpu.h
+  Module Name:  ArchSpecific.c
 
 **/
 
-#ifndef _CPU_DXE_H_
-#define _CPU_DXE_H_
-
-#include "MpCommon.h"
-
-extern EFI_PHYSICAL_ADDRESS        mStartupVector;
-
-extern ACPI_CPU_DATA               *mAcpiCpuData;
+#include "Cpu.h"
+#include "MpService.h"
 
 /**
-  Wakes up APs for the first time to count their number and collect BIST data.
+  Prepares Startup Vector for APs.
 
-  This function wakes up APs for the first time to count their number and
-  collect BIST data.
+  This function prepares Startup Vector for APs.
 
 **/
 VOID
-WakeupAPAndCollectBist (
+PrepareAPStartupVector (
   VOID
-  );
-
-/**
-  Prepare ACPI NVS memory below 4G memory for use of S3 resume.
-  
-  This function allocates ACPI NVS memory below 4G memory for use of S3 resume,
-  and saves data into the memory region.
-
-  @param  Context   The Context save the info.
-  
-**/
-VOID
-SaveCpuS3Data (
-  VOID    *Context
-  );
-
-#endif
+  )
+{
+  //
+  // Allocate a 4K-aligned region under 1M for startup vector for AP.
+  // The region contains AP startup code and exchange data between BSP and AP.
+  //
+  AllocateStartupVector (SIZE_4KB);
+}

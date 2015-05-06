@@ -317,6 +317,8 @@ PrepareAPStartupVector (
 
   StartupVector = WorkingBuffer;
   
+  ASSERT (AddressMap.Size + sizeof (MP_CPU_EXCHANGE_INFO) <= SIZE_4KB);
+
   //
   // Copy AP startup code to startup vector, and then redirect the long jump
   // instructions for mode switching.
