@@ -56,13 +56,17 @@
   Cpu.h
 
 [Sources.Ia32]
+  IA32/ArchSpecific.c
 
 [Packages]
   MdePkg/MdePkg.dec
+  IntelFrameworkPkg/IntelFrameworkPkg.dec
+  IntelFrameworkModulePkg/IntelFrameworkModulePkg.dec
   UefiCpuPkg/UefiCpuPkg.dec
 
 [LibraryClasses]
   UefiBootServicesTableLib
+  MemoryAllocationLib
   UefiDriverEntryPoint
   BaseMemoryLib
   UefiLib
@@ -72,6 +76,7 @@
 [Guids]
 
 [Protocols]
+  gEfiLegacyBiosProtocolGuid                    ## SOMETIMES_CONSUMES
   gEfiSmmConfigurationProtocolGuid              # PROTOCOL ALWAYS_CONSUMED
 
 [FeaturePcd]
@@ -80,6 +85,7 @@
 
 [Pcd]
   gUefiCpuPkgTokenSpaceGuid.PcdCpuS3DataAddress
+  gEfiIntelFrameworkModulePkgTokenSpaceGuid.PcdEbdaReservedMemorySize
 
 [Depex]
   TRUE
