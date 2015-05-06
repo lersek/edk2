@@ -35,7 +35,6 @@
 #define _ACPI_CPU_DATA_H_
 
 typedef struct {
-  BOOLEAN               APState;
   EFI_PHYSICAL_ADDRESS  StartupVector;
   EFI_PHYSICAL_ADDRESS  GdtrProfile;
   EFI_PHYSICAL_ADDRESS  IdtrProfile;
