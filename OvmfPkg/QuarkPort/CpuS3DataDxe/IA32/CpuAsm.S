@@ -1,10 +1,5 @@
-## @file
+#------------------------------------------------------------------------------
 #
-# DXE driver that populates ACPI_CPU_DATA for PiSmmCpuDxeSmm.
-#
-# Based on Quark_EDKII_v1.1.0/IA32FamilyCpuBasePkg/CpuMpDxe.
-#
-# Copyright (C) 2015, Red Hat, Inc.
 # Copyright (c) 2013-2015 Intel Corporation.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,62 +28,29 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-##
-
-[Defines]
-  INF_VERSION                    = 0x00010005
-  BASE_NAME                      = CpuS3DataDxe
-  FILE_GUID                      = B16CB1D2-8583-43BB-9F2C-27D8E2528F71
-  MODULE_TYPE                    = DXE_DRIVER
-  VERSION_STRING                 = 1.0
-  ENTRY_POINT                    = CpuS3DataInitialize
-
-# The following information is for reference only and not required by the build
-# tools.
+# Module Name:
 #
-#  VALID_ARCHITECTURES           = IA32 X64
+#   CpuAsm.S
+# 
+# Abstract:
+# 
+#   Assembly code that supports IA32 CPU architectural protocol
+#
+#------------------------------------------------------------------------------
 
-[Sources]
-  ProcessorConfig.c
-  MpService.h
-  MpCommon.h
-  MpCommon.c
-  Cpu.h
+ASM_GLOBAL ASM_PFX(ApMachineCheckHandler)
+ASM_PFX(ApMachineCheckHandler):
+  #
+  # Clear MCIP flag of IA32_MCG_STATUS register
+  #
+  movl    $0x17a,%ecx
+  rdmsr
+  btrl    $2,%eax
+  wrmsr
 
-[Sources.Ia32]
-  IA32/CpuAsm.asm
-  IA32/CpuAsm.S
-  IA32/ArchSpecificDef.h
-  IA32/ArchSpecific.c
+  iret
 
-[Packages]
-  MdePkg/MdePkg.dec
-  IntelFrameworkPkg/IntelFrameworkPkg.dec
-  IntelFrameworkModulePkg/IntelFrameworkModulePkg.dec
-  OvmfPkg/OvmfPkg.dec
+ASM_GLOBAL ASM_PFX(ApMachineCheckHandlerEnd)
 
-[LibraryClasses]
-  UefiBootServicesTableLib
-  MemoryAllocationLib
-  UefiDriverEntryPoint
-  BaseMemoryLib
-  UefiLib
-  DebugLib
-  BaseLib
+ASM_PFX(ApMachineCheckHandlerEnd):
 
-[Guids]
-
-[Protocols]
-  gEfiLegacyBiosProtocolGuid                    ## SOMETIMES_CONSUMES
-  gEfiSmmConfigurationProtocolGuid              # PROTOCOL ALWAYS_CONSUMED
-
-[FeaturePcd]
-
-[FixedPcd]
-
-[Pcd]
-  gQuarkPortCpuTokenSpaceGuid.PcdCpuS3DataAddress
-  gEfiIntelFrameworkModulePkgTokenSpaceGuid.PcdEbdaReservedMemorySize
-
-[Depex]
-  TRUE

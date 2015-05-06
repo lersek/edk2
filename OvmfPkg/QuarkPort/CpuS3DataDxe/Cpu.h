@@ -70,4 +70,28 @@ SaveCpuS3Data (
   VOID    *Context
   );
 
+/**
+  Label of start of AP machine check handler.
+
+  This is just a label of start of AP machine check handler.
+
+**/
+VOID
+EFIAPI
+ApMachineCheckHandler (
+  VOID
+  );
+
+/**
+  Label of end of AP machine check handler.
+
+  This is just a label of end of AP machine check handler.
+
+**/
+VOID
+EFIAPI
+ApMachineCheckHandlerEnd (
+  VOID
+  );
+
 #endif

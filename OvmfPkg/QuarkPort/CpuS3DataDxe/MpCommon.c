@@ -39,6 +39,8 @@
 #include "Cpu.h"
 
 UINTN                 mStartupVectorSize;
+EFI_PHYSICAL_ADDRESS  mApMachineCheckHandlerBase;
+UINT32                mApMachineCheckHandlerSize;
 
 /**
   Allocates startup vector for APs.
@@ -145,6 +147,36 @@ ReAllocateMemoryForAP (
 }
 
 /**
+  Allocate aligned ACPI NVS memory below 4G.
+
+  This function allocates aligned ACPI NVS memory below 4G.
+
+  @param  Size       Size of memory region to allocate
+  @param  Alignment  Alignment in bytes
+
+  @return Base address of the allocated region
+
+**/
+VOID*
+AllocateAlignedAcpiNvsMemory (
+  IN  UINTN         Size,
+  IN  UINTN         Alignment
+  )
+{
+  UINTN       PointerValue;
+  VOID        *Pointer;
+
+  Pointer = AllocateAcpiNvsMemoryBelow4G (Size + Alignment - 1);
+
+  PointerValue  = (UINTN) Pointer;
+  PointerValue  = (PointerValue + Alignment - 1) / Alignment * Alignment;
+
+  Pointer      = (VOID *) PointerValue;
+
+  return Pointer;
+}
+
+/**
   Allocate EfiACPIMemoryNVS below 4G memory address.
 
   This function allocates EfiACPIMemoryNVS below 4G memory address.
@@ -181,3 +213,86 @@ AllocateAcpiNvsMemoryBelow4G (
   return Buffer;
 }
 
+/**
+  Creates a copy of GDT and IDT for all APs.
+
+  This function creates a copy of GDT and IDT for all APs.
+
+  @param  Gdtr   Base and limit of GDT for AP
+  @param  Idtr   Base and limit of IDT for AP
+
+**/
+VOID
+PrepareGdtIdtForAP (
+  OUT IA32_DESCRIPTOR          *Gdtr,
+  OUT IA32_DESCRIPTOR          *Idtr
+  )
+{
+  SEGMENT_DESCRIPTOR        *GdtForAP;
+  INTERRUPT_GATE_DESCRIPTOR *IdtForAP;
+  IA32_DESCRIPTOR           GdtrForBSP;
+  IA32_DESCRIPTOR           IdtrForBSP;
+  VOID                      *MachineCheckHandlerBuffer;
+
+  //
+  // Get the BSP's data of GDT and IDT
+  //
+  AsmReadGdtr ((IA32_DESCRIPTOR *) &GdtrForBSP);
+  AsmReadIdtr ((IA32_DESCRIPTOR *) &IdtrForBSP);
+
+  //
+  // Allocate ACPI NVS memory for GDT, IDT, and machine check handler.
+  // Combine allocation for ACPI NVS memory under 4G to save memory.
+  //
+  GdtForAP = AllocateAlignedAcpiNvsMemory (
+               ((GdtrForBSP.Limit + 1) +
+                (IdtrForBSP.Limit + 1) +
+                (UINTN) ApMachineCheckHandlerEnd -
+                (UINTN) ApMachineCheckHandler),
+               8
+               );
+
+  //
+  // GDT base is 8-bype aligned, and its size is multiple of 8-bype, so IDT
+  // base here is also 8-bype aligned.
+  //
+  IdtForAP = (INTERRUPT_GATE_DESCRIPTOR *)
+               ((UINTN) GdtForAP + GdtrForBSP.Limit + 1);
+  MachineCheckHandlerBuffer = (VOID *) ((UINTN) GdtForAP +
+                                        (GdtrForBSP.Limit + 1) +
+                                        (IdtrForBSP.Limit + 1));
+  //
+  // Make copy for APs' GDT & IDT
+  //
+  CopyMem (GdtForAP, (VOID *) GdtrForBSP.Base, GdtrForBSP.Limit + 1);
+  CopyMem (IdtForAP, (VOID *) IdtrForBSP.Base, IdtrForBSP.Limit + 1);
+
+  //
+  // Copy code for AP's machine check handler to ACPI NVS memory, and register
+  // in IDT
+  //
+  CopyMem (
+    MachineCheckHandlerBuffer,
+    (VOID *) (UINTN) ApMachineCheckHandler,
+    (UINTN) ApMachineCheckHandlerEnd - (UINTN) ApMachineCheckHandler
+    );
+  SetIdtEntry ((UINTN) MachineCheckHandlerBuffer,
+    &IdtForAP[INTERRUPT_HANDLER_MACHINE_CHECK]);
+
+  //
+  // Set AP's profile for GDTR and IDTR
+  //
+  Gdtr->Base  = (UINTN) GdtForAP;
+  Gdtr->Limit = GdtrForBSP.Limit;
+
+  Idtr->Base  = (UINTN) IdtForAP;
+  Idtr->Limit = IdtrForBSP.Limit;
+
+  //
+  // Save the AP's machine check handler information
+  //
+  mApMachineCheckHandlerBase =
+    (EFI_PHYSICAL_ADDRESS) (UINTN) MachineCheckHandlerBuffer;
+  mApMachineCheckHandlerSize =
+    (UINT32) ((UINTN)ApMachineCheckHandlerEnd - (UINTN)ApMachineCheckHandler);
+}

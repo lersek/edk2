@@ -38,6 +38,17 @@
 #include "Cpu.h"
 #include "MpService.h"
 
+//
+// OVMF port note: in this driver we don't actually use this buffer for
+// communicating between the BSP and the APs, we only allocate it as auxiliary
+// storage between the entry point and the EFI_SMM_CONFIGURATION_PROTOCOL
+// installation callback, for setting up various parameters of the AP startup
+// vector that is to be used by PiSmmCpuDxeSmm.
+//
+STATIC
+MP_CPU_EXCHANGE_INFO    mExchangeInfoBuffer;
+MP_CPU_EXCHANGE_INFO    *mExchangeInfo = &mExchangeInfoBuffer;
+
 /**
   Prepares Startup Vector for APs.
 
@@ -54,4 +65,41 @@ PrepareAPStartupVector (
   // The region contains AP startup code and exchange data between BSP and AP.
   //
   AllocateStartupVector (SIZE_4KB);
+
+  //
+  // Get the start address of exchange data between BSP and AP.
+  //
+  ZeroMem ((VOID *) mExchangeInfo, sizeof (MP_CPU_EXCHANGE_INFO));
+
+  PrepareGdtIdtForAP (
+    (IA32_DESCRIPTOR *) (UINTN) &mExchangeInfo->GdtrProfile,
+    (IA32_DESCRIPTOR *) (UINTN) &mExchangeInfo->IdtrProfile
+    );
+}
+
+/**
+  Sets specified IDT entry with given function pointer.
+
+  This function sets specified IDT entry with given function pointer.
+
+  @param  FunctionPointer  Function pointer for IDT entry.
+  @param  IdtEntry         The IDT entry to update.
+
+  @return The original IDT entry value.
+
+**/
+UINTN
+SetIdtEntry (
+  IN  UINTN                       FunctionPointer,
+  OUT INTERRUPT_GATE_DESCRIPTOR   *IdtEntry
+)
+{
+  UINTN  OriginalEntry;
+
+  OriginalEntry = ((UINT32) IdtEntry->OffsetHigh << 16) + IdtEntry->OffsetLow;
+
+  IdtEntry->OffsetLow  = (UINT16) FunctionPointer;
+  IdtEntry->OffsetHigh = (UINT16) (FunctionPointer >> 16);
+
+  return OriginalEntry;
 }
