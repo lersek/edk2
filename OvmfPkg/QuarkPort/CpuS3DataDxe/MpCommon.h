@@ -42,12 +42,38 @@
 
 #include <AcpiCpuData.h>
 
+#include <Protocol/LegacyBios.h>
 #include <Protocol/SmmConfiguration.h>
 
 #include <Library/DebugLib.h>
 #include <Library/UefiLib.h>
 #include <Library/BaseMemoryLib.h>
+#include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+
+/**
+  Allocates startup vector for APs.
+
+  This function allocates Startup vector for APs.
+
+  @param  Size  The size of startup vector.
+
+**/
+VOID
+AllocateStartupVector (
+  UINTN   Size
+  );
+
+/**
+  Prepares Startup Vector for APs.
+
+  This function prepares Startup Vector for APs.
+
+**/
+VOID
+PrepareAPStartupVector (
+  VOID
+  );
 
 /**
   Allocate EfiACPIMemoryNVS below 4G memory address.
@@ -62,6 +88,22 @@
 VOID*
 AllocateAcpiNvsMemoryBelow4G (
   IN   UINTN   Size
+  );
+
+/**
+  Protocol notification that is fired when LegacyBios protocol is installed.
+
+  Re-allocate a wakeup buffer from E/F segment because the previous wakeup
+  buffer under 640K won't be preserved by the legacy OS.
+
+  @param  Event                 The triggered event.
+  @param  Context               Context for this event.
+**/
+VOID
+EFIAPI
+ReAllocateMemoryForAP (
+  IN EFI_EVENT  Event,
+  IN VOID       *Context
   );
 
 #endif

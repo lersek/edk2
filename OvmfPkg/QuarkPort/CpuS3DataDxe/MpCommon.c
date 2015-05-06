@@ -36,6 +36,113 @@
 **/
 
 #include "MpService.h"
+#include "Cpu.h"
+
+UINTN                 mStartupVectorSize;
+
+/**
+  Allocates startup vector for APs.
+
+  This function allocates Startup vector for APs.
+
+  @param  Size  The size of startup vector.
+
+**/
+VOID
+AllocateStartupVector (
+  UINTN   Size
+  )
+{
+  EFI_STATUS                            Status;
+  EFI_PHYSICAL_ADDRESS                  StartAddress;
+
+  mStartupVectorSize = Size;
+  Status = EFI_NOT_FOUND;
+
+  //
+  // Allocate wakeup buffer below 640K. Don't touch legacy region.
+  // Leave some room immediately below 640K in for CSM module.
+  // PcdEbdaReservedMemorySize has been required to be a multiple of 4KB.
+  //
+  StartAddress = 0xA0000 - PcdGet32 (PcdEbdaReservedMemorySize) -
+                 (EFI_SIZE_TO_PAGES (Size) * EFI_PAGE_SIZE);
+  for (mStartupVector = StartAddress;
+       mStartupVector >= 0x2000;
+       mStartupVector -= (EFI_SIZE_TO_PAGES (Size) * EFI_PAGE_SIZE)) {
+
+    //
+    // If finally no CSM in the platform, this wakeup buffer is to be used in
+    // S3 boot path.
+    //
+    Status = gBS->AllocatePages (
+                    AllocateAddress,
+                    EfiReservedMemoryType,
+                    EFI_SIZE_TO_PAGES (Size),
+                    &mStartupVector
+                    );
+
+    if (!EFI_ERROR (Status)) {
+      break;
+    }
+  }
+
+  ASSERT_EFI_ERROR (Status);
+}
+
+/**
+  Protocol notification that is fired when LegacyBios protocol is installed.
+
+  Re-allocate a wakeup buffer from E/F segment because the previous wakeup
+  buffer under 640K won't be preserved by the legacy OS.
+
+  @param  Event                 The triggered event.
+  @param  Context               Context for this event.
+**/
+VOID
+EFIAPI
+ReAllocateMemoryForAP (
+  IN EFI_EVENT  Event,
+  IN VOID       *Context
+  )
+{
+  EFI_LEGACY_BIOS_PROTOCOL   *LegacyBios;
+  VOID                       *LegacyRegion;
+  EFI_STATUS                 Status;
+
+  Status = gBS->LocateProtocol (&gEfiLegacyBiosProtocolGuid, NULL,
+                  (VOID **)&LegacyBios);
+  if (EFI_ERROR (Status)) {
+    return ;
+  }
+
+  //
+  // Allocate 4K aligned bytes from either 0xE0000 or 0xF0000.
+  // Note some CSM16 does not satisfy alignment request, so allocate a buffer
+  // of 2*4K and adjust the base address myself.
+  //
+  Status = LegacyBios->GetLegacyRegion (
+                         LegacyBios,
+                         0x2000,
+                         0,
+                         0x1000,
+                         &LegacyRegion
+                         );
+  ASSERT_EFI_ERROR (Status);
+
+  if ((((UINTN)LegacyRegion) & 0xfff) != 0) {
+    LegacyRegion =
+      (VOID *)(UINTN)((((UINTN)LegacyRegion) + 0xfff) & ~((UINTN)0xfff));
+  }
+
+  //
+  // Free original wakeup buffer
+  //
+  FreePages ((VOID *)(UINTN)mStartupVector,
+    EFI_SIZE_TO_PAGES (mStartupVectorSize));
+
+  mStartupVector = (EFI_PHYSICAL_ADDRESS)(UINTN)LegacyRegion;
+  mAcpiCpuData->StartupVector = mStartupVector;
+}
 
 /**
   Allocate EfiACPIMemoryNVS below 4G memory address.
