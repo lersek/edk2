@@ -85,9 +85,11 @@
 [FeaturePcd]
 
 [FixedPcd]
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuMaxLogicalProcessorNumber
 
 [Pcd]
   gUefiCpuPkgTokenSpaceGuid.PcdCpuS3DataAddress
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuApStackSize
   gEfiIntelFrameworkModulePkgTokenSpaceGuid.PcdEbdaReservedMemorySize
 
 [Depex]
