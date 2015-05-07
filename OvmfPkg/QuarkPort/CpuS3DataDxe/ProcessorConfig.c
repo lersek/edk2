@@ -34,6 +34,8 @@
 
 **/
 
+#include <Library/MtrrLib.h>
+
 #include "MpService.h"
 #include "Cpu.h"
 #include "MpApic.h"
@@ -220,6 +222,27 @@ WakeupAPAndCollectBist (
 }
 
 /**
+  Callback function executed when the EndOfDxe event group is signaled.
+
+  We delay saving the MTRR settings until BDS signals EndOfDxe.
+
+  @param[in]  Event    Event whose notification function is being invoked.
+  @param[out] Context  Pointer to the MTRR_SETTINGS buffer to fill in.
+**/
+STATIC
+VOID
+EFIAPI
+SaveMtrrsOnEndOfDxe (
+  IN EFI_EVENT Event,
+  OUT VOID     *Context
+  )
+{
+  DEBUG ((EFI_D_VERBOSE, "%a\n", __FUNCTION__));
+  MtrrGetAllMtrrs (Context);
+  gBS->CloseEvent (Event);
+}
+
+/**
   Prepare ACPI NVS memory below 4G memory for use of S3 resume.
   
   This function allocates ACPI NVS memory below 4G memory for use of S3 resume,
@@ -234,11 +257,28 @@ SaveCpuS3Data (
   )
 {
   MP_CPU_SAVED_DATA       *MpCpuSavedData;
+  MTRR_SETTINGS           *MtrrSettings;
+  EFI_STATUS              Status;
+  EFI_EVENT               EndOfDxeEvent;
 
   //
   // Allocate ACPI NVS memory below 4G memory for use of S3 resume.
   //
   MpCpuSavedData = AllocateAcpiNvsMemoryBelow4G (sizeof (MP_CPU_SAVED_DATA));
+
+  //
+  // Allocate buffer for MTRR settings.
+  //
+  MtrrSettings = AllocateAcpiNvsMemoryBelow4G (sizeof *MtrrSettings);
+
+  //
+  // Install notification callback for EndOfDxe that will fill in the MTRR
+  // settings.
+  //
+  Status = gBS->CreateEventEx (EVT_NOTIFY_SIGNAL, TPL_CALLBACK,
+                  SaveMtrrsOnEndOfDxe, MtrrSettings,
+                  &gEfiEndOfDxeEventGroupGuid, &EndOfDxeEvent);
+  ASSERT_EFI_ERROR (Status);
 
   //
   // Set the value for CPU data
@@ -252,6 +292,7 @@ SaveCpuS3Data (
   mAcpiCpuData->StackAddress   =
     (EFI_PHYSICAL_ADDRESS) (UINTN) mExchangeInfo->StackStart;
   mAcpiCpuData->StackSize      = PcdGet32 (PcdCpuApStackSize);
+  mAcpiCpuData->MtrrTable      = (EFI_PHYSICAL_ADDRESS)(UINTN)MtrrSettings;
 
   mAcpiCpuData->ApMachineCheckHandlerBase = mApMachineCheckHandlerBase;
   mAcpiCpuData->ApMachineCheckHandlerSize = mApMachineCheckHandlerSize;
