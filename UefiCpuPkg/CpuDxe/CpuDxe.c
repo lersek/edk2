@@ -407,11 +407,47 @@ CpuSetMemoryAttributes (
              );
 
   if (!RETURN_ERROR (Status)) {
-    if (FeaturePcdGet (PcdCpuSyncMtrrToAcpiNvs)) {
-      //
-      // Sync saved MTRR settings
-      //
-      MtrrGetAllMtrrs (mMtrrTable);
+    MTRR_SETTINGS            *SyncToBuffer;
+    MTRR_SETTINGS            LocalBuffer;
+    EFI_STATUS               MpStatus;
+    EFI_MP_SERVICES_PROTOCOL *MpService;
+
+    SyncToBuffer =
+      FeaturePcdGet (PcdCpuSyncMtrrToAcpiNvs) ? mMtrrTable : &LocalBuffer;
+    MpStatus = gBS->LocateProtocol (
+                      &gEfiMpServiceProtocolGuid,
+                      NULL,
+                      (VOID **) &MpService
+                      );
+
+    //
+    // Sync saved MTRR settings if (a) we have to reflect them to AcpiNVS, or
+    // (b) broadcast them to APs, or (c) both.
+    //
+    if (FeaturePcdGet (PcdCpuSyncMtrrToAcpiNvs) || !EFI_ERROR (MpStatus)) {
+      MtrrGetAllMtrrs (SyncToBuffer);
+    }
+
+    //
+    // Synchronize the update with all APs
+    //
+    if (!EFI_ERROR (MpStatus)) {
+      MpStatus = MpService->StartupAllAPs (
+                              MpService,    // This
+                              LoadMtrrData, // Procedure
+                              TRUE,         // SingleThread
+                              NULL,         // WaitEvent
+                              0,            // TimeoutInMicrosecsond
+                              SyncToBuffer, // ProcedureArgument
+                              NULL          // FailedCpuList
+                              );
+      if (MpStatus == EFI_NOT_STARTED) {
+        //
+        // If no enabled APs exit in the system, return success
+        //
+        MpStatus = EFI_SUCCESS;
+      }
+      ASSERT_EFI_ERROR (MpStatus);
     }
   }
   return (EFI_STATUS) Status;
