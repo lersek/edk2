@@ -68,6 +68,7 @@ typedef  struct {
 #pragma pack()
 
 typedef struct {
+  VOID              *StackStart;
   IA32_DESCRIPTOR   GdtrProfile;
   IA32_DESCRIPTOR   IdtrProfile;
 } MP_CPU_EXCHANGE_INFO;

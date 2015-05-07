@@ -65,6 +65,7 @@
   MdePkg/MdePkg.dec
   IntelFrameworkPkg/IntelFrameworkPkg.dec
   IntelFrameworkModulePkg/IntelFrameworkModulePkg.dec
+  UefiCpuPkg/UefiCpuPkg.dec
   OvmfPkg/OvmfPkg.dec
 
 [LibraryClasses]
@@ -85,8 +86,10 @@
 [FeaturePcd]
 
 [FixedPcd]
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuMaxLogicalProcessorNumber
 
 [Pcd]
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuApStackSize
   gQuarkPortCpuTokenSpaceGuid.PcdCpuS3DataAddress
   gEfiIntelFrameworkModulePkgTokenSpaceGuid.PcdEbdaReservedMemorySize
 
