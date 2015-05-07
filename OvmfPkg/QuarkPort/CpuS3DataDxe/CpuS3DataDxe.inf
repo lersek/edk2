@@ -54,6 +54,8 @@
   MpCommon.h
   MpCommon.c
   Cpu.h
+  MpApic.c
+  MpApic.h
 
 [Sources.Ia32]
   IA32/CpuAsm.asm
@@ -80,6 +82,7 @@
 [Guids]
 
 [Protocols]
+  gEfiMpServiceProtocolGuid                     # PROTOCOL ALWAYS_CONSUMED
   gEfiLegacyBiosProtocolGuid                    ## SOMETIMES_CONSUMES
   gEfiSmmConfigurationProtocolGuid              # PROTOCOL ALWAYS_CONSUMED
 
@@ -94,4 +97,4 @@
   gEfiIntelFrameworkModulePkgTokenSpaceGuid.PcdEbdaReservedMemorySize
 
 [Depex]
-  TRUE
+  gEfiMpServiceProtocolGuid
