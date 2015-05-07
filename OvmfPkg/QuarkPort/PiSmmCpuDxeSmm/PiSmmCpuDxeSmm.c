@@ -964,9 +964,6 @@ SmmReadyToLockEventNotify (
   IN EFI_HANDLE      Handle
   )
 {
-  UINTN                      Index;
-  CPU_REGISTER_TABLE         *SourceRegisterTableList;
-  CPU_REGISTER_TABLE         *DestinationRegisterTableList;
   ACPI_CPU_DATA              *AcpiCpuData;
   IA32_DESCRIPTOR            *Gdtr;
   IA32_DESCRIPTOR            *Idtr;
@@ -999,20 +996,6 @@ SmmReadyToLockEventNotify (
     ASSERT (mAcpiCpuData.IdtrProfile != 0);
 
     CopyMem ((VOID *)(UINTN)mAcpiCpuData.IdtrProfile, (VOID *)(UINTN)AcpiCpuData->IdtrProfile, sizeof (IA32_DESCRIPTOR));
-
-    mAcpiCpuData.RegisterTable = (EFI_PHYSICAL_ADDRESS)(UINTN)AllocatePool (mAcpiCpuData.NumberOfCpus * sizeof (CPU_REGISTER_TABLE));
-    ASSERT (mAcpiCpuData.RegisterTable != 0);
-
-    CopyMem ((CPU_REGISTER_TABLE *)(UINTN)mAcpiCpuData.RegisterTable, (CPU_REGISTER_TABLE *)(UINTN)AcpiCpuData->RegisterTable, mAcpiCpuData.NumberOfCpus * sizeof (CPU_REGISTER_TABLE));
-
-    SourceRegisterTableList      = (CPU_REGISTER_TABLE *)(UINTN)AcpiCpuData->RegisterTable;
-    DestinationRegisterTableList = (CPU_REGISTER_TABLE *)(UINTN)mAcpiCpuData.RegisterTable;
-    for (Index = 0; Index < mAcpiCpuData.NumberOfCpus; Index++) {
-      DestinationRegisterTableList[Index].RegisterTableEntry = AllocatePool (DestinationRegisterTableList[Index].AllocatedSize);
-      ASSERT (DestinationRegisterTableList[Index].RegisterTableEntry != NULL);
-
-      CopyMem (DestinationRegisterTableList[Index].RegisterTableEntry, SourceRegisterTableList[Index].RegisterTableEntry, DestinationRegisterTableList[Index].AllocatedSize);
-    }
 
     //
     // Copy AP's GDT, IDT and Machine Check handler into SMRAM. 

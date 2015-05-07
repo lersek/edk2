@@ -255,21 +255,8 @@ MPRendezvousProcedure (
   VOID
   )
 {
-  CPU_REGISTER_TABLE         *RegisterTableList;
-  UINT32                     InitApicId;
-  UINTN                      Index;
-
   ProgramVirtualWireMode ();
   DisableLvtInterrupts ();
-
-  RegisterTableList = (CPU_REGISTER_TABLE *) (UINTN) mAcpiCpuData.RegisterTable;
-  InitApicId = GetInitialApicId ();
-  for (Index = 0; Index < mAcpiCpuData.NumberOfCpus; Index++) {
-    if (RegisterTableList[Index].InitialApicId == InitApicId) {
-      SetProcessorRegister (&RegisterTableList[Index]);
-      break;
-    }
-  }
 
   //
   // Count down the number with lock mechanism.
@@ -382,19 +369,6 @@ InitializeCpu (
   VOID
   )
 {
-  CPU_REGISTER_TABLE         *RegisterTableList;
-  UINT32                     InitApicId;
-  UINTN                      Index;
-
-  RegisterTableList = (CPU_REGISTER_TABLE *) (UINTN) mAcpiCpuData.RegisterTable;
-  InitApicId = GetInitialApicId ();
-  for (Index = 0; Index < mAcpiCpuData.NumberOfCpus; Index++) {
-    if (RegisterTableList[Index].InitialApicId == InitApicId) {
-      SetProcessorRegister (&RegisterTableList[Index]);
-      break;
-    }
-  } 
-
   mNumberToFinish = mAcpiCpuData.NumberOfCpus - 1;
   mExchangeInfo->ApFunction  = (VOID *) (UINTN) MPRendezvousProcedure;
 
