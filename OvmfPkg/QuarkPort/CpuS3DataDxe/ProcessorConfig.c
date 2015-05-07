@@ -43,6 +43,26 @@ EFI_EVENT                           mSmmConfigurationNotificationEvent;
 EFI_HANDLE                          mImageHandle;
 
 /**
+  Prepares memory region for processor configuration.
+  
+  This function prepares memory region for processor configuration.
+
+**/
+VOID
+PrepareMemoryForConfiguration (
+  VOID
+  )
+{
+  //
+  // Claim memory for AP stack.
+  //
+  mExchangeInfo->StackStart = AllocateAcpiNvsMemoryBelow4G (
+                                PcdGet32 (PcdCpuMaxLogicalProcessorNumber) *
+                                PcdGet32 (PcdCpuApStackSize)
+                                );
+}
+
+/**
   Event notification that is fired every time a gEfiSmmConfigurationProtocol
   installs.
 
@@ -109,6 +129,11 @@ ProcessorConfiguration (
   // and BIST information of APs.
   //
   WakeupAPAndCollectBist ();
+
+  //
+  // Prepare data in memory for processor configuration
+  //
+  PrepareMemoryForConfiguration ();
 
   return EFI_SUCCESS;
 }
@@ -206,6 +231,9 @@ SaveCpuS3Data (
     (EFI_PHYSICAL_ADDRESS) (UINTN) &(MpCpuSavedData->GdtrProfile);
   mAcpiCpuData->IdtrProfile    =
     (EFI_PHYSICAL_ADDRESS) (UINTN) &(MpCpuSavedData->IdtrProfile);
+  mAcpiCpuData->StackAddress   =
+    (EFI_PHYSICAL_ADDRESS) (UINTN) mExchangeInfo->StackStart;
+  mAcpiCpuData->StackSize      = PcdGet32 (PcdCpuApStackSize);
 
   mAcpiCpuData->ApMachineCheckHandlerBase = mApMachineCheckHandlerBase;
   mAcpiCpuData->ApMachineCheckHandlerSize = mApMachineCheckHandlerSize;
