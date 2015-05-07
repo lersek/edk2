@@ -252,6 +252,8 @@ SaveCpuS3Data (
   mAcpiCpuData->StackAddress   =
     (EFI_PHYSICAL_ADDRESS) (UINTN) mExchangeInfo->StackStart;
   mAcpiCpuData->StackSize      = PcdGet32 (PcdCpuApStackSize);
+  mAcpiCpuData->MtrrTable      =
+    (EFI_PHYSICAL_ADDRESS) (UINTN) PcdGet64 (PcdCpuMtrrTableAddress);
 
   mAcpiCpuData->ApMachineCheckHandlerBase = mApMachineCheckHandlerBase;
   mAcpiCpuData->ApMachineCheckHandlerSize = mApMachineCheckHandlerSize;

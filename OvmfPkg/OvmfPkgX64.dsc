@@ -335,6 +335,7 @@
 !endif
 !if $(SMM_REQUIRE) == TRUE
   gUefiOvmfPkgTokenSpaceGuid.PcdSmmSmramRequire|TRUE
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuSyncMtrrToAcpiNvs|TRUE
 !endif
 
   ## Feature PCDs imported from
@@ -394,6 +395,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdVideoHorizontalResolution|800
   gEfiMdeModulePkgTokenSpaceGuid.PcdVideoVerticalResolution|600
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfHostBridgePciDevId|0
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuMtrrTableAddress|0
 
   gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|0
 

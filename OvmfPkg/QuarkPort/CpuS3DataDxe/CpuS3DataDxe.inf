@@ -93,6 +93,7 @@
 
 [Pcd]
   gUefiCpuPkgTokenSpaceGuid.PcdCpuApStackSize
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuMtrrTableAddress
   gQuarkPortCpuTokenSpaceGuid.PcdCpuS3DataAddress
   gEfiIntelFrameworkModulePkgTokenSpaceGuid.PcdEbdaReservedMemorySize
 
