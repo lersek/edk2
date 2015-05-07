@@ -43,6 +43,7 @@
 #include "ArchSpecificDef.h"
 #include <AcpiCpuData.h>
 
+#include <Protocol/MpService.h>
 #include <Protocol/LegacyBios.h>
 #include <Protocol/SmmConfiguration.h>
 
@@ -51,6 +52,7 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Library/CpuConfigLib.h>
 
 #define INTERRUPT_HANDLER_MACHINE_CHECK       0x12
 
@@ -74,6 +76,7 @@ typedef struct {
 } MP_CPU_EXCHANGE_INFO;
 
 extern MP_CPU_EXCHANGE_INFO        *mExchangeInfo;
+extern CPU_CONFIG_CONTEXT_BUFFER   mCpuConfigConextBuffer;
 extern EFI_PHYSICAL_ADDRESS        mApMachineCheckHandlerBase;
 extern UINT32                      mApMachineCheckHandlerSize;
 

@@ -36,7 +36,9 @@
 
 #include "MpService.h"
 #include "Cpu.h"
+#include "MpApic.h"
 
+CPU_CONFIG_CONTEXT_BUFFER           mCpuConfigConextBuffer;
 EFI_PHYSICAL_ADDRESS                mStartupVector;
 ACPI_CPU_DATA                       *mAcpiCpuData;
 EFI_EVENT                           mSmmConfigurationNotificationEvent;
@@ -123,17 +125,33 @@ ProcessorConfiguration (
   VOID
   )
 {
+  EFI_STATUS    Status;
+
   //
   // Wakeup APs for the first time, BSP stalls for arbitrary
   // time for APs' completion. BSP then collects the number
   // and BIST information of APs.
   //
   WakeupAPAndCollectBist ();
+  //
+  // Sort APIC ID of all processors in asending order. Processor number
+  // is assigned in this order to ease MP debug. SMBIOS logic also depends on
+  // it.
+  //
+  SortApicId ();
 
   //
   // Prepare data in memory for processor configuration
   //
   PrepareMemoryForConfiguration ();
+
+  //
+  // Check if there is legacy APIC ID conflict among all processors.
+  //
+  Status = CheckApicId ();
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
 
   return EFI_SUCCESS;
 }
@@ -245,6 +263,9 @@ SaveCpuS3Data (
     (VOID *) (UINTN) &mExchangeInfo->GdtrProfile, sizeof (IA32_DESCRIPTOR));
   CopyMem ((VOID *) (UINTN) mAcpiCpuData->IdtrProfile,
     (VOID *) (UINTN) &mExchangeInfo->IdtrProfile, sizeof (IA32_DESCRIPTOR));
+
+  mAcpiCpuData->NumberOfCpus =
+    (UINT32) mCpuConfigConextBuffer.NumberOfProcessors;
 
   //
   // Set the base address of CPU S3 data to PcdCpuS3DataAddress
