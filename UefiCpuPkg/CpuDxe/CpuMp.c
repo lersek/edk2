@@ -14,6 +14,7 @@
 
 #include "CpuDxe.h"
 #include "CpuMp.h"
+#include "MtrrSync.h"
 
 UINTN gMaxLogicalProcessorNumber;
 UINTN gApStackSize;
@@ -1551,7 +1552,8 @@ InitializeMpSupport (
   VOID
   )
 {
-  EFI_STATUS Status;
+  EFI_STATUS    Status;
+  MTRR_SETTINGS MtrrSettings;
 
   gMaxLogicalProcessorNumber = (UINTN) PcdGet32 (PcdCpuMaxLogicalProcessorNumber);
   if (gMaxLogicalProcessorNumber < 1) {
@@ -1596,6 +1598,21 @@ InitializeMpSupport (
                              mMpSystemData.CpuDatas);
 
   mAPsAlreadyInitFinished = TRUE;
+
+  //
+  // Synchronize MTRR settings to APs.
+  //
+  MtrrGetAllMtrrs (&MtrrSettings);
+  Status = mMpServicesTemplate.StartupAllAPs (
+                                 &mMpServicesTemplate, // This
+                                 LoadMtrrData,         // Procedure
+                                 TRUE,                 // SingleThread
+                                 NULL,                 // WaitEvent
+                                 0,                    // TimeoutInMicrosecsond
+                                 &MtrrSettings,        // ProcedureArgument
+                                 NULL                  // FailedCpuList
+                                 );
+  ASSERT_EFI_ERROR (Status);
 
   Status = gBS->InstallMultipleProtocolInterfaces (
                   &mMpServiceHandle,
