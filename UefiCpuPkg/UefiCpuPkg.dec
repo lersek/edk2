@@ -62,5 +62,16 @@
   # @Prompt Configure stack size for Application Processor (AP)
   gUefiCpuPkgTokenSpaceGuid.PcdCpuApStackSize|0x8000|UINT32|0x00000003
 
+[PcdsFeatureFlag]
+  ## This flag controls whether the EFI_CPU_ARCH_PROTOCOL implementation
+  #  reflects the updated MTRR settings to a persistent (AcpiNVS) memory block.
+  # @Prompt Keep MTRR settings reflected to an AcpiNVS memory block
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuSyncMtrrToAcpiNvs|FALSE|BOOLEAN|0x00000004
+
+[PcdsDynamic, PcdsDynamicEx]
+  ## If PcdCpuSyncMtrrToAcpiNvs is TRUE, the PCD below will be set to the
+  #  address of the AcpiNVS memory block in question.
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuMtrrTableAddress|0x0|UINT64|0x00000005
+
 [UserExtensions.TianoCore."ExtraFiles"]
   UefiCpuPkgExtra.uni

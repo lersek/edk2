@@ -14,6 +14,7 @@
 
 #include "CpuDxe.h"
 #include "CpuMp.h"
+#include "MtrrSync.h"
 
 //
 // Global Variables
@@ -405,6 +406,14 @@ CpuSetMemoryAttributes (
              CacheType
              );
 
+  if (!RETURN_ERROR (Status)) {
+    if (FeaturePcdGet (PcdCpuSyncMtrrToAcpiNvs)) {
+      //
+      // Sync saved MTRR settings
+      //
+      MtrrGetAllMtrrs (mMtrrTable);
+    }
+  }
   return (EFI_STATUS) Status;
 }
 
@@ -869,6 +878,14 @@ InitializeCpu (
   // Enable the local APIC for Virtual Wire Mode.
   //
   ProgramVirtualWireMode ();
+
+  if (FeaturePcdGet (PcdCpuSyncMtrrToAcpiNvs)) {
+    //
+    // Allocates ACPI NVS memory for MTRR data.
+    //
+    InitializeMtrrData ();
+    MtrrGetAllMtrrs (mMtrrTable);
+  }
 
   //
   // Install CPU Architectural Protocol

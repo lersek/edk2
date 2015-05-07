@@ -52,6 +52,8 @@
   CpuGdt.h
   CpuMp.c
   CpuMp.h
+  MtrrSync.c
+  MtrrSync.h
 
 [Sources.IA32]
   Ia32/CpuAsm.asm | MSFT
@@ -80,6 +82,10 @@
 [Pcd]
   gUefiCpuPkgTokenSpaceGuid.PcdCpuMaxLogicalProcessorNumber   ## CONSUMES
   gUefiCpuPkgTokenSpaceGuid.PcdCpuApStackSize                 ## CONSUMES
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuMtrrTableAddress            ## SOMETIMES_PRODUCES
+
+[FeaturePcd]
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuSyncMtrrToAcpiNvs
 
 [Depex]
   TRUE
