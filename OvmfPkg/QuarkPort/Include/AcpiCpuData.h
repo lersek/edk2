@@ -42,7 +42,6 @@ typedef struct {
   UINT32                StackSize;
   UINT32                NumberOfCpus;
   EFI_PHYSICAL_ADDRESS  MtrrTable;
-  EFI_PHYSICAL_ADDRESS  PreSmmInitRegisterTable;
   EFI_PHYSICAL_ADDRESS  RegisterTable;
   EFI_PHYSICAL_ADDRESS  ApMachineCheckHandlerBase;
   UINT32                ApMachineCheckHandlerSize;

@@ -239,23 +239,7 @@ EarlyMPRendezvousProcedure (
   VOID
   )
 {
-  CPU_REGISTER_TABLE         *RegisterTableList;
-  UINT32                     InitApicId;
-  UINTN                      Index;
-
   LoadMtrrData (mAcpiCpuData.MtrrTable);
-
-  //
-  // Find processor number for this CPU.
-  //
-  RegisterTableList = (CPU_REGISTER_TABLE *) (UINTN) mAcpiCpuData.PreSmmInitRegisterTable;
-  InitApicId = GetInitialApicId ();
-  for (Index = 0; Index < mAcpiCpuData.NumberOfCpus; Index++) {
-    if (RegisterTableList[Index].InitialApicId == InitApicId) {
-      SetProcessorRegister (&RegisterTableList[Index]);
-      break;
-    }
-  } 
 
   //
   // Count down the number with lock mechanism.
@@ -363,23 +347,11 @@ EarlyInitializeCpu (
   VOID
   )
 {
-  CPU_REGISTER_TABLE         *RegisterTableList;
-  UINT32                     InitApicId;
-  UINTN                      Index;
-
   LoadMtrrData (mAcpiCpuData.MtrrTable);
 
   //
   // Find processor number for this CPU.
   //
-  RegisterTableList = (CPU_REGISTER_TABLE *) (UINTN) mAcpiCpuData.PreSmmInitRegisterTable;
-  InitApicId = GetInitialApicId ();
-  for (Index = 0; Index < mAcpiCpuData.NumberOfCpus; Index++) {
-    if (RegisterTableList[Index].InitialApicId == InitApicId) {
-      SetProcessorRegister (&RegisterTableList[Index]);
-      break;
-    }
-  } 
 
   ProgramVirtualWireMode ();
 
