@@ -1561,10 +1561,6 @@ InitializeMpSupport (
     return;
   }
 
-  if (gMaxLogicalProcessorNumber == 1) {
-    return;
-  }
-
   gApStackSize = (UINTN) PcdGet32 (PcdCpuApStackSize);
   ASSERT ((gApStackSize & (SIZE_4KB - 1)) == 0);
 
@@ -1586,11 +1582,6 @@ InitializeMpSupport (
   StartApsStackless ();
 
   DEBUG ((DEBUG_INFO, "Detect CPU count: %d\n", mMpSystemData.NumberOfProcessors));
-  if (mMpSystemData.NumberOfProcessors == 1) {
-    FreeApStartupCode ();
-    FreePages (mCommonStack, EFI_SIZE_TO_PAGES (gMaxLogicalProcessorNumber * gApStackSize));
-    return;
-  }
 
   mMpSystemData.CpuDatas = ReallocatePool (
                              sizeof (CPU_DATA_BLOCK) * gMaxLogicalProcessorNumber,
@@ -1612,7 +1603,7 @@ InitializeMpSupport (
                                  &MtrrSettings,        // ProcedureArgument
                                  NULL                  // FailedCpuList
                                  );
-  ASSERT_EFI_ERROR (Status);
+  ASSERT (Status == EFI_SUCCESS || Status == EFI_NOT_STARTED);
 
   Status = gBS->InstallMultipleProtocolInterfaces (
                   &mMpServiceHandle,
