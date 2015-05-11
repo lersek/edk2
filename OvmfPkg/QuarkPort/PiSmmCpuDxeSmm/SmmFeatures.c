@@ -97,8 +97,10 @@ IsSmrrSupported (
 
   MtrrCap = AsmReadMsr64(EFI_MSR_IA32_MTRR_CAP);
   if ((MtrrCap & IA32_MTRR_SMRR_SUPPORT_BIT) == 0) {
+    DEBUG ((EFI_D_INFO, "%a: SMRR support was not found\n", __FUNCTION__));
     return FALSE;
   } else {
+    DEBUG ((EFI_D_INFO, "%a: SMRR support was found\n", __FUNCTION__));
     return TRUE;
   }
 }
@@ -160,19 +162,10 @@ GetCpuFamily (
   )
 {
   UINT32         ClassIndex;
-  UINT32         Index;
-  UINT32         Count;
-  CPUID_MAPPING  *CpuMapping;
-  UINT32         RegEax;
 
-  AsmCpuid (EFI_CPUID_VERSION_INFO, &RegEax, NULL, NULL, NULL);
   for (ClassIndex = 0; ClassIndex < sizeof(mCpuClasstable)/sizeof(mCpuClasstable[0]); ClassIndex++) {
-    CpuMapping = mCpuClasstable[ClassIndex]->MappingTable;
-    Count = mCpuClasstable[ClassIndex]->MappingCount;
-    for (Index = 0; Index < Count; Index++) {
-      if ((CpuMapping[Index].Signature & CpuMapping[Index].Mask) == (RegEax & CpuMapping[Index].Mask)) {
-        return mCpuClasstable[ClassIndex];
-      }
+    if (mCpuClasstable[ClassIndex]->Family == CpuPentium) {
+      return mCpuClasstable[ClassIndex];
     }
   }
 
