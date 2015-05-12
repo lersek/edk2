@@ -313,6 +313,7 @@
   DebugLib|OvmfPkg/Library/PlatformDebugLibIoPort/PlatformDebugLibIoPort.inf
 !endif
   CpuExceptionHandlerLib|UefiCpuPkg/Library/CpuExceptionHandlerLib/SmmCpuExceptionHandlerLib.inf
+  BaseCryptLib|CryptoPkg/Library/BaseCryptLib/SmmCryptLib.inf
 
 [LibraryClasses.common.SMM_CORE]
   PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
@@ -701,10 +702,22 @@
       SmmLib|MdePkg/Library/SmmLibNull/SmmLibNull.inf
       SmmCpuFeaturesLib|UefiCpuPkg/Library/SmmCpuFeaturesLib/SmmCpuFeaturesLib.inf
   }
-!endif
 
   #
-  # Variable driver stack
+  # Variable driver stack (SMM)
+  #
+  OvmfPkg/QemuFlashFvbServicesRuntimeDxe/FvbServicesSmm.inf
+  MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteSmm.inf
+  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableSmm.inf {
+    <LibraryClasses>
+      NULL|MdeModulePkg/Library/VarCheckUefiLib/VarCheckUefiLib.inf
+  }
+  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableSmmRuntimeDxe.inf
+
+!else
+
+  #
+  # Variable driver stack (non-SMM)
   #
   OvmfPkg/QemuFlashFvbServicesRuntimeDxe/FvbServicesRuntimeDxe.inf
   OvmfPkg/EmuVariableFvbRuntimeDxe/Fvb.inf {
@@ -716,3 +729,4 @@
     <LibraryClasses>
       NULL|MdeModulePkg/Library/VarCheckUefiLib/VarCheckUefiLib.inf
   }
+!endif
