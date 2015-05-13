@@ -101,7 +101,6 @@
   MemoryAllocationLib
   DebugAgentLib
   HobLib
-  CpuConfigLib
   PciLib
   LocalApicLib
   UefiCpuLib
