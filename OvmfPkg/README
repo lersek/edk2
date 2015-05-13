@@ -118,6 +118,45 @@ $ OvmfPkg/build.sh -a X64 qemu -cdrom /path/to/disk-image.iso
 To build a 32-bit OVMF without debug messages using GCC 4.5:
 $ OvmfPkg/build.sh -a IA32 -b RELEASE -t GCC45
 
+=== SMM support ===
+
+OVMF is capable of utilizing SMM if the underlying QEMU or KVM hypervisor
+emulates SMM. SMM is put to use in the S3 suspend and resume infrastructure,
+and in the UEFI variable driver stack. The purpose is (virtual) hardware
+separation between the runtime guest OS and the firmware (OVMF), with the
+intent to make Secure Boot actually secure, by preventing the runtime guest OS
+from tampering with the variable store and S3 areas.
+
+For SMM support, OVMF must be built with the "-D SMM_REQUIRE" option. The
+resultant firmware binary will check if QEMU actually provides SMM emulation;
+if it doesn't, then OVMF will log an error and trigger an assertion failure
+during boot (even in RELEASE builds). Both the naming of the flag (SMM_REQUIRE,
+instead of SMM_ENABLE), and this behavior are consistent with the goal
+described above: this is supposed to be a security feature, and fallbacks are
+not allowed. Similarly, a pflash-backed variable store is a requirement.
+
+QEMU should be started with the following flags (in addition to any other
+flags):
+
+  qemu-system-i386 \
+    -machine q35,smm=on,accel=(tcg|kvm) \
+    -global driver=cfi.pflash01,property=secure,value=on \
+    -smp cpus=1 \
+    ...
+
+OVMF's SMM support is subject to the following by-design limitations:
+- only the q35 machine type of QEMU is supported.
+
+OVMF's SMM support is subject to the following shortcomings:
+- it works only in uniprocessor guests,
+- with TCG acceleration, it works only on qemu-system-i386 (not on
+  qemu-system-x86_64),
+- with KVM acceleration, it should work on qemu-system-x86_64 in addition to
+  qemu-system-i386, but a 32-bit VCPU is required nonetheless (that is, long
+  mode must be disabled with the "-cpu <MODEL>,-lm" switch).
+
+These issues will hopefully be addressed in the future.
+
 === Network Support ===
 
 OVMF provides a UEFI network stack by default. Its lowest level driver is the
