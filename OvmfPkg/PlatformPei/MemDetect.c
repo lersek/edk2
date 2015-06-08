@@ -36,6 +36,8 @@ Module Name:
 #include "Platform.h"
 #include "Cmos.h"
 
+UINT8 mPhysMemAddressWidth;
+
 UINT32
 GetSystemMemorySizeBelow4gb (
   VOID
@@ -84,6 +86,47 @@ GetSystemMemorySizeAbove4gb (
   return LShiftU64 (Size, 16);
 }
 
+
+/**
+  Initialize the mPhysMemAddressWidth variable, based on guest RAM size.
+**/
+VOID
+AddressWidthInitialization (
+  VOID
+  )
+{
+  UINT64 FirstNonAddress;
+
+  //
+  // As guest-physical memory size grows, the permanent PEI RAM requirements
+  // are dominated by the identity-mapping page tables built by the DXE IPL.
+  // The DXL IPL keys off of the physical address bits advertized in the CPU
+  // HOB. To conserve memory, we calculate the minimum address width here.
+  //
+  FirstNonAddress      = BASE_4GB + GetSystemMemorySizeAbove4gb ();
+  mPhysMemAddressWidth = (UINT8)HighBitSet64 (FirstNonAddress);
+
+  //
+  // If FirstNonAddress is not an integral power of two, then we need an
+  // additional bit.
+  //
+  if ((FirstNonAddress & (FirstNonAddress - 1)) != 0) {
+    ++mPhysMemAddressWidth;
+  }
+
+  //
+  // The minimum address width is 36 (covers up to and excluding 64 GB, which
+  // is the maximum for Ia32 + PAE). The theoretical architecture maximum for
+  // X64 long mode is 52 bits, but the DXE IPL clamps that down to 48 bits. We
+  // can simply assert that here, since 48 bits are good enough for 256 TB.
+  //
+  if (mPhysMemAddressWidth <= 36) {
+    mPhysMemAddressWidth = 36;
+  }
+  ASSERT (mPhysMemAddressWidth <= 48);
+}
+
+
 /**
   Publish PEI core memory
 
@@ -99,6 +142,7 @@ PublishPeiMemory (
   EFI_PHYSICAL_ADDRESS        MemoryBase;
   UINT64                      MemorySize;
   UINT64                      LowerMemorySize;
+  UINT32                      PeiMemoryCap;
 
   if (mBootMode == BOOT_ON_S3_RESUME) {
     MemoryBase = PcdGet32 (PcdS3AcpiReservedMemoryBase);
@@ -107,13 +151,24 @@ PublishPeiMemory (
     LowerMemorySize = GetSystemMemorySizeBelow4gb ();
 
     //
+    // For the minimum address width of 36, installing 64 MB as permanent PEI
+    // RAM is sufficient. For the maximum width, the DXE IPL needs a bit more
+    // than 1 GB for paging structures. Therefore we establish an exponential
+    // formula so that the 48-36+1=13 different widths map to permanent PEI RAM
+    // sizes in [64 MB, 2 GB], that is [1<<26, 1<<31]; 6 different powers.
+    //
+    PeiMemoryCap = SIZE_64MB << ((mPhysMemAddressWidth - 36) * 5 / 12);
+    DEBUG ((EFI_D_INFO, "%a: mPhysMemAddressWidth=%d PeiMemoryCap=%uMB\n",
+      __FUNCTION__, mPhysMemAddressWidth, PeiMemoryCap >> 20));
+
+    //
     // Determine the range of memory to use during PEI
     //
     MemoryBase = PcdGet32 (PcdOvmfDxeMemFvBase) + PcdGet32 (PcdOvmfDxeMemFvSize);
     MemorySize = LowerMemorySize - MemoryBase;
-    if (MemorySize > SIZE_64MB) {
-      MemoryBase = LowerMemorySize - SIZE_64MB;
-      MemorySize = SIZE_64MB;
+    if (MemorySize > PeiMemoryCap) {
+      MemoryBase = LowerMemorySize - PeiMemoryCap;
+      MemorySize = PeiMemoryCap;
     }
   }
 

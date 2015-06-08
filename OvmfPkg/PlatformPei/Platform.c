@@ -405,6 +405,7 @@ InitializePlatform (
   }
 
   BootModeInitialization ();
+  AddressWidthInitialization ();
 
   PublishPeiMemory ();
 
