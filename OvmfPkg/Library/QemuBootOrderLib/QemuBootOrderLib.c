@@ -27,6 +27,7 @@
 #include <Guid/GlobalVariable.h>
 #include <Guid/VirtioMmioTransport.h>
 
+#include "ExtraRootBusMap.h"
 
 /**
   OpenFirmware to UEFI device path translation output buffer size in CHAR16's.
@@ -42,9 +43,10 @@
 /**
   Numbers of nodes in OpenFirmware device paths that are required and examined.
 **/
-#define REQUIRED_PCI_OFW_NODES  2
-#define REQUIRED_MMIO_OFW_NODES 1
-#define EXAMINED_OFW_NODES      6
+#define REQUIRED_PCI_OFW_NODES            2
+#define REQUIRED_PCI_EXTRA_ROOT_OFW_NODES 3
+#define REQUIRED_MMIO_OFW_NODES           1
+#define EXAMINED_OFW_NODES                6
 
 
 /**
@@ -556,6 +558,11 @@ ParseOfwNode (
 
   @param[in]     NumNodes        Number of elements in OfwNode.
 
+  @param[in]     ExtraPciRoots   An EXTRA_ROOT_BUS_MAP object created with
+                                 CreateExtraRootBusMap(), to be used for
+                                 translating positions of extra root buses to
+                                 bus numbers.
+
   @param[out]    Translated      Destination array receiving the UEFI path
                                  fragment, allocated by the caller. If the
                                  return value differs from RETURN_SUCCESS, its
@@ -576,16 +583,22 @@ ParseOfwNode (
   @retval RETURN_UNSUPPORTED       The array of OpenFirmware device nodes can't
                                    be translated in the current implementation.
 
+  @retval RETURN_PROTOCOL_ERROR    The initial OpenFirmware node refers to an
+                                   extra PCI root bus (by serial number) that
+                                   is invalid according to ExtraPciRoots.
+
 **/
 STATIC
 RETURN_STATUS
 TranslatePciOfwNodes (
-  IN      CONST OFW_NODE *OfwNode,
-  IN      UINTN          NumNodes,
-  OUT     CHAR16         *Translated,
-  IN OUT  UINTN          *TranslatedSize
+  IN      CONST OFW_NODE           *OfwNode,
+  IN      UINTN                    NumNodes,
+  IN      CONST EXTRA_ROOT_BUS_MAP *ExtraPciRoots,
+  OUT     CHAR16                   *Translated,
+  IN OUT  UINTN                    *TranslatedSize
   )
 {
+  UINT32 PciRoot;
   UINTN  FirstNonBridge;
   CHAR16 Bridges[BRIDGE_TRANSLATION_OUTPUT_SIZE];
   UINTN  BridgesLen;
@@ -594,11 +607,42 @@ TranslatePciOfwNodes (
   UINTN  Written;
 
   //
-  // Get PCI device and optional PCI function. Assume a single PCI root.
+  // Parse the PCI root bus number.
   //
-  if (NumNodes < REQUIRED_PCI_OFW_NODES ||
-      !SubstringEq (OfwNode[0].DriverName, "pci")
-      ) {
+  // The initial OFW node for the main root bus (ie. bus number 0) is:
+  //
+  //   /pci@i0cf8
+  //
+  // For extra root buses, the initial two OFW nodes are
+  //
+  //   /pci-root@4/pci@i0cf8
+  //             ^
+  //             root bus serial number (not PCI bus number)
+  //
+  if (NumNodes >= REQUIRED_PCI_OFW_NODES &&
+      SubstringEq (OfwNode[0].DriverName, "pci")) {
+    PciRoot = 0;
+    FirstNonBridge = REQUIRED_PCI_OFW_NODES - 1;
+  } else if (NumNodes >= REQUIRED_PCI_EXTRA_ROOT_OFW_NODES &&
+             SubstringEq (OfwNode[0].DriverName, "pci-root") &&
+             SubstringEq (OfwNode[1].DriverName, "pci")) {
+    UINT64 PciRootSerial;
+
+    NumEntries = 1;
+    if (RETURN_ERROR (ParseUnitAddressHexList (OfwNode[0].UnitAddress,
+                        &PciRootSerial, &NumEntries))) {
+      return RETURN_UNSUPPORTED;
+    }
+
+    //
+    // Map the extra root bus's serial number to its actual bus number.
+    //
+    if (EFI_ERROR (MapRootBusPosToBusNr (ExtraPciRoots, PciRootSerial,
+                     &PciRoot))) {
+      return RETURN_PROTOCOL_ERROR;
+    }
+    FirstNonBridge = REQUIRED_PCI_EXTRA_ROOT_OFW_NODES - 1;
+  } else {
     return RETURN_UNSUPPORTED;
   }
 
@@ -613,7 +657,6 @@ TranslatePciOfwNodes (
   //
   //   Pci(0x1E,0x0)
   //
-  FirstNonBridge = 1;
   Bridges[0] = L'\0';
   BridgesLen = 0;
   do {
@@ -709,7 +752,8 @@ TranslatePciOfwNodes (
     Written = UnicodeSPrintAsciiFormat (
       Translated,
       *TranslatedSize * sizeof (*Translated), // BufferSize in bytes
-      "PciRoot(0x0)%s/Pci(0x%Lx,0x%Lx)/Ata(%a,%a,0x0)",
+      "PciRoot(0x%x)%s/Pci(0x%Lx,0x%Lx)/Ata(%a,%a,0x0)",
+      PciRoot,
       Bridges,
       PciDevFun[0],
       PciDevFun[1],
@@ -753,7 +797,8 @@ TranslatePciOfwNodes (
     Written = UnicodeSPrintAsciiFormat (
       Translated,
       *TranslatedSize * sizeof (*Translated), // BufferSize in bytes
-      "PciRoot(0x0)%s/Pci(0x%Lx,0x%Lx)/Floppy(0x%Lx)",
+      "PciRoot(0x%x)%s/Pci(0x%Lx,0x%Lx)/Floppy(0x%Lx)",
+      PciRoot,
       Bridges,
       PciDevFun[0],
       PciDevFun[1],
@@ -781,7 +826,8 @@ TranslatePciOfwNodes (
     Written = UnicodeSPrintAsciiFormat (
       Translated,
       *TranslatedSize * sizeof (*Translated), // BufferSize in bytes
-      "PciRoot(0x0)%s/Pci(0x%Lx,0x%Lx)/HD(",
+      "PciRoot(0x%x)%s/Pci(0x%Lx,0x%Lx)/HD(",
+      PciRoot,
       Bridges,
       PciDevFun[0],
       PciDevFun[1]
@@ -825,7 +871,8 @@ TranslatePciOfwNodes (
     Written = UnicodeSPrintAsciiFormat (
       Translated,
       *TranslatedSize * sizeof (*Translated), // BufferSize in bytes
-      "PciRoot(0x0)%s/Pci(0x%Lx,0x%Lx)/Scsi(0x%Lx,0x%Lx)",
+      "PciRoot(0x%x)%s/Pci(0x%Lx,0x%Lx)/Scsi(0x%Lx,0x%Lx)",
+      PciRoot,
       Bridges,
       PciDevFun[0],
       PciDevFun[1],
@@ -849,7 +896,8 @@ TranslatePciOfwNodes (
     Written = UnicodeSPrintAsciiFormat (
       Translated,
       *TranslatedSize * sizeof (*Translated), // BufferSize in bytes
-      "PciRoot(0x0)%s/Pci(0x%Lx,0x%Lx)",
+      "PciRoot(0x%x)%s/Pci(0x%Lx,0x%Lx)",
+      PciRoot,
       Bridges,
       PciDevFun[0],
       PciDevFun[1]
@@ -1057,6 +1105,11 @@ TranslateMmioOfwNodes (
 
   @param[in]     NumNodes        Number of elements in OfwNode.
 
+  @param[in]     ExtraPciRoots   An EXTRA_ROOT_BUS_MAP object created with
+                                 CreateExtraRootBusMap(), to be used for
+                                 translating positions of extra root buses to
+                                 bus numbers.
+
   @param[out]    Translated      Destination array receiving the UEFI path
                                  fragment, allocated by the caller. If the
                                  return value differs from RETURN_SUCCESS, its
@@ -1077,14 +1130,19 @@ TranslateMmioOfwNodes (
   @retval RETURN_UNSUPPORTED       The array of OpenFirmware device nodes can't
                                    be translated in the current implementation.
 
+  @retval RETURN_PROTOCOL_ERROR    The array of OpenFirmware device nodes has
+                                   been (partially) recognized, but it contains
+                                   a logic error / doesn't match system state.
+
 **/
 STATIC
 RETURN_STATUS
 TranslateOfwNodes (
-  IN      CONST OFW_NODE *OfwNode,
-  IN      UINTN          NumNodes,
-  OUT     CHAR16         *Translated,
-  IN OUT  UINTN          *TranslatedSize
+  IN      CONST OFW_NODE           *OfwNode,
+  IN      UINTN                    NumNodes,
+  IN      CONST EXTRA_ROOT_BUS_MAP *ExtraPciRoots,
+  OUT     CHAR16                   *Translated,
+  IN OUT  UINTN                    *TranslatedSize
   )
 {
   RETURN_STATUS Status;
@@ -1092,8 +1150,8 @@ TranslateOfwNodes (
   Status = RETURN_UNSUPPORTED;
 
   if (FeaturePcdGet (PcdQemuBootOrderPciTranslation)) {
-    Status = TranslatePciOfwNodes (OfwNode, NumNodes, Translated,
-               TranslatedSize);
+    Status = TranslatePciOfwNodes (OfwNode, NumNodes, ExtraPciRoots,
+               Translated, TranslatedSize);
   }
   if (Status == RETURN_UNSUPPORTED &&
       FeaturePcdGet (PcdQemuBootOrderMmioTranslation)) {
@@ -1116,6 +1174,11 @@ TranslateOfwNodes (
                                  byte immediately following the consumed
                                  characters. In other error cases, it points to
                                  the byte that caused the error.
+
+  @param[in]     ExtraPciRoots   An EXTRA_ROOT_BUS_MAP object created with
+                                 CreateExtraRootBusMap(), to be used for
+                                 translating positions of extra root buses to
+                                 bus numbers.
 
   @param[out]    Translated      Destination array receiving the UEFI path
                                  fragment, allocated by the caller. If the
@@ -1142,6 +1205,12 @@ TranslateOfwNodes (
                                     the current implementation. Further calls
                                     to this function are possible.
 
+  @retval RETURN_PROTOCOL_ERROR     The OpenFirmware device path has been
+                                    (partially) recognized, but it contains a
+                                    logic error / doesn't match system state.
+                                    Further calls to this function are
+                                    possible.
+
   @retval RETURN_NOT_FOUND          Translation terminated. On input, *Ptr was
                                     pointing to the empty string or "HALT". On
                                     output, *Ptr points to the empty string
@@ -1154,9 +1223,10 @@ TranslateOfwNodes (
 STATIC
 RETURN_STATUS
 TranslateOfwPath (
-  IN OUT  CONST CHAR8 **Ptr,
-  OUT     CHAR16      *Translated,
-  IN OUT  UINTN       *TranslatedSize
+  IN OUT  CONST CHAR8              **Ptr,
+  IN      CONST EXTRA_ROOT_BUS_MAP *ExtraPciRoots,
+  OUT     CHAR16                   *Translated,
+  IN OUT  UINTN                    *TranslatedSize
   )
 {
   UINTN         NumNodes;
@@ -1204,6 +1274,7 @@ TranslateOfwPath (
   Status = TranslateOfwNodes (
              Node,
              NumNodes < EXAMINED_OFW_NODES ? NumNodes : EXAMINED_OFW_NODES,
+             ExtraPciRoots,
              Translated,
              TranslatedSize);
   switch (Status) {
@@ -1217,6 +1288,11 @@ TranslateOfwPath (
 
   case RETURN_UNSUPPORTED:
     DEBUG ((DEBUG_VERBOSE, "%a: unsupported\n", __FUNCTION__));
+    break;
+
+  case RETURN_PROTOCOL_ERROR:
+    DEBUG ((DEBUG_VERBOSE, "%a: logic error / system state mismatch\n",
+      __FUNCTION__));
     break;
 
   default:
@@ -1512,6 +1588,8 @@ SetBootOrderFromQemu (
   ACTIVE_OPTION                    *ActiveOption;
   UINTN                            ActiveCount;
 
+  EXTRA_ROOT_BUS_MAP               *ExtraPciRoots;
+
   UINTN                            TranslatedSize;
   CHAR16                           Translated[TRANSLATION_OUTPUT_SIZE];
 
@@ -1556,13 +1634,24 @@ SetBootOrderFromQemu (
     goto ErrorFreeBootOrder;
   }
 
+  if (FeaturePcdGet (PcdQemuBootOrderPciTranslation)) {
+    Status = CreateExtraRootBusMap (&ExtraPciRoots);
+    if (EFI_ERROR (Status)) {
+      goto ErrorFreeActiveOption;
+    }
+  } else {
+    ExtraPciRoots = NULL;
+  }
+
   //
   // translate each OpenFirmware path
   //
   TranslatedSize = sizeof (Translated) / sizeof (Translated[0]);
-  Status = TranslateOfwPath (&FwCfgPtr, Translated, &TranslatedSize);
+  Status = TranslateOfwPath (&FwCfgPtr, ExtraPciRoots, Translated,
+             &TranslatedSize);
   while (Status == RETURN_SUCCESS ||
          Status == RETURN_UNSUPPORTED ||
+         Status == RETURN_PROTOCOL_ERROR ||
          Status == RETURN_BUFFER_TOO_SMALL) {
     if (Status == RETURN_SUCCESS) {
       UINTN Idx;
@@ -1582,7 +1671,7 @@ SetBootOrderFromQemu (
           //
           Status = BootOrderAppend (&BootOrder, &ActiveOption[Idx]);
           if (Status != RETURN_SUCCESS) {
-            goto ErrorFreeActiveOption;
+            goto ErrorFreeExtraPciRoots;
           }
           break;
         }
@@ -1590,7 +1679,8 @@ SetBootOrderFromQemu (
     }   // translation successful
 
     TranslatedSize = sizeof (Translated) / sizeof (Translated[0]);
-    Status = TranslateOfwPath (&FwCfgPtr, Translated, &TranslatedSize);
+    Status = TranslateOfwPath (&FwCfgPtr, ExtraPciRoots, Translated,
+               &TranslatedSize);
   } // scanning of OpenFirmware paths done
 
   if (Status == RETURN_NOT_FOUND && BootOrder.Produced > 0) {
@@ -1601,7 +1691,7 @@ SetBootOrderFromQemu (
     //
     Status = BootOrderComplete (&BootOrder, ActiveOption, ActiveCount);
     if (RETURN_ERROR (Status)) {
-      goto ErrorFreeActiveOption;
+      goto ErrorFreeExtraPciRoots;
     }
 
     //
@@ -1619,11 +1709,16 @@ SetBootOrderFromQemu (
                     );
     if (EFI_ERROR (Status)) {
       DEBUG ((DEBUG_ERROR, "%a: setting BootOrder: %r\n", __FUNCTION__, Status));
-      goto ErrorFreeActiveOption;
+      goto ErrorFreeExtraPciRoots;
     }
 
     DEBUG ((DEBUG_INFO, "%a: setting BootOrder: success\n", __FUNCTION__));
     PruneBootVariables (ActiveOption, ActiveCount);
+  }
+
+ErrorFreeExtraPciRoots:
+  if (ExtraPciRoots != NULL) {
+    DestroyExtraRootBusMap (ExtraPciRoots);
   }
 
 ErrorFreeActiveOption:
