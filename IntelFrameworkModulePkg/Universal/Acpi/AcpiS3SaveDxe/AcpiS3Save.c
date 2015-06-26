@@ -29,7 +29,6 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <Guid/AcpiS3Context.h>
 #include <Guid/Acpi.h>
 #include <Guid/EventGroup.h>
-#include <Protocol/AcpiS3Save.h>
 #include <IndustryStandard/Acpi.h>
 
 #include "AcpiS3Save.h"
@@ -51,13 +50,6 @@ VOID
 S3ReadyThunkPlatform (
   IN ACPI_S3_CONTEXT      *AcpiS3Context
   );
-
-UINTN     mLegacyRegionSize;
-
-EFI_ACPI_S3_SAVE_PROTOCOL mS3Save = {
-  LegacyGetS3MemorySize,
-  S3Ready,
-};
 
 EFI_GUID              mAcpiS3IdtrProfileGuid = {
   0xdea652b0, 0xd587, 0x4c54, { 0xb5, 0xb4, 0xc6, 0x82, 0xe7, 0xa0, 0xaa, 0x3d }
@@ -407,52 +399,16 @@ S3CreateIdentityMappingPageTables (
 }
 
 /**
-  Gets the buffer of legacy memory below 1 MB 
-  This function is to get the buffer in legacy memory below 1MB that is required during S3 resume.
-
-  @param This           A pointer to the EFI_ACPI_S3_SAVE_PROTOCOL instance.
-  @param Size           The returned size of legacy memory below 1 MB.
-
-  @retval EFI_SUCCESS           Size is successfully returned.
-  @retval EFI_INVALID_PARAMETER The pointer Size is NULL.
-
-**/
-EFI_STATUS
-EFIAPI
-LegacyGetS3MemorySize (
-  IN  EFI_ACPI_S3_SAVE_PROTOCOL   *This,
-  OUT UINTN                       *Size
-  )
-{
-  ASSERT (FALSE);
-
-  if (Size == NULL) {
-    return EFI_INVALID_PARAMETER;
-  }
-
-  *Size = mLegacyRegionSize;
-  return EFI_SUCCESS;
-}
-
-/**
   Prepares all information that is needed in the S3 resume boot path.
   
   Allocate the resources or prepare informations and save in ACPI variable set for S3 resume boot path  
   
-  @param This                 A pointer to the EFI_ACPI_S3_SAVE_PROTOCOL instance.
-  @param LegacyMemoryAddress  The base address of legacy memory.
-
-  @retval EFI_NOT_FOUND         Some necessary information cannot be found.
   @retval EFI_SUCCESS           All information was saved successfully.
-  @retval EFI_OUT_OF_RESOURCES  Resources were insufficient to save all the information.
-  @retval EFI_INVALID_PARAMETER The memory range is not located below 1 MB.
-
 **/
 EFI_STATUS
 EFIAPI
 S3Ready (
-  IN EFI_ACPI_S3_SAVE_PROTOCOL    *This,
-  IN VOID                         *LegacyMemoryAddress
+  VOID
   )
 {
   EFI_STATUS                                    Status;
@@ -464,16 +420,11 @@ S3Ready (
 
   DEBUG ((EFI_D_INFO, "S3Ready!\n"));
 
-  //
-  // Platform may invoke AcpiS3Save->S3Save() before ExitPmAuth, because we need save S3 information there, while BDS ReadyToBoot may invoke it again.
-  // So if 2nd S3Save() is triggered later, we need ignore it.
-  //
+  ASSERT (!AlreadyEntered);
   if (AlreadyEntered) {
     return EFI_SUCCESS;
   }
   AlreadyEntered = TRUE;
-
-  ASSERT (LegacyMemoryAddress == NULL);
 
   AcpiS3Context = AllocateMemoryBelow4G (EfiReservedMemoryType, sizeof(*AcpiS3Context));
   ASSERT (AcpiS3Context != NULL);
@@ -567,13 +518,9 @@ OnEndOfDxe (
   EFI_STATUS Status;
 
   //
-  // Our S3Ready() function ignores both of its parameters, and always
-  // succeeds.
+  // Our S3Ready() function always succeeds.
   //
-  Status = S3Ready (
-             NULL, // This
-             NULL  // LegacyMemoryAddress
-             );
+  Status = S3Ready ();
   ASSERT_EFI_ERROR (Status);
 
   //
@@ -607,26 +554,9 @@ InstallAcpiS3Save (
   EFI_STATUS        Status;
   EFI_EVENT         EndOfDxeEvent;
 
-  if (!FeaturePcdGet(PcdPlatformCsmSupport)) {
-    //
-    // More memory for no CSM tip, because GDT need relocation
-    //
-    mLegacyRegionSize = 0x250;
-  } else {
-    mLegacyRegionSize = 0x100;
-  }
-
   if (FeaturePcdGet(PcdFrameworkCompatibilitySupport)) {
     InstallAcpiS3SaveThunk ();
   }
-
-  Status = gBS->InstallProtocolInterface (
-                  &ImageHandle,
-                  &gEfiAcpiS3SaveProtocolGuid,
-                  EFI_NATIVE_INTERFACE,
-                  &mS3Save
-                  );
-  ASSERT_EFI_ERROR (Status);
 
   Status = gBS->CreateEventEx (
                   EVT_NOTIFY_SIGNAL,
