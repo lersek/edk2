@@ -38,7 +38,6 @@ Abstract:
 #include <Protocol/DxeSmmReadyToLock.h>
 #include <Protocol/UserManager.h>
 #include <Protocol/DeferredImageLoad.h>
-#include <Protocol/AcpiS3Save.h>
 #include <Protocol/ExitPmAuth.h>
 #include <Protocol/MmioDevice.h>
 #include <Protocol/I2cBusMcg.h>

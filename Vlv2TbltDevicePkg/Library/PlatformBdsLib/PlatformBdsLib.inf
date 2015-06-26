@@ -82,7 +82,6 @@
   gEfiDxeSmmReadyToLockProtocolGuid
   gEfiUserManagerProtocolGuid
   gEfiDeferredImageLoadProtocolGuid
-  gEfiAcpiS3SaveProtocolGuid
   gEfiSpiProtocolGuid                           ## PROTOCOL CONSUMES
   gExitPmAuthProtocolGuid
   gEfiTdtOperationProtocolGuid
@@ -97,6 +96,7 @@
   gEfiGlobalVariableGuid
   gEfiNormalSetupGuid
   gEfiPartTypeSystemPartGuid
+  gEfiEndOfDxeEventGroupGuid
 
 [Pcd]
   gPlatformModuleTokenSpaceGuid.PcdFlashFvRecovery2Base

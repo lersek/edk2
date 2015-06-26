@@ -49,7 +49,6 @@ Abstract:
 #include <Protocol/CpuIo.h>
 #include <Guid/BoardFeatures.h>
 #include <Protocol/AcpiSupport.h>
-#include <Protocol/AcpiS3Save.h>
 #include <Protocol/Ps2Policy.h>
 #include <Library/CpuIA32.h>
 #include <SetupMode.h>
@@ -642,7 +641,6 @@ OnReadyToBoot (
   EFI_STATUS                  Status;
   EFI_ACPI_TABLE_VERSION      TableVersion;
   EFI_ACPI_SUPPORT_PROTOCOL   *AcpiSupport;
-  EFI_ACPI_S3_SAVE_PROTOCOL   *AcpiS3Save;
   SYSTEM_CONFIGURATION        SetupVarBuffer;
   UINTN                       VariableSize;
   EFI_PLATFORM_CPU_INFO       *PlatformCpuInfoPtr = NULL;
@@ -726,15 +724,6 @@ OnReadyToBoot (
                           TableVersion
                           );
   ASSERT_EFI_ERROR (Status);
-
-  //
-  // S3 script save.
-  //
-  Status = gBS->LocateProtocol (&gEfiAcpiS3SaveProtocolGuid, NULL, (VOID **) &AcpiS3Save);
-  if (!EFI_ERROR (Status)) {
-    AcpiS3Save->S3Save (AcpiS3Save, NULL);
-  }
-
 }
 
 VOID

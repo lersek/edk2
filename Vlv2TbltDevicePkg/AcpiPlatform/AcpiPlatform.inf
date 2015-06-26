@@ -70,7 +70,6 @@
   gEnhancedSpeedstepProtocolGuid
   gEfiPlatformCpuProtocolGuid
   gEfiAcpiSupportProtocolGuid
-  gEfiAcpiS3SaveProtocolGuid
   gEfiCpuIoProtocolGuid
   gEfiPs2PolicyProtocolGuid
   gEfiFirmwareVolume2ProtocolGuid

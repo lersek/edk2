@@ -1,5 +1,7 @@
 /** @file
 
+  Copyright (c) 2015, Red Hat, Inc.<BR>
+  Copyright (c) 2015, Linaro Ltd.<BR>
   Copyright (c) 2004  - 2015, Intel Corporation. All rights reserved.<BR>
                                                                                    
   This program and the accompanying materials are licensed and made available under
@@ -26,6 +28,7 @@ Abstract:
 #include "BdsPlatform.h"
 #include "SetupMode.h"
 #include <Guid/SetupVariable.h>
+#include <Guid/EventGroup.h>
 #include <Library/TcgPhysicalPresenceLib.h>
 #include <Library/TrEEPhysicalPresenceLib.h>
 #include <Protocol/I2cMasterMcg.h>
@@ -148,7 +151,6 @@ InstallReadyToLock (
   EFI_STATUS                Status;
   EFI_HANDLE                Handle;
   EFI_SMM_ACCESS2_PROTOCOL  *SmmAccess;
-  EFI_ACPI_S3_SAVE_PROTOCOL *AcpiS3Save;
 
   //
   // Install DxeSmmReadyToLock protocol prior to the processing of boot options
@@ -159,19 +161,6 @@ InstallReadyToLock (
                   (VOID **) &SmmAccess
                   );
   if (!EFI_ERROR (Status)) {
-
-    //
-    // Prepare S3 information, this MUST be done before DxeSmmReadyToLock
-    //
-    Status = gBS->LocateProtocol (
-                    &gEfiAcpiS3SaveProtocolGuid,
-                    NULL,
-                    (VOID **)&AcpiS3Save
-                    );
-    if (!EFI_ERROR (Status)) {
-      AcpiS3Save->S3Save (AcpiS3Save, NULL);
-    }
-
     Handle = NULL;
     Status = gBS->InstallProtocolInterface (
                     &Handle,
@@ -205,6 +194,25 @@ ShellImageCallback (
  DEBUG ((EFI_D_INFO, "BdsEntry ShellImageCallback \n"));
 }
 
+/**
+  Empty callback function executed when the EndOfDxe event group is signaled.
+
+  We only need this function because we'd like to signal EndOfDxe, and for that
+  we need to create an event, with a callback function.
+
+  @param[in] Event    Event whose notification function is being invoked.
+  @param[in] Context  The pointer to the notification function's context, which
+                      is implementation-dependent.
+**/
+VOID
+EFIAPI
+OnEndOfDxe (
+  IN EFI_EVENT Event,
+  IN VOID      *Context
+  )
+{
+}
+
 //
 // BDS Platform Functions
 //
@@ -224,6 +232,7 @@ PlatformBdsInit (
   )
 {
   EFI_STATUS  Status;
+  EFI_EVENT   EndOfDxeEvent;
   EFI_EVENT   ShellImageEvent;
   EFI_GUID    ShellEnvProtocol = SHELL_ENVIRONMENT_INTERFACE_PROTOCOL;
 
@@ -233,6 +242,22 @@ PlatformBdsInit (
   SerialPortWrite((UINT8 *)">>>>BdsEntry\r\n", 14);
   #endif
   BdsLibSaveMemoryTypeInformation ();
+
+  //
+  // Signal the EndOfDxe event group.
+  //
+  Status = gBS->CreateEventEx (
+                  EVT_NOTIFY_SIGNAL,
+                  TPL_CALLBACK,
+                  OnEndOfDxe,
+                  NULL, /* NotifyContext */
+                  &gEfiEndOfDxeEventGroupGuid,
+                  &EndOfDxeEvent
+                  );
+  if (!EFI_ERROR (Status)) {
+    gBS->SignalEvent (EndOfDxeEvent);
+    gBS->CloseEvent (EndOfDxeEvent);
+  }
 
   //
   // Before user authentication, the user identification devices need be connected
