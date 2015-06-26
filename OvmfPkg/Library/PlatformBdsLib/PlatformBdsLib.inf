@@ -64,4 +64,8 @@
 
 [Protocols]
   gEfiDecompressProtocolGuid
+  gEfiS3SaveStateProtocolGuid                   # PROTOCOL SOMETIMES_CONSUMED
+  gEfiDxeSmmReadyToLockProtocolGuid             # PROTOCOL SOMETIMES_PRODUCED
 
+[Guids]
+  gEfiEndOfDxeEventGroupGuid

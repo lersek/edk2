@@ -1152,6 +1152,68 @@ Returns:
 }
 
 
+/**
+  Empty callback function executed when the EndOfDxe event group is signaled.
+
+  We only need this function because we'd like to signal EndOfDxe, and for that
+  we need to create an event, with a callback function.
+
+  @param[in] Event    Event whose notification function is being invoked.
+  @param[in] Context  The pointer to the notification function's context, which
+                      is implementation-dependent.
+**/
+STATIC
+VOID
+EFIAPI
+OnEndOfDxe (
+  IN EFI_EVENT Event,
+  IN VOID      *Context
+  )
+{
+}
+
+
+/**
+  Save the S3 boot script.
+
+  Note that we trigger DxeSmmReadyToLock here -- otherwise the script wouldn't
+  be saved actually. Triggering this protocol installation event in turn locks
+  down SMM, so no further changes to LockBoxes or SMRAM are possible
+  afterwards.
+**/
+STATIC
+VOID
+SaveS3BootScript (
+  VOID
+  )
+{
+  EFI_STATUS                 Status;
+  EFI_S3_SAVE_STATE_PROTOCOL *BootScript;
+  EFI_HANDLE                 Handle;
+  STATIC CONST UINT8         Info[] = { 0xDE, 0xAD, 0xBE, 0xEF };
+
+  Status = gBS->LocateProtocol (&gEfiS3SaveStateProtocolGuid, NULL,
+                  (VOID **) &BootScript);
+  ASSERT_EFI_ERROR (Status);
+
+  //
+  // Despite the opcode documentation in the PI spec, the protocol
+  // implementation embeds a deep copy of the info in the boot script, rather
+  // than storing just a pointer to runtime or NVS storage.
+  //
+  Status = BootScript->Write(BootScript, EFI_BOOT_SCRIPT_INFORMATION_OPCODE,
+                         (UINT32) sizeof Info,
+                         (EFI_PHYSICAL_ADDRESS)(UINTN) &Info);
+  ASSERT_EFI_ERROR (Status);
+
+  Handle = NULL;
+  Status = gBS->InstallProtocolInterface (&Handle,
+                  &gEfiDxeSmmReadyToLockProtocolGuid, EFI_NATIVE_INTERFACE,
+                  NULL);
+  ASSERT_EFI_ERROR (Status);
+}
+
+
 VOID
 EFIAPI
 PlatformBdsPolicyBehavior (
@@ -1186,10 +1248,34 @@ Returns:
 {
   EFI_STATUS                         Status;
   EFI_BOOT_MODE                      BootMode;
+  EFI_EVENT                          EndOfDxeEvent;
 
   DEBUG ((EFI_D_INFO, "PlatformBdsPolicyBehavior\n"));
 
   ConnectRootBridge ();
+
+  //
+  // We can't signal End-of-Dxe earlier than this. Namely, End-of-Dxe triggers
+  // the preparation of S3 system information. That logic has a hard dependency
+  // on the presence of the FACS ACPI table. Since our ACPI tables are only
+  // installed after PCI enumeration completes, we must not trigger the S3 save
+  // earlier, hence we can't signal End-of-Dxe earlier.
+  //
+  Status = gBS->CreateEventEx (EVT_NOTIFY_SIGNAL, TPL_CALLBACK, OnEndOfDxe,
+                  NULL /* NotifyContext */, &gEfiEndOfDxeEventGroupGuid,
+                  &EndOfDxeEvent);
+  if (!EFI_ERROR (Status)) {
+    gBS->SignalEvent (EndOfDxeEvent);
+    gBS->CloseEvent (EndOfDxeEvent);
+  }
+
+  if (QemuFwCfgS3Enabled ()) {
+    //
+    // Save the boot script too. Note that this requires/includes emitting the
+    // DxeSmmReadyToLock event, which in turn locks down SMM.
+    //
+    SaveS3BootScript ();
+  }
 
   if (PcdGetBool (PcdOvmfFlashVariablesEnable)) {
     DEBUG ((EFI_D_INFO, "PlatformBdsPolicyBehavior: not restoring NvVars "
