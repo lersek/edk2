@@ -316,7 +316,6 @@
   # Platform Driver
   #
   ArmVirtPkg/VirtFdtDxe/VirtFdtDxe.inf
-  ArmVirtPkg/QemuFwCfgToPcdDxe/QemuFwCfgToPcd.inf
   OvmfPkg/VirtioBlkDxe/VirtioBlk.inf
   OvmfPkg/VirtioScsiDxe/VirtioScsi.inf
   OvmfPkg/VirtioNetDxe/VirtioNet.inf
