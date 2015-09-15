@@ -475,6 +475,12 @@ SataControllerStart (
     SataPrivateData->DeviceCount = IDE_MAX_DEVICES;
   } else if (IS_PCI_SATADPA (&PciData)) {
     //
+    // Enable AHCI mode.
+    //
+    AhciWriteReg (PciIo, R_AHCI_GHC,
+      AhciReadReg (PciIo, R_AHCI_GHC) | B_AHCI_GHC_AE);
+
+    //
     // Read Host Capability Register(CAP) to get Number of Ports(NPS) and Supports Port Multiplier(SPM)
     //   NPS is 0's based value indicating the maximum number of ports supported by the HBA silicon.
     //   A maximum of 32 ports can be supported. A value of '0h', indicating one port, is the minimum requirement.
