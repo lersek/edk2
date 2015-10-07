@@ -698,7 +698,35 @@ SecCoreStartupWithStack (
   IA32_DESCRIPTOR             IdtDescriptor;
   UINT32                      Index;
 
+  //
+  // This code may be running on the S3 resume boot path, where RAM has been
+  // populated by the runtime guest OS. Guarantee the reinitialization of the
+  // BaseExtractGuidedSectionLib handler table, before the constructor of
+  // LzmaCustomDecompressLib calls into BaseExtractGuidedSectionLib, due to our
+  // explicit ProcessLibraryConstructorList() call below.
+  //
+  // We must not rely on any libraries before calling
+  // ProcessLibraryConstructorList(), thus we clear the table with an
+  // open-coded loop. (The FeaturePcdGet() and FixedPcdGetXX() macro
+  // invocations are preprocessed to constants.)
+  //
+  if (FeaturePcdGet (PcdSmmSmramRequire)) {
+    UINT8 *Table;
+
+    Table = (UINT8*)(UINTN)FixedPcdGet64 (PcdGuidedExtractHandlerTableAddress);
+    for (Index = 0;
+         Index < FixedPcdGet32 (PcdGuidedExtractHandlerTableSize);
+         ++Index) {
+      Table[Index] = 0;
+    }
+  }
+
   ProcessLibraryConstructorList (NULL, NULL);
+
+  if (FeaturePcdGet (PcdSmmSmramRequire)) {
+    DEBUG ((EFI_D_VERBOSE, "%a: cleared BaseExtractGuidedSectionLib table\n",
+      __FUNCTION__));
+  }
 
   DEBUG ((EFI_D_INFO,
     "SecCoreStartupWithStack(0x%x, 0x%x)\n",
