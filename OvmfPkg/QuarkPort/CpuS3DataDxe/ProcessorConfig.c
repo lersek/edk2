@@ -57,6 +57,9 @@ PrepareMemoryForConfiguration (
   VOID
   )
 {
+  UINTN                NumberOfProcessors;
+  UINTN                RegisterTableSize;
+
   //
   // Claim memory for AP stack.
   //
@@ -64,6 +67,17 @@ PrepareMemoryForConfiguration (
                                 PcdGet32 (PcdCpuMaxLogicalProcessorNumber) *
                                 PcdGet32 (PcdCpuApStackSize)
                                 );
+
+  //
+  // OVMF port note: leaving these tables zero-filled tells PiSmmCpuDxeSmm that
+  // there is no work to do.
+  //
+  NumberOfProcessors = mCpuConfigConextBuffer.NumberOfProcessors;
+  RegisterTableSize = sizeof (CPU_REGISTER_TABLE) * NumberOfProcessors;
+  mCpuConfigConextBuffer.RegisterTable =
+    AllocateAcpiNvsMemoryBelow4G (RegisterTableSize);
+  mCpuConfigConextBuffer.PreSmmInitRegisterTable =
+    AllocateAcpiNvsMemoryBelow4G (RegisterTableSize);
 }
 
 /**
@@ -293,6 +307,12 @@ SaveCpuS3Data (
     (EFI_PHYSICAL_ADDRESS) (UINTN) mExchangeInfo->StackStart;
   mAcpiCpuData->StackSize      = PcdGet32 (PcdCpuApStackSize);
   mAcpiCpuData->MtrrTable      = (EFI_PHYSICAL_ADDRESS)(UINTN)MtrrSettings;
+
+  mAcpiCpuData->RegisterTable =
+    (EFI_PHYSICAL_ADDRESS)(UINTN)mCpuConfigConextBuffer.RegisterTable;
+  mAcpiCpuData->PreSmmInitRegisterTable =
+    (EFI_PHYSICAL_ADDRESS)(UINTN)
+      mCpuConfigConextBuffer.PreSmmInitRegisterTable;
 
   mAcpiCpuData->ApMachineCheckHandlerBase = mApMachineCheckHandlerBase;
   mAcpiCpuData->ApMachineCheckHandlerSize = mApMachineCheckHandlerSize;
