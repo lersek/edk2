@@ -1697,7 +1697,7 @@ InitializeMpSupport (
                   );
   ASSERT_EFI_ERROR (Status);
 
-  if (mMpSystemData.NumberOfProcessors < gMaxLogicalProcessorNumber) {
+  if (mMpSystemData.NumberOfProcessors > 1 && mMpSystemData.NumberOfProcessors < gMaxLogicalProcessorNumber) {
     if (mApStackStart != NULL) {
       FreePages (mApStackStart, EFI_SIZE_TO_PAGES (
                                   (gMaxLogicalProcessorNumber - mMpSystemData.NumberOfProcessors) *
