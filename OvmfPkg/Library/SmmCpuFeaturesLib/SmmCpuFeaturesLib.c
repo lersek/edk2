@@ -15,45 +15,10 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <PiSmm.h>
 #include <Library/SmmCpuFeaturesLib.h>
 #include <Library/BaseLib.h>
-#include <Library/MtrrLib.h>
 #include <Library/PcdLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/DebugLib.h>
-#include <Register/Cpuid.h>
 #include <Register/SmramSaveStateMap.h>
-
-//
-// Machine Specific Registers (MSRs)
-//
-#define  SMM_FEATURES_LIB_IA32_MTRR_CAP            0x0FE
-#define  SMM_FEATURES_LIB_IA32_FEATURE_CONTROL     0x03A
-#define  SMM_FEATURES_LIB_IA32_SMRR_PHYSBASE       0x1F2
-#define  SMM_FEATURES_LIB_IA32_SMRR_PHYSMASK       0x1F3
-#define  SMM_FEATURES_LIB_IA32_CORE_SMRR_PHYSBASE  0x0A0
-#define  SMM_FEATURES_LIB_IA32_CORE_SMRR_PHYSMASK  0x0A1
-#define    EFI_MSR_SMRR_MASK                       0xFFFFF000
-#define    EFI_MSR_SMRR_PHYS_MASK_VALID            BIT11
-
-//
-// Set default value to assume SMRR is not supported
-//
-BOOLEAN  mSmrrSupported = FALSE;
-
-//
-// Set default value to assume IA-32 Architectural MSRs are used
-//
-UINT32  mSmrrPhysBaseMsr = SMM_FEATURES_LIB_IA32_SMRR_PHYSBASE;
-UINT32  mSmrrPhysMaskMsr = SMM_FEATURES_LIB_IA32_SMRR_PHYSMASK;
-
-//
-// Set default value to assume MTRRs need to be configured on each SMI
-//
-BOOLEAN  mNeedConfigureMtrrs = TRUE;
-
-//
-// Array for state of SMRR enable on all CPUs
-//
-BOOLEAN  *mSmrrEnabled;
 
 /**
   The constructor function 
@@ -68,91 +33,9 @@ SmmCpuFeaturesLibConstructor (
   IN EFI_SYSTEM_TABLE  *SystemTable
   )
 {
-  UINT32  RegEax;
-  UINT32  RegEdx;
-  UINTN   FamilyId;
-  UINTN   ModelId;
-
   //
-  // Retrieve CPU Family and Model 
+  // No need to program SMRRs on our virtual platform.
   //
-  AsmCpuid (CPUID_VERSION_INFO, &RegEax, NULL, NULL, &RegEdx);
-  FamilyId = (RegEax >> 8) & 0xf;
-  ModelId  = (RegEax >> 4) & 0xf;
-  if (FamilyId == 0x06 || FamilyId == 0x0f) {
-    ModelId = ModelId | ((RegEax >> 12) & 0xf0);
-  }
-
-  //
-  // Check CPUID(CPUID_VERSION_INFO).EDX[12] for MTRR capability
-  //
-  if ((RegEdx & BIT12) != 0) {
-    //
-    // Check MTRR_CAP MSR bit 11 for SMRR support
-    //
-    if ((AsmReadMsr64 (SMM_FEATURES_LIB_IA32_MTRR_CAP) & BIT11) != 0) {
-      mSmrrSupported = TRUE;
-    }
-  }
-
-  //
-  // Intel(R) 64 and IA-32 Architectures Software Developer's Manual
-  // Volume 3C, Section 35.3 MSRs in the Intel(R) Atom(TM) Processor Family
-  // 
-  // If CPU Family/Model is 06_1CH, 06_26H, 06_27H, 06_35H or 06_36H, then 
-  // SMRR Physical Base and SMM Physical Mask MSRs are not available.
-  //
-  if (FamilyId == 0x06) {
-    if (ModelId == 0x1C || ModelId == 0x26 || ModelId == 0x27 || ModelId == 0x35 || ModelId == 0x36) {
-      mSmrrSupported = FALSE;
-    }
-  }
-
-  //
-  // Intel(R) 64 and IA-32 Architectures Software Developer's Manual
-  // Volume 3C, Section 35.2 MSRs in the Intel(R) Core(TM) 2 Processor Family
-  //
-  // If CPU Family/Model is 06_0F or 06_17, then use Intel(R) Core(TM) 2 
-  // Processor Family MSRs 
-  //
-  if (FamilyId == 0x06) {
-    if (ModelId == 0x17 || ModelId == 0x0f) {
-      mSmrrPhysBaseMsr = SMM_FEATURES_LIB_IA32_CORE_SMRR_PHYSBASE;
-      mSmrrPhysMaskMsr = SMM_FEATURES_LIB_IA32_CORE_SMRR_PHYSMASK;
-    }
-  }
-  
-  //
-  // Intel(R) 64 and IA-32 Architectures Software Developer's Manual
-  // Volume 3C, Section 34.4.2 SMRAM Caching
-  //   An IA-32 processor does not automatically write back and invalidate its 
-  //   caches before entering SMM or before exiting SMM. Because of this behavior, 
-  //   care must be taken in the placement of the SMRAM in system memory and in 
-  //   the caching of the SMRAM to prevent cache incoherence when switching back 
-  //   and forth between SMM and protected mode operation.
-  //
-  // An IA-32 processor is a processor that does not support the Intel 64 
-  // Architecture.  Support for the Intel 64 Architecture can be detected from 
-  // CPUID(CPUID_EXTENDED_CPU_SIG).EDX[29]
-  //
-  // If an IA-32 processor is detected, then set mNeedConfigureMtrrs to TRUE, 
-  // so caches are flushed on SMI entry and SMI exit, the interrupted code 
-  // MTRRs are saved/restored, and MTRRs for SMM are loaded.
-  //
-  AsmCpuid (CPUID_EXTENDED_FUNCTION, &RegEax, NULL, NULL, NULL);
-  if (RegEax >= CPUID_EXTENDED_CPU_SIG) {
-    AsmCpuid (CPUID_EXTENDED_CPU_SIG, NULL, NULL, NULL, &RegEdx);
-    if ((RegEdx & BIT29) != 0) {
-      mNeedConfigureMtrrs = FALSE;
-    }
-  }
-  
-  //
-  // Allocate array for state of SMRR enable on all CPUs
-  //
-  mSmrrEnabled = (BOOLEAN *)AllocatePool (sizeof (BOOLEAN) * PcdGet32 (PcdCpuMaxLogicalProcessorNumber));
-  ASSERT (mSmrrEnabled != NULL);
-  
   return EFI_SUCCESS;
 }
 
@@ -190,7 +73,6 @@ SmmCpuFeaturesInitializeProcessor (
   )
 {
   SMRAM_SAVE_STATE_MAP  *CpuState;
-  UINT64                FeatureControl;
 
   //
   // Configure SMBASE.
@@ -199,37 +81,8 @@ SmmCpuFeaturesInitializeProcessor (
   CpuState->x86.SMBASE = (UINT32)CpuHotPlugData->SmBase[CpuIndex];
 
   //
-  // Intel(R) 64 and IA-32 Architectures Software Developer's Manual
-  // Volume 3C, Section 35.2 MSRs in the Intel(R) Core(TM) 2 Processor Family
+  // No need to program SMRRs on our virtual platform.
   //
-  // If Intel(R) Core(TM) Core(TM) 2 Processor Family MSRs are being used, then 
-  // make sure SMRR Enable(BIT3) of MSR_FEATURE_CONTROL MSR(0x3A) is set before 
-  // accessing SMRR base/mask MSRs.  If Lock(BIT0) of MSR_FEATURE_CONTROL MSR(0x3A)
-  // is set, then the MSR is locked and can not be modified.
-  //
-  if (mSmrrSupported && mSmrrPhysBaseMsr == SMM_FEATURES_LIB_IA32_CORE_SMRR_PHYSBASE) {
-    FeatureControl = AsmReadMsr64 (SMM_FEATURES_LIB_IA32_FEATURE_CONTROL);
-    if ((FeatureControl & BIT3) == 0) {
-      if ((FeatureControl & BIT0) == 0) {
-        AsmWriteMsr64 (SMM_FEATURES_LIB_IA32_FEATURE_CONTROL, FeatureControl | BIT3);
-      } else {
-        mSmrrSupported = FALSE;
-      }
-    }
-  }
-  
-  //
-  // If SMRR is supported, then program SMRR base/mask MSRs.
-  // The EFI_MSR_SMRR_PHYS_MASK_VALID bit is not set until the first normal SMI.
-  // The code that initializes SMM environment is running in normal mode
-  // from SMRAM region.  If SMRR is enabled here, then the SMRAM region
-  // is protected and the normal mode code execution will fail.
-  //  
-  if (mSmrrSupported) {
-    AsmWriteMsr64 (mSmrrPhysBaseMsr, CpuHotPlugData->SmrrBase | MTRR_CACHE_WRITE_BACK);
-    AsmWriteMsr64 (mSmrrPhysMaskMsr, (~(CpuHotPlugData->SmrrSize - 1) & EFI_MSR_SMRR_MASK));
-    mSmrrEnabled[CpuIndex] = FALSE;
-  }
 }
 
 /**
@@ -242,7 +95,7 @@ SmmCpuFeaturesInitializeProcessor (
   the value of the instruction pointer from the SMRAM save state that was 
   replaced.  If this function returns 0, then the SMRAM save state was not 
   modified.
-  
+
   This function is called during the very first SMI on each CPU after 
   SmmCpuFeaturesInitializeProcessor() to set a flag in normal execution mode
   to signal that the SMBASE of each CPU has been updated before the default
@@ -364,7 +217,7 @@ SmmCpuFeaturesNeedConfigureMtrrs (
   VOID
   )
 {
-  return mNeedConfigureMtrrs;
+  return FALSE;
 }
 
 /**
@@ -377,9 +230,9 @@ SmmCpuFeaturesDisableSmrr (
   VOID
   )
 {
-  if (mSmrrSupported && mNeedConfigureMtrrs) {
-    AsmWriteMsr64 (mSmrrPhysMaskMsr, AsmReadMsr64(mSmrrPhysMaskMsr) & ~EFI_MSR_SMRR_PHYS_MASK_VALID);
-  }
+  //
+  // No SMRR support, nothing to do
+  //
 }
 
 /**
@@ -392,9 +245,9 @@ SmmCpuFeaturesReenableSmrr (
   VOID
   )
 {
-  if (mSmrrSupported && mNeedConfigureMtrrs) {
-    AsmWriteMsr64 (mSmrrPhysMaskMsr, AsmReadMsr64(mSmrrPhysMaskMsr) | EFI_MSR_SMRR_PHYS_MASK_VALID);
-  }
+  //
+  // No SMRR support, nothing to do
+  //
 }
 
 /**
@@ -411,12 +264,8 @@ SmmCpuFeaturesRendezvousEntry (
   )
 {
   //
-  // If SMRR is supported and this is the first normal SMI, then enable SMRR
+  // No SMRR support, nothing to do
   //
-  if (mSmrrSupported && !mSmrrEnabled[CpuIndex]) {
-    AsmWriteMsr64 (mSmrrPhysMaskMsr, AsmReadMsr64 (mSmrrPhysMaskMsr) | EFI_MSR_SMRR_PHYS_MASK_VALID);
-    mSmrrEnabled[CpuIndex] = TRUE;
-  }
 }
 
 /**
@@ -454,6 +303,7 @@ SmmCpuFeaturesIsSmmRegisterSupported (
   IN SMM_REG_NAME  RegName
   )
 {
+  ASSERT (RegName == SmmRegFeatureControl);
   return FALSE;
 }
 
@@ -476,6 +326,11 @@ SmmCpuFeaturesGetSmmRegister (
   IN SMM_REG_NAME  RegName
   )
 {
+  //
+  // This is called for SmmRegSmmDelayed, SmmRegSmmBlocked, SmmRegSmmEnable.
+  // The last of these should actually be SmmRegSmmDisable, so we can just
+  // return FALSE.
+  //
   return 0;
 }
 
@@ -498,6 +353,7 @@ SmmCpuFeaturesSetSmmRegister (
   IN UINT64        Value
   )
 {
+  ASSERT (FALSE);
 }
 
 /**
