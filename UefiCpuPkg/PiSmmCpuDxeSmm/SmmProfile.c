@@ -555,12 +555,12 @@ InitPaging (
           Pt = AllocatePages (1);
           ASSERT (Pt != NULL);
       
-          *Pte = (UINTN)Pt | IA32_PG_RW | IA32_PG_P;
-      
           // Split it
-          for (Level4 = 0; Level4 < SIZE_4KB / sizeof(*Pt); Level4++, Pt++) {
-            *Pt = Address + ((Level4 << 12) | IA32_PG_RW | IA32_PG_P);
+          for (Level4 = 0; Level4 < SIZE_4KB / sizeof(*Pt); Level4++) {
+            Pt[Level4] = Address + ((Level4 << 12) | IA32_PG_RW | IA32_PG_P);
           } // end for PT
+
+          *Pte = (UINTN)Pt | IA32_PG_RW | IA32_PG_P;
         } // end if IsAddressSplit
       } // end for PTE
     } // end for PDE
