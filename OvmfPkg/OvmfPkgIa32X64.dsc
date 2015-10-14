@@ -384,6 +384,7 @@
 [PcdsFixedAtBuild.X64]
 !if $(SMM_REQUIRE) == TRUE
   gUefiCpuPkgTokenSpaceGuid.PcdCpuSmmSyncMode|0x01
+  gUefiOvmfPkgTokenSpaceGuid.PcdQ35TsegMbytes|2
 !endif
 
 !if $(SECURE_BOOT_ENABLE) == TRUE
