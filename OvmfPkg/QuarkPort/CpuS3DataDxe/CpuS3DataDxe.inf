@@ -63,6 +63,11 @@
   IA32/ArchSpecificDef.h
   IA32/ArchSpecific.c
 
+[Sources.X64]
+  X64/CpuAsm.nasm
+  X64/ArchSpecificDef.h
+  X64/ArchSpecific.c
+
 [Packages]
   MdePkg/MdePkg.dec
   IntelFrameworkPkg/IntelFrameworkPkg.dec
