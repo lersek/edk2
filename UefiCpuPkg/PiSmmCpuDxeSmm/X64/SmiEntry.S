@@ -212,6 +212,19 @@ L1:
     .byte   0x48, 0x89, 0x0d            # mov [rip + disp32], rcx
     .long   SSM_DR6 - (. + 4 - _SmiEntryPoint + 0x8000)
 L2:
+
+    pushq   $PROTECT_MODE_CS
+    pushq   $L3
+    lretq
+L3:
+    movq    %cr0, %rbx
+    btrl    $31, %ebx
+    movq    %rbx, %cr0
+    movl    $0xc0000080, %ecx
+    rdmsr
+    andb    $0xfe,%ah
+    wrmsr
+
     rsm
 
 ASM_PFX(gcSmiHandlerSize):    .word      . - _SmiEntryPoint

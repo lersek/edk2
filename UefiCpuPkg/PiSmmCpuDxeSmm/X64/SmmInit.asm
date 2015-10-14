@@ -32,6 +32,8 @@ EXTERNDEF   mSmmRelocationOriginalAddressPtr32:DWORD
 EXTERNDEF   gSmmInitStack:QWORD
 EXTERNDEF   gcSmiInitGdtr:FWORD
 
+PROTECT_MODE_CS EQU     08h
+
     .code
 
 gcSmiInitGdtr   LABEL   FWORD
@@ -88,6 +90,17 @@ gSmmInitStack   DQ      ?
     movdqa  xmm4, [rsp + 40h]
     movdqa  xmm5, [rsp + 50h]    
 
+    push    PROTECT_MODE_CS
+    push    @3
+    retfq
+@3:
+    mov     rbx, cr0
+    btr     ebx, 31
+    mov     cr0, rbx
+    mov     ecx, 0c0000080h
+    rdmsr
+    and     ah, 0feh
+    wrmsr
     rsm
 SmmStartup  ENDP
 

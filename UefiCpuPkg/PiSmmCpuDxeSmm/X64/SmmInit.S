@@ -32,6 +32,7 @@ ASM_GLOBAL   ASM_PFX(mSmmRelocationOriginalAddressPtr32)
 ASM_GLOBAL   ASM_PFX(gSmmInitStack)
 ASM_GLOBAL   ASM_PFX(gcSmiInitGdtr)
 
+.equ            PROTECT_MODE_CS, 0x08
 
     .text
 
@@ -88,6 +89,18 @@ ASM_PFX(gSmmInitStack):  .space  8
     movdqa  0x30(%rsp), %xmm3
     movdqa  0x40(%rsp), %xmm4
     movdqa  0x50(%rsp), %xmm5
+
+    pushq   $PROTECT_MODE_CS                     # push 32-bit CS
+    pushq   $L3
+    lretq
+L3:
+    movq    %cr0, %rbx                # get out of long mode
+    btrl    $31, %ebx
+    movq    %rbx, %cr0
+    movl    $0xc0000080, %ecx
+    rdmsr
+    andb    $0xfe,%ah
+    wrmsr
 
     rsm
 

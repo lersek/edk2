@@ -214,6 +214,19 @@ _SmiHandler:
     DB      48h, 89h, 0dh               ; mov [rip + disp32], rcx
     DD      SSM_DR6 - ($ + 4 - _SmiEntryPoint + 8000h)
 @2:
+
+    push    PROTECT_MODE_CS
+    push    @3
+    retfq
+@3:
+    mov     rbx, cr0
+    btr     ebx, 31
+    mov     cr0, rbx
+    mov     ecx, 0c0000080h
+    rdmsr
+    and     ah, 0feh
+    wrmsr
+
     rsm
 
 gcSmiHandlerSize    DW      $ - _SmiEntryPoint
