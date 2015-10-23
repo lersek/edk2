@@ -44,6 +44,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   OvmfPkg/OvmfPkg.dec
+  UefiCpuPkg/UefiCpuPkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -58,6 +59,10 @@
 [Protocols]
   gEfiS3SaveStateProtocolGuid   ## SOMETIMES_CONSUMES
   gEfiSmmControl2ProtocolGuid   ## PRODUCES
+
+[Pcd]
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuSmmApSyncTimeout ## SOMETIMES_PRODUCES
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuSmmSyncMode      ## SOMETIMES_PRODUCES
 
 [FeaturePcd]
   gUefiOvmfPkgTokenSpaceGuid.PcdSmmSmramRequire

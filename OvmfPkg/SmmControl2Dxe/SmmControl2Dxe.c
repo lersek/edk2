@@ -56,6 +56,15 @@ OnS3SaveStateInstalled (
 STATIC UINTN mSmiEnable;
 
 //
+// The indicator whether we have negotiated with QEMU to broadcast the SMI to
+// all VCPUs whenever we write to ICH9_APM_CNT in our
+// EFI_SMM_CONTROL2_PROTOCOL.Trigger() implementation. This variable is only
+// used to carry information from the entry point function to the S3SaveState
+// protocol installation callback.
+//
+STATIC BOOLEAN mSmiBroadcast;
+
+//
 // Event signaled when an S3SaveState protocol interface is installed.
 //
 STATIC EFI_EVENT mS3SaveStateInstalled;
@@ -107,10 +116,10 @@ SmmControl2DxeTrigger (
   // report about hardware status, while this register is fully governed by
   // software.
   //
-  // Write to the status register first, as this won't trigger the SMI just
-  // yet. Then write to the control register.
+  // QEMU utilizes the status register for feature negotiation, therefore we
+  // can't accept external data.
   //
-  IoWrite8 (ICH9_APM_STS, DataPort    == NULL ? 0 : *DataPort);
+  ASSERT (DataPort == NULL);
   IoWrite8 (ICH9_APM_CNT, CommandPort == NULL ? 0 : *CommandPort);
   return EFI_SUCCESS;
 }
@@ -177,6 +186,7 @@ SmmControl2DxeEntryPoint (
 {
   UINT32     PmBase;
   UINT32     SmiEnableVal;
+  UINT8      ApmStatusVal;
   EFI_STATUS Status;
 
   //
@@ -227,6 +237,43 @@ SmmControl2DxeEntryPoint (
     DEBUG ((EFI_D_ERROR, "%a: failed to lock down GBL_SMI_EN\n",
       __FUNCTION__));
     goto FatalError;
+  }
+
+  //
+  // Negotiate broadcast SMI with QEMU.
+  //
+  IoWrite8 (ICH9_APM_STS, QEMU_ICH9_APM_STS_GET_SET_FEAT);
+  ApmStatusVal = IoRead8 (ICH9_APM_STS);
+  if ((ApmStatusVal & QEMU_ICH9_APM_STS_GET_SET_FEAT) != 0) {
+    DEBUG ((DEBUG_VERBOSE, "%a: SMI feature negotiation unavailable\n",
+      __FUNCTION__));
+    IoWrite8 (ICH9_APM_STS, 0);
+  } else if ((ApmStatusVal & QEMU_ICH9_APM_STS_F_BCAST_SMI) == 0) {
+    DEBUG ((DEBUG_VERBOSE, "%a: SMI broadcast unavailable\n", __FUNCTION__));
+  } else {
+    //
+    // Request the broadcast feature, and nothing else. Check for confirmation.
+    //
+    IoWrite8 (ICH9_APM_STS, QEMU_ICH9_APM_STS_F_BCAST_SMI);
+    ApmStatusVal = IoRead8 (ICH9_APM_STS);
+    if ((ApmStatusVal & QEMU_ICH9_APM_STS_GET_SET_FEAT) != 0) {
+      DEBUG ((DEBUG_VERBOSE, "%a: failed to negotiate SMI broadcast\n",
+        __FUNCTION__));
+    } else {
+      //
+      // Configure the traditional AP sync / SMI delivery mode for
+      // PiSmmCpuDxeSmm. Effectively, restore the UefiCpuPkg defaults, from
+      // which the original QEMU behavior (i.e., unicast SMI) used to differ.
+      //
+      if (RETURN_ERROR (PcdSet64S (PcdCpuSmmApSyncTimeout, 1000000)) ||
+          RETURN_ERROR (PcdSet8S (PcdCpuSmmSyncMode, 0x00))) {
+        DEBUG ((DEBUG_ERROR, "%a: PiSmmCpuDxeSmm PCD configuration failed\n",
+          __FUNCTION__));
+        goto FatalError;
+      }
+      mSmiBroadcast = TRUE;
+      DEBUG ((DEBUG_INFO, "%a: using SMI broadcast\n", __FUNCTION__));
+    }
   }
 
   if (QemuFwCfgS3Enabled ()) {
@@ -358,6 +405,26 @@ OnS3SaveStateInstalled (
       Status));
     ASSERT (FALSE);
     CpuDeadLoop ();
+  }
+
+  if (mSmiBroadcast) {
+    UINT8 ApmStatusVal;
+
+    ApmStatusVal = QEMU_ICH9_APM_STS_F_BCAST_SMI;
+    Status = S3SaveState->Write (
+                            S3SaveState,
+                            EFI_BOOT_SCRIPT_IO_WRITE_OPCODE,
+                            EfiBootScriptWidthUint8,
+                            (UINT64)ICH9_APM_STS,
+                            (UINTN)1,
+                            &ApmStatusVal
+                            );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "%a: EFI_BOOT_SCRIPT_IO_WRITE_OPCODE: %r\n",
+        __FUNCTION__, Status));
+      ASSERT (FALSE);
+      CpuDeadLoop ();
+    }
   }
 
   DEBUG ((EFI_D_VERBOSE, "%a: boot script fragment saved\n", __FUNCTION__));
