@@ -91,8 +91,10 @@
 //
 // IO ports
 //
-#define ICH9_APM_CNT 0xB2
-#define ICH9_APM_STS 0xB3
+#define ICH9_APM_CNT                    0xB2
+
+#define ICH9_APM_STS                    0xB3
+#define QEMU_ICH9_APM_STS_BROADCAST_SMI   'Q'
 
 //
 // IO ports relative to PMBASE

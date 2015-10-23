@@ -107,10 +107,26 @@ SmmControl2DxeTrigger (
   // report about hardware status, while this register is fully governed by
   // software.
   //
+  // On the QEMU platform, we use the status register to request a "broadcast"
+  // SMI; i.e., to bring all VCPUs into SMM at once. Edk2 handles the case when
+  // the SMI is raised only on the processor that calls Trigger(), but
+  //
+  // - if the processor executing Trigger() is an AP, then the resultant AP-BSP
+  //   synchronization is time consuming and computation-hungry,
+  //
+  // - edk2 modules that deal with SMIs generally expect / prefer a software
+  //   SMI to affect all CPUs at once; unicast SMIs have exposed obscure corner
+  //   cases.
+  //
+  // Note that we exploit the fact that the SMM_CORE never passes a non-NULL
+  // DataPort pointer (that is, we exploit that it doesn't care about the
+  // status register value).
+  //
   // Write to the status register first, as this won't trigger the SMI just
   // yet. Then write to the control register.
   //
-  IoWrite8 (ICH9_APM_STS, DataPort    == NULL ? 0 : *DataPort);
+  ASSERT (DataPort == NULL);
+  IoWrite8 (ICH9_APM_STS, QEMU_ICH9_APM_STS_BROADCAST_SMI);
   IoWrite8 (ICH9_APM_CNT, CommandPort == NULL ? 0 : *CommandPort);
   return EFI_SUCCESS;
 }
