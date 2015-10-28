@@ -1691,9 +1691,10 @@ InitializeMpSupport (
   VOID
   )
 {
-  EFI_STATUS     Status;
-  MTRR_SETTINGS  MtrrSettings;
-  UINTN          Timeout;
+  EFI_STATUS      Status;
+  MTRR_SETTINGS   MtrrSettings;
+  UINTN           Timeout;
+  CPU_AP_HLT_LOOP *CpuApHltLoop;
 
   gMaxLogicalProcessorNumber = (UINTN) PcdGet32 (PcdCpuMaxLogicalProcessorNumber);
   if (gMaxLogicalProcessorNumber < 1) {
@@ -1701,9 +1702,8 @@ InitializeMpSupport (
     return;
   }
 
-
-
   InitMpSystemData ();
+  CpuApHltLoop = NULL;
 
   //
   // Only perform AP detection if PcdCpuMaxLogicalProcessorNumber is greater than 1
@@ -1724,14 +1724,14 @@ InitializeMpSupport (
     mTopOfApCommonStack = (UINT8*) mApStackStart + gApStackSize;
     mApStackStart = mTopOfApCommonStack;
 
-    PrepareAPStartupCode ();
+    PrepareAPStartupCode (&CpuApHltLoop);
 
     StartApsStackless ();
   }
 
   DEBUG ((DEBUG_INFO, "Detect CPU count: %d\n", mMpSystemData.NumberOfProcessors));
   if (mMpSystemData.NumberOfProcessors == 1) {
-    FreeApStartupCode ();
+    FreeApStartupCode (CpuApHltLoop);
     if (mCommonStack != NULL) {
       FreePages (mCommonStack, EFI_SIZE_TO_PAGES (gMaxLogicalProcessorNumber * gApStackSize));
     }

@@ -131,6 +131,13 @@ typedef struct {
 } MP_SYSTEM_DATA;
 
 /**
+  Opaque data structure holding the binary code of the final HALT loop for the
+  APs.
+
+**/
+typedef struct _CPU_AP_HLT_LOOP CPU_AP_HLT_LOOP;
+
+/**
   This function is called by all processors (both BSP and AP) once and collects MP related data.
 
   @param Bsp             TRUE if the CPU is BSP
@@ -608,25 +615,50 @@ ResetProcessorToIdleState (
   );
 
 /**
-  Prepares Startup Code for APs.
-  This function prepares Startup Code for APs.
+  This function prepares the Startup Code and the final HALT loop for the APs.
 
-  @retval EFI_SUCCESS           The APs were started
-  @retval EFI_OUT_OF_RESOURCES  Cannot allocate memory to start APs
+  @param[out] CpuApHltLoopPointer  On output, pointer to the HALT loop for the
+                                   APs, allocated in AcpiNVS type memory. The
+                                   numeric value of this pointer is less than 1
+                                   MB, and it is page-aligned.
+
+  @retval EFI_SUCCESS           The routines have been prepared.
+  @retval EFI_OUT_OF_RESOURCES  Cannot allocate memory for the routines.
 
 **/
 EFI_STATUS
 PrepareAPStartupCode (
-  VOID
+  OUT CPU_AP_HLT_LOOP **CpuApHltLoopPointer
   );
 
 /**
-  Free the code buffer of startup AP.
+  Free the AP startup and HALT loop routines.
+
+  @param[in] CpuApHltLoopPointer  The pointer to the HALT loop for the APs,
+                                  stored by the successful invocation of
+                                  PrepareAPStartupCode().
 
 **/
 VOID
 FreeApStartupCode (
-  VOID
+  IN CPU_AP_HLT_LOOP *CpuApHltLoopPointer OPTIONAL
+  );
+
+/**
+  Wait until all APs enter the final HALT loop.
+
+  @param[in] CpuApHltLoopPointer  The pointer to the HALT loop for the APs,
+                                  stored by the successful invocation of
+                                  PrepareAPStartupCode().
+
+  @param[in] ApCount              The number of APs that have been detected at
+                                  MP services initialization.
+
+**/
+VOID
+WaitForAllApsToEnterHltLoop (
+  IN CPU_AP_HLT_LOOP *CpuApHltLoopPointer,
+  IN UINT16          ApCount
   );
 
 /**

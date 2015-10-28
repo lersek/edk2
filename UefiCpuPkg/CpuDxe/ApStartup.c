@@ -133,6 +133,19 @@ typedef struct {
 
 } STARTUP_CODE;
 
+struct _CPU_AP_HLT_LOOP {
+  UINT8  MovAx;
+  UINT16 AxValue;
+  UINT8  MovDsAx[2];
+  UINT8  LockedWordIncrement[6];
+
+  UINT8  Cli;
+  UINT8  Hlt;
+  UINT8  JmpToCli[2];
+
+  UINT16 SharedWordCounter;
+};
+
 #pragma pack()
 
 /**
@@ -321,6 +334,67 @@ STARTUP_CODE mStartupCodeTemplate = {
 volatile STARTUP_CODE *StartupCode = NULL;
 
 /**
+  This real mode assembly code is used by the ExitBootServices() callback for
+  rebooting all APs into a HALT loop. The BSP returns from the callback when
+  all APs have entered the code.
+
+  Assemble it with:
+  $ nasm -o HltLoop HltLoop.nasmb
+
+  Then disassemble it with:
+  $ ndisasm HltLoop
+
+  ;
+  ; Real mode code.
+  ;
+  BITS 16
+
+  ;
+  ; The binary should be stored at offset 0 of both the containing page
+  ; and the containing real mode segment.
+  ;
+  ORG 0
+
+  ;
+  ; Set DS to the page this code has been stored in.
+  ; The AX value will be patched by the C language initialization code.
+  ;
+         mov      ax, 0x0000
+         mov      ds, ax
+
+  ;
+  ; Let the BSP know that this AP has entered the code.
+  ;
+    lock inc word [ds:SharedWordCounter]
+
+  ;
+  ; The HALT loop.
+  ;
+  Loop:
+         cli
+         hlt
+         jmp      Loop
+
+  ;
+  ; This counter is bumped by each AP, and checked by the BSP.
+  ;
+  SharedWordCounter:
+         dw       0x0000
+**/
+STATIC CONST CPU_AP_HLT_LOOP mCpuApHltLoopTemplate = {
+  0xB8, 0x0000,                           // mov ax,0x0
+  { 0x8E, 0xD8 },                         // mov ds,ax
+
+  { 0xF0, 0x3E, 0xFF, 0x06, 0x0F, 0x00 }, // lock inc word [ds:0xf]
+
+  0xFA,                                   // cli @ offset 0xb
+  0xF4,                                   // hlt
+  { 0xEB, 0xFC },                         // jmp short 0xb
+
+  0x0000                                  // SharedWordCounter @ offset 0xf
+};
+
+/**
   The function will check if BSP Execute Disable is enabled.
   DxeIpl may have enabled Execute Disable for BSP,
   APs need to get the status and sync up the settings.
@@ -363,21 +437,27 @@ IsBspExecuteDisableEnabled (
 }
 
 /**
-  Prepares Startup Code for APs.
-  This function prepares Startup Code for APs.
+  This function prepares the Startup Code and the final HALT loop for the APs.
 
-  @retval EFI_SUCCESS           The APs were started
-  @retval EFI_OUT_OF_RESOURCES  Cannot allocate memory to start APs
+  @param[out] CpuApHltLoopPointer  On output, pointer to the HALT loop for the
+                                   APs, allocated in AcpiNVS type memory. The
+                                   numeric value of this pointer is less than 1
+                                   MB, and it is page-aligned.
+
+  @retval EFI_SUCCESS           The routines have been prepared.
+  @retval EFI_OUT_OF_RESOURCES  Cannot allocate memory for the routines.
 
 **/
 EFI_STATUS
 PrepareAPStartupCode (
-  VOID
+  OUT CPU_AP_HLT_LOOP **CpuApHltLoopPointer
   )
 {
   EFI_STATUS            Status;
   IA32_DESCRIPTOR       Gdtr;
   EFI_PHYSICAL_ADDRESS  StartAddress;
+  EFI_PHYSICAL_ADDRESS  CpuApHltLoopAddress;
+  CPU_AP_HLT_LOOP       *CpuApHltLoop;
 
   StartAddress = BASE_1MB;
   Status = gBS->AllocatePages (
@@ -416,24 +496,78 @@ PrepareAPStartupCode (
   StartupCode->EnableExecuteDisable.Cr3Value = (UINT32) AsmReadCr3 ();
 #endif
 
+  //
+  // Prepare the HALT loop for the ExitBootServices() callback.
+  //
+  CpuApHltLoopAddress = BASE_1MB - 1;
+  Status = gBS->AllocatePages (AllocateMaxAddress, EfiACPIMemoryNVS,
+                  EFI_SIZE_TO_PAGES (sizeof *CpuApHltLoop),
+                  &CpuApHltLoopAddress);
+  if (EFI_ERROR (Status)) {
+    gBS->FreePages (StartAddress, EFI_SIZE_TO_PAGES (sizeof *StartupCode));
+    return Status;
+  }
+
+  CpuApHltLoop = (VOID *)(UINTN)CpuApHltLoopAddress;
+  CopyMem (CpuApHltLoop, &mCpuApHltLoopTemplate, sizeof *CpuApHltLoop);
+  //
+  // Point DS via AX to the page where the routine has been allocated.
+  //
+  CpuApHltLoop->AxValue = (UINT16)((UINTN)CpuApHltLoopAddress >> 4);
+
+  *CpuApHltLoopPointer = CpuApHltLoop;
   return EFI_SUCCESS;
 }
 
 /**
-  Free the code buffer of startup AP.
+  Free the AP startup and HALT loop routines.
+
+  @param[in] CpuApHltLoopPointer  The pointer to the HALT loop for the APs,
+                                  stored by the successful invocation of
+                                  PrepareAPStartupCode().
 
 **/
 VOID
 FreeApStartupCode (
-  VOID
+  IN CPU_AP_HLT_LOOP *CpuApHltLoopPointer OPTIONAL
   )
 {
   if (StartupCode != NULL) {
     gBS->FreePages ((EFI_PHYSICAL_ADDRESS)(UINTN)(VOID*) StartupCode,
                     EFI_SIZE_TO_PAGES (sizeof (*StartupCode)));
   }
+
+  if (CpuApHltLoopPointer != NULL) {
+    gBS->FreePages ((UINTN)CpuApHltLoopPointer,
+           EFI_SIZE_TO_PAGES (sizeof *CpuApHltLoopPointer));
+  }
 }
 
+
+/**
+  Wait until all APs enter the final HALT loop.
+
+  @param[in] CpuApHltLoopPointer  The pointer to the HALT loop for the APs,
+                                  stored by the successful invocation of
+                                  PrepareAPStartupCode().
+
+  @param[in] ApCount              The number of APs that have been detected at
+                                  MP services initialization.
+
+**/
+VOID
+WaitForAllApsToEnterHltLoop (
+  IN CPU_AP_HLT_LOOP *CpuApHltLoopPointer,
+  IN UINT16          ApCount
+  )
+{
+  while (InterlockedCompareExchange16 (
+           &CpuApHltLoopPointer->SharedWordCounter,
+           ApCount,
+           ApCount) != ApCount) {
+    CpuPause();
+  }
+}
 
 /**
   Starts the Application Processors and directs them to jump to the
