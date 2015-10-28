@@ -462,7 +462,7 @@ PrepareAPStartupCode (
   StartAddress = BASE_1MB;
   Status = gBS->AllocatePages (
                   AllocateMaxAddress,
-                  EfiACPIMemoryNVS,
+                  EfiBootServicesCode,
                   EFI_SIZE_TO_PAGES (sizeof (*StartupCode)),
                   &StartAddress
                   );
