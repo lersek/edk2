@@ -1659,11 +1659,20 @@ ExitBootServicesCallback (
   IN VOID                     *Context
   )
 {
+  CPU_AP_HLT_LOOP *CpuApHltLoop;
+  UINT32          CpuApHltLoopAddress;
+
+  CpuApHltLoop = Context;
+  CpuApHltLoopAddress = (UINT32)(UINTN)Context;
+  DEBUG ((EFI_D_VERBOSE, "%a: %a: HLT loop routine at %04x:%04x\n",
+    gEfiCallerBaseName, __FUNCTION__, CpuApHltLoopAddress >> 4, 0));
+
   //
-  // Avoid APs access invalid buff datas which allocated by BootServices,
-  // so we send INIT IPI to APs to let them wait for SIPI state.
+  // Force all APs to execute the HLT loop. Wait until they all enter the code.
   //
-  SendInitIpiAllExcludingSelf ();
+  SendInitSipiSipiAllExcludingSelf (CpuApHltLoopAddress);
+  WaitForAllApsToEnterHltLoop (CpuApHltLoop,
+    (UINT16)(mMpSystemData.NumberOfProcessors - 1));
 }
 
 /**
@@ -1800,7 +1809,7 @@ InitializeMpSupport (
                     EVT_SIGNAL_EXIT_BOOT_SERVICES,
                     TPL_CALLBACK,
                     ExitBootServicesCallback,
-                    NULL,
+                    CpuApHltLoop,
                     &mExitBootServicesEvent
                     );
     ASSERT_EFI_ERROR (Status);
