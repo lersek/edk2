@@ -1795,12 +1795,14 @@ InitializeMpSupport (
     }
   }
 
-  Status = gBS->CreateEvent (
-                  EVT_SIGNAL_EXIT_BOOT_SERVICES,
-                  TPL_CALLBACK,
-                  ExitBootServicesCallback,
-                  NULL,
-                  &mExitBootServicesEvent
-                  );
-  ASSERT_EFI_ERROR (Status);
+  if (mMpSystemData.NumberOfProcessors > 1) {
+    Status = gBS->CreateEvent (
+                    EVT_SIGNAL_EXIT_BOOT_SERVICES,
+                    TPL_CALLBACK,
+                    ExitBootServicesCallback,
+                    NULL,
+                    &mExitBootServicesEvent
+                    );
+    ASSERT_EFI_ERROR (Status);
+  }
 }
