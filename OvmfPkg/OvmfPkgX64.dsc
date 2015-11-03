@@ -388,6 +388,7 @@
 
 !if $(SMM_REQUIRE) == TRUE
   gUefiCpuPkgTokenSpaceGuid.PcdCpuSmmSyncMode|0x01
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuSmmApSyncTimeout|100000
 !endif
 
 !if $(SECURE_BOOT_ENABLE) == TRUE
