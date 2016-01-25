@@ -95,6 +95,13 @@ InitRootBridge (
   RootBus->MemAbove4G.Base      = 0;
   RootBus->MemAbove4G.Limit     = 0;
 
+  RootBus->Bus.Base  = RootBusNumber;
+  RootBus->Bus.Limit = MaxSubBusNumber;
+  RootBus->Io.Base   = 0;
+  RootBus->Io.Limit  = MAX_UINT16;
+  RootBus->Mem.Base  = BASE_2GB;
+  RootBus->Mem.Limit = BASE_4GB - 1;
+
   return EFI_OUT_OF_RESOURCES;
 }
 
