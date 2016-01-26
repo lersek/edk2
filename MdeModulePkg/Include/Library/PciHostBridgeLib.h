@@ -24,6 +24,18 @@ typedef struct {
   UINT64 Limit;
 } PCI_ROOT_BRIDGE_APERTURE;
 
+//
+// Bits for the PCI_ROOT_BRIDGE.Flags field. When a given bit is clear, the
+// host bridge driver will attempt to add the corresponding aperture to the GCD
+// memory space map, and set its attributes, using DXE services. When a bit is
+// set, the aperture is assumed to be present in the GCD memory space map.
+//
+#define PCI_ROOT_BRIDGE_APERTURE_PRESENT_IO     BIT0
+#define PCI_ROOT_BRIDGE_APERTURE_PRESENT_MEM32  BIT1
+#define PCI_ROOT_BRIDGE_APERTURE_PRESENT_MEM64  BIT2
+#define PCI_ROOT_BRIDGE_APERTURE_PRESENT_PMEM32 BIT3
+#define PCI_ROOT_BRIDGE_APERTURE_PRESENT_PMEM64 BIT4
+
 typedef struct {
   UINT32                   Segment;              ///< Segment number.
   UINT64                   Supports;             ///< Supported attributes.
@@ -44,6 +56,7 @@ typedef struct {
   PCI_ROOT_BRIDGE_APERTURE MemAbove4G;           ///< MMIO aperture above 4GB which can be used by the root bridge.
   PCI_ROOT_BRIDGE_APERTURE PMem;                 ///< Prefetchable MMIO aperture below 4GB which can be used by the root bridge.
   PCI_ROOT_BRIDGE_APERTURE PMemAbove4G;          ///< Prefetchable MMIO aperture above 4GB which can be used by the root bridge.
+  UINT32                   Flags;                ///< See PCI_ROOT_BRIDGE_APERTURE_PRESENT_xxx above.
   EFI_DEVICE_PATH_PROTOCOL *DevicePath;          ///< Device path.
 } PCI_ROOT_BRIDGE;
 

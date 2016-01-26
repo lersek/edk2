@@ -54,6 +54,7 @@ InitializePciHostBridge (
   UINTN                       Index;
   PCI_ROOT_BRIDGE_APERTURE    *MemApertures[4];
   UINTN                       MemApertureIndex;
+  UINT32                      AperturePresentMask;
 
   RootBridges = PciHostBridgeGetRootBridges (&RootBridgeCount);
   if ((RootBridges == NULL) || (RootBridgeCount == 0)) {
@@ -108,7 +109,9 @@ InitializePciHostBridge (
       continue;
     }
 
-    if (RootBridges[Index].Io.Limit > RootBridges[Index].Io.Base) {
+    AperturePresentMask = PCI_ROOT_BRIDGE_APERTURE_PRESENT_IO;
+    if (RootBridges[Index].Io.Limit > RootBridges[Index].Io.Base &&
+        (RootBridges[Index].Flags & AperturePresentMask) == 0) {
       Status = gDS->AddIoSpace (
                       EfiGcdIoTypeIo,
                       RootBridges[Index].Io.Base,
@@ -129,7 +132,9 @@ InitializePciHostBridge (
     MemApertures[3] = &RootBridges[Index].PMemAbove4G;
 
     for (MemApertureIndex = 0; MemApertureIndex < sizeof (MemApertures) / sizeof (MemApertures[0]); MemApertureIndex++) {
-      if (MemApertures[MemApertureIndex]->Limit > MemApertures[MemApertureIndex]->Base) {
+      AperturePresentMask <<= 1;
+      if (MemApertures[MemApertureIndex]->Limit > MemApertures[MemApertureIndex]->Base &&
+          (RootBridges[Index].Flags & AperturePresentMask) == 0) {
         Status = gDS->AddMemorySpace (
                         EfiGcdMemoryTypeMemoryMappedIo,
                         MemApertures[MemApertureIndex]->Base,
