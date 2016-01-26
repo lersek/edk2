@@ -140,6 +140,9 @@ InitRootBridge (
   RootBus->Mem.Base  = BASE_2GB;
   RootBus->Mem.Limit = BASE_4GB - 1;
 
+  RootBus->Flags = PCI_ROOT_BRIDGE_APERTURE_PRESENT_IO |
+                   PCI_ROOT_BRIDGE_APERTURE_PRESENT_MEM32;
+
   DevicePath = AllocateCopyPool (sizeof mRootBridgeDevicePathTemplate,
                  &mRootBridgeDevicePathTemplate);
   if (DevicePath == NULL) {
