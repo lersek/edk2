@@ -44,6 +44,7 @@ typedef struct {
   PCI_ROOT_BRIDGE_APERTURE MemAbove4G;           ///< MMIO aperture above 4GB which can be used by the root bridge.
   PCI_ROOT_BRIDGE_APERTURE PMem;                 ///< Prefetchable MMIO aperture below 4GB which can be used by the root bridge.
   PCI_ROOT_BRIDGE_APERTURE PMemAbove4G;          ///< Prefetchable MMIO aperture above 4GB which can be used by the root bridge.
+  PCI_ROOT_BRIDGE_APERTURE Pci;                  ///< PCI config space range that is valid for the devices behind the root bridge.
   EFI_DEVICE_PATH_PROTOCOL *DevicePath;          ///< Device path.
 } PCI_ROOT_BRIDGE;
 

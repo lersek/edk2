@@ -90,6 +90,7 @@ CreateRootBridge (
   DEBUG ((EFI_D_INFO, "  MemAbove4G: %lx - %lx\n", Bridge->MemAbove4G.Base, Bridge->MemAbove4G.Limit));
   DEBUG ((EFI_D_INFO, "        PMem: %lx - %lx\n", Bridge->PMem.Base, Bridge->PMem.Limit));
   DEBUG ((EFI_D_INFO, " PMemAbove4G: %lx - %lx\n", Bridge->PMemAbove4G.Base, Bridge->PMemAbove4G.Limit));
+  DEBUG ((EFI_D_INFO, "         Pci: %lx - %lx\n", Bridge->Pci.Base, Bridge->Pci.Limit));
 
   //
   // Make sure Mem and MemAbove4G apertures are valid
@@ -168,6 +169,7 @@ CreateRootBridge (
   CopyMem (&RootBridge->Io, &Bridge->Io, sizeof (PCI_ROOT_BRIDGE_APERTURE));
   CopyMem (&RootBridge->Mem, &Bridge->Mem, sizeof (PCI_ROOT_BRIDGE_APERTURE));
   CopyMem (&RootBridge->MemAbove4G, &Bridge->MemAbove4G, sizeof (PCI_ROOT_BRIDGE_APERTURE));
+  CopyMem (&RootBridge->Pci, &Bridge->Pci, sizeof (PCI_ROOT_BRIDGE_APERTURE));
 
 
   for (Index = TypeIo; Index < TypeMax; Index++) {
@@ -350,8 +352,8 @@ RootBridgeIoCheckParameter (
     } else {
       Address = PciRbAddr->Register;
     }
-    Base = 0;
-    Limit = 0xFFF;
+    Base = RootBridge->Pci.Base;
+    Limit = RootBridge->Pci.Limit;
   }
 
   if (Address < Base) {
