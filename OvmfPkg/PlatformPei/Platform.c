@@ -240,7 +240,13 @@ MemMapInitialization (
     // 0xFED20000    gap                          896 KB
     // 0xFEE00000    LAPIC                          1 MB
     //
-    AddIoMemoryRangeHob (PciBase, 0xFC000000);
+    PcdSet64 (PcdPciMmio32Base, PciBase);
+    PcdSet64 (PcdPciMmio32Size, 0xFC000000 - PciBase);
+    AddIoMemoryBaseSizeHob (
+      PcdGet64 (PcdPciMmio32Base),
+      PcdGet64 (PcdPciMmio32Size)
+      );
+
     AddIoMemoryBaseSizeHob (0xFEC00000, SIZE_4KB);
     AddIoMemoryBaseSizeHob (0xFED00000, SIZE_1KB);
     if (mHostBridgeDevId == INTEL_Q35_MCH_DEVICE_ID) {
