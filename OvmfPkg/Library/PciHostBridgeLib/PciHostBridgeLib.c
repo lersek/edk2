@@ -103,6 +103,9 @@ InitRootBridge (
   RootBus->Mem.Limit = PcdGet64 (PcdPciMmio32Base) +
                        (PcdGet64 (PcdPciMmio32Size) - 1);
 
+  RootBus->Pci.Base  = 0x00;
+  RootBus->Pci.Limit = 0xFF;
+
   return EFI_OUT_OF_RESOURCES;
 }
 
