@@ -400,6 +400,14 @@
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x2F
 !endif
 
+  # This PCD is used to set the base address of the PCI express hierarchy. It
+  # is only consulted when OVMF runs on Q35. In that case it is programmed into
+  # the PCIEXBAR register.
+  #
+  # The value we set below matches both the QEMU default, and the value that
+  # SeaBIOS hard-codes.
+  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress|0xB0000000
+
 !ifdef $(SOURCE_DEBUG_ENABLE)
   gEfiSourceLevelDebugPkgTokenSpaceGuid.PcdDebugLoadImageMethod|0x2
 !endif
