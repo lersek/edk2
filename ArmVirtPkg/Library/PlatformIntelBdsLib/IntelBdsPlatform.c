@@ -25,6 +25,7 @@
 #include <Protocol/PciIo.h>
 #include <Protocol/PciRootBridgeIo.h>
 #include <Guid/EventGroup.h>
+#include <Protocol/RootBusesConnected.h>
 
 #include "IntelBdsPlatform.h"
 
@@ -394,12 +395,22 @@ PlatformBdsPolicyBehavior (
   IN BASEM_MEMORY_TEST               BaseMemoryTest
   )
 {
+  EFI_STATUS Status;
+
   //
   // Locate the PCI root bridges and make the PCI bus driver connect each,
   // non-recursively. This will produce a number of child handles with PciIo on
   // them.
   //
   FilterAndProcess (&gEfiPciRootBridgeIoProtocolGuid, NULL, Connect);
+
+  //
+  // Signal the ACPI platform driver that it can download QEMU ACPI tables.
+  //
+  Status = gBS->InstallProtocolInterface (&gImageHandle,
+                  &gRootBusesConnectedProtocolGuid, EFI_NATIVE_INTERFACE,
+                  NULL);
+  ASSERT_EFI_ERROR (Status);
 
   //
   // Find all display class PCI devices (using the handles from the previous
