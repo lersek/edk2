@@ -17,7 +17,7 @@
 #ifndef _VIRTIO_NET_DXE_H_
 #define _VIRTIO_NET_DXE_H_
 
-#include <IndustryStandard/VirtioNet.h>
+#include <IndustryStandard/Virtio10Net.h>
 #include <Library/DebugLib.h>
 #include <Library/VirtioLib.h>
 #include <Protocol/ComponentName.h>
@@ -89,7 +89,7 @@ typedef struct {
   UINT16                      TxMaxPending;      // VirtioNetInitTx
   UINT16                      TxCurPending;      // VirtioNetInitTx
   UINT16                      *TxFreeStack;      // VirtioNetInitTx
-  VIRTIO_NET_REQ              TxSharedReq;       // VirtioNetInitTx
+  VIRTIO_1_0_NET_REQ          TxSharedReq;       // VirtioNetInitTx
   UINT16                      TxLastUsed;        // VirtioNetInitTx
 } VNET_DEV;
 
