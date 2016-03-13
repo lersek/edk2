@@ -14,6 +14,7 @@
 
 #include "BdsPlatform.h"
 #include <Library/QemuBootOrderLib.h>
+#include <Protocol/RootBusesConnected.h>
 
 
 //
@@ -1265,6 +1266,14 @@ Returns:
 
   VisitAllInstancesOfProtocol (&gEfiPciRootBridgeIoProtocolGuid,
     ConnectRootBridge, NULL);
+
+  //
+  // Signal the ACPI platform driver that it can download QEMU ACPI tables.
+  //
+  Status = gBS->InstallProtocolInterface (&gImageHandle,
+                  &gRootBusesConnectedProtocolGuid, EFI_NATIVE_INTERFACE,
+                  NULL);
+  ASSERT_EFI_ERROR (Status);
 
   //
   // We can't signal End-of-Dxe earlier than this. Namely, End-of-Dxe triggers
