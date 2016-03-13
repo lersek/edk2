@@ -13,7 +13,7 @@
   WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 **/
 
-#include <Protocol/PciEnumerationComplete.h>
+#include <Protocol/RootBusesConnected.h>
 #include "AcpiPlatform.h"
 
 STATIC
@@ -38,14 +38,15 @@ FindAcpiTableProtocol (
 STATIC
 VOID
 EFIAPI
-OnPciEnumerated (
+OnRootBusesConnected (
   IN EFI_EVENT Event,
   IN VOID      *Context
   )
 {
   EFI_STATUS Status;
 
-  DEBUG ((EFI_D_INFO, "%a: PCI enumeration complete, installing ACPI tables\n",
+  DEBUG ((EFI_D_INFO,
+    "%a: root buses have been connected, installing ACPI tables\n",
     __FUNCTION__));
   Status = InstallAcpiTables (FindAcpiTableProtocol ());
   if (EFI_ERROR (Status)) {
@@ -64,7 +65,7 @@ AcpiPlatformEntryPoint (
 {
   EFI_STATUS Status;
   VOID       *Interface;
-  EFI_EVENT  PciEnumerated;
+  EFI_EVENT  RootBusesConnected;
   VOID       *Registration;
 
   //
@@ -79,36 +80,37 @@ AcpiPlatformEntryPoint (
   }
 
   //
-  // Similarly, if PCI enumeration has already completed, install the tables
+  // Similarly, if root buses have already been connected, install the tables
   // immediately.
   //
-  Status = gBS->LocateProtocol (&gEfiPciEnumerationCompleteProtocolGuid,
+  Status = gBS->LocateProtocol (&gRootBusesConnectedProtocolGuid,
                   NULL /* Registration */, &Interface);
   if (!EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_INFO, "%a: PCI enumeration already complete, "
+    DEBUG ((EFI_D_INFO, "%a: root buses already connected, "
       "installing ACPI tables\n", __FUNCTION__));
     return InstallAcpiTables (FindAcpiTableProtocol ());
   }
   ASSERT (Status == EFI_NOT_FOUND);
 
   //
-  // Otherwise, delay installing the ACPI tables until PCI enumeration
-  // completes. The entry point's return status will only reflect the callback
+  // Otherwise, delay installing the ACPI tables until root buses are
+  // connected. The entry point's return status will only reflect the callback
   // setup.
   //
-  Status = gBS->CreateEvent (EVT_NOTIFY_SIGNAL, TPL_CALLBACK, OnPciEnumerated,
-                  NULL /* Context */, &PciEnumerated);
+  Status = gBS->CreateEvent (EVT_NOTIFY_SIGNAL, TPL_CALLBACK,
+                  OnRootBusesConnected, NULL /* Context */,
+                  &RootBusesConnected);
   if (EFI_ERROR (Status)) {
     return Status;
   }
 
-  Status = gBS->RegisterProtocolNotify (
-                  &gEfiPciEnumerationCompleteProtocolGuid, PciEnumerated,
-                  &Registration);
+  Status = gBS->RegisterProtocolNotify (&gRootBusesConnectedProtocolGuid,
+                  RootBusesConnected, &Registration);
   if (EFI_ERROR (Status)) {
-    gBS->CloseEvent (PciEnumerated);
+    gBS->CloseEvent (RootBusesConnected);
   } else {
-    DEBUG ((EFI_D_INFO, "%a: PCI enumeration pending, registered callback\n",
+    DEBUG ((EFI_D_INFO,
+      "%a: waiting for root buses to be connected, registered callback\n",
       __FUNCTION__));
   }
 

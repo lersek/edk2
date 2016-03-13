@@ -47,7 +47,7 @@
 
 [Protocols]
   gEfiAcpiTableProtocolGuid                     # PROTOCOL ALWAYS_CONSUMED
-  gEfiPciEnumerationCompleteProtocolGuid        # PROTOCOL SOMETIMES_CONSUMED
+  gRootBusesConnectedProtocolGuid               # PROTOCOL SOMETIMES_CONSUMED
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdPciDisableBusEnumeration
