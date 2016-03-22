@@ -678,6 +678,10 @@ cleanlib:
                             for item in SingleCommandList[1:]:
                                 if FlagDict[Tool]['Macro'] in item:
                                     Str = self._AutoGenObject._BuildOption[Tool]['FLAGS']
+                                    for Option in self._AutoGenObject.BuildOption.keys():
+                                        for Attr in self._AutoGenObject.BuildOption[Option]:
+                                            if Str.find(Option + '_' + Attr) != -1:
+                                                Str = Str.replace('$(' + Option + '_' + Attr + ')', self._AutoGenObject.BuildOption[Option][Attr])
                                     while(Str.find('$(') != -1):
                                         for macro in self._AutoGenObject.Macros.keys():
                                             MacroName = '$('+ macro + ')'
@@ -685,7 +689,12 @@ cleanlib:
                                                 Str = Str.replace(MacroName, self._AutoGenObject.Macros[macro])
                                                 break
                                         else:
-                                            EdkLogger.error("build", AUTOGEN_ERROR, "Not supported macro is found in make command : %s" % Str, ExtraData="[%s]" % str(self._AutoGenObject))
+                                            # if the Macro definition cannot be found, replace the Macro to ' '
+                                            while(Str.find('$(') != -1):
+                                                MacroStartPos = Str.find('$(')
+                                                MacroEndPos = Str.find(')', MacroStartPos)
+                                                Macro = Str[MacroStartPos: MacroEndPos+1]
+                                                Str = Str.replace(Macro, ' ')
                                     SingleCommandLength += len(Str)
                                 elif '$(INC)' in item:
                                     SingleCommandLength += self._AutoGenObject.IncludePathLength + len(IncPrefix) * len(self._AutoGenObject._IncludePathList)
@@ -702,8 +711,12 @@ cleanlib:
                                                 Str = Str.replace(MacroName, self._AutoGenObject.Macros[macro])
                                                 break
                                         else:
-                                            EdkLogger.error("build", AUTOGEN_ERROR, "Not supported macro is found in make command : %s" % Str, ExtraData="[%s]" % str(self._AutoGenObject))
-
+                                            # if the Macro definition cannot be found, replace the Macro to ' '
+                                            while(Str.find('$(') != -1):
+                                                MacroStartPos = Str.find('$(')
+                                                MacroEndPos = Str.find(')', MacroStartPos)
+                                                Macro = Str[MacroStartPos: MacroEndPos+1]
+                                                Str = Str.replace(Macro, ' ')
                                     SingleCommandLength += len(Str)
 
                             if SingleCommandLength > GlobalData.gCommandMaxLength:
@@ -717,6 +730,10 @@ cleanlib:
                         Value = self._AutoGenObject.BuildOption[Flag]['FLAGS']
                         for inc in self._AutoGenObject._IncludePathList:
                             Value += ' ' + IncPrefix + inc
+                        for Option in self._AutoGenObject.BuildOption.keys():
+                            for Attr in self._AutoGenObject.BuildOption[Option]:
+                                if Value.find(Option + '_' + Attr) != -1:
+                                    Value = Value.replace('$(' + Option + '_' + Attr + ')', self._AutoGenObject.BuildOption[Option][Attr])
                         while (Value.find('$(') != -1):
                             for macro in self._AutoGenObject.Macros.keys():
                                 MacroName = '$('+ macro + ')'
@@ -724,7 +741,12 @@ cleanlib:
                                     Value = Value.replace(MacroName, self._AutoGenObject.Macros[macro])
                                     break
                             else:
-                                EdkLogger.error("build", AUTOGEN_ERROR, "Not supported macro is found in make command : %s" % Str, ExtraData="[%s]" % str(self._AutoGenObject))
+                                # if the Macro definition cannot be found, replace the Macro to ' '
+                                while(Value.find('$(') != -1):
+                                    MacroStartPos = Value.find('$(')
+                                    MacroEndPos = Value.find(')', MacroStartPos)
+                                    Macro = Value[MacroStartPos: MacroEndPos+1]
+                                    Value = Value.replace(Macro, ' ')
                         RespDict[Key] = Value
                         for Target in BuildTargets:
                             for i, SingleCommand in enumerate(BuildTargets[Target].Commands):
