@@ -135,7 +135,7 @@ class MultipleWorkspace(object):
                     if MacroStartPos != -1:
                         MacroEndPos = str.find(')', MacroStartPos)
                         Substr = str[MacroEndPos+1:]
-                        if Substr.startswith('/') or Substr.startswith('\\'):
+                        if Substr.startswith(os.sep):
                             Substr = Substr[1:]
                         PathList[i] = str[0:MacroStartPos] + os.path.normpath(cls.join(cls.WORKSPACE, Substr))
             PathStr = ' '.join(PathList)
