@@ -131,8 +131,8 @@ class MultipleWorkspace(object):
             PathList = PathStr.split()
             if PathList:
                 for i, str in enumerate(PathList):
-                    if str.find(TAB_WORKSPACE) != -1:
-                        MacroStartPos = str.find(TAB_WORKSPACE)
+                    MacroStartPos = str.find(TAB_WORKSPACE)
+                    if MacroStartPos != -1:
                         MacroEndPos = str.find(')', MacroStartPos)
                         Substr = str[MacroEndPos+1:]
                         if Substr.startswith('/') or Substr.startswith('\\'):
