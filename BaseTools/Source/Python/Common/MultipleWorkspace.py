@@ -137,7 +137,11 @@ class MultipleWorkspace(object):
                         Substr = str[MacroEndPos+1:]
                         if Substr.startswith(os.sep):
                             Substr = Substr[1:]
-                        PathList[i] = str[0:MacroStartPos] + os.path.normpath(cls.join(cls.WORKSPACE, Substr))
+                        if Substr.endswith(os.sep):
+                            Final = os.sep
+                        else:
+                            Final = ''
+                        PathList[i] = str[0:MacroStartPos] + os.path.normpath(cls.join(cls.WORKSPACE, Substr)) + Final
             PathStr = ' '.join(PathList)
         return PathStr
     
