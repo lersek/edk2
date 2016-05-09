@@ -30,8 +30,8 @@
   MdePkg/MdePkg.dec
   OvmfPkg/OvmfPkg.dec
 
-[Pcd]
-  gUefiOvmfPkgTokenSpaceGuid.PcdAcpiPmBaseAddress
+[FixedPcd]
+  gUefiOvmfPkgTokenSpaceGuid.PcdPiix4AcpiPmBaseAddress
 
 [LibraryClasses]
   BaseLib

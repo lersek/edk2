@@ -38,5 +38,5 @@
   IoLib
   TimerLib
 
-[Pcd]
-  gUefiOvmfPkgTokenSpaceGuid.PcdAcpiPmBaseAddress
+[FixedPcd]
+  gUefiOvmfPkgTokenSpaceGuid.PcdPiix4AcpiPmBaseAddress
