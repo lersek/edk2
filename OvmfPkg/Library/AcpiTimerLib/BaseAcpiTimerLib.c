@@ -73,7 +73,7 @@ AcpiTimerLibConstructor (
     // If the Power Management Base Address is not programmed,
     // then program the Power Management Base Address from a PCD.
     //
-    PciAndThenOr32 (Pmba, (UINT32) ~0xFFC0,
+    PciAndThenOr32 (Pmba, ~(UINT32)PIIX4_PMBA_MASK,
       FixedPcdGet16 (PcdPiix4AcpiPmBaseAddress));
 
     //

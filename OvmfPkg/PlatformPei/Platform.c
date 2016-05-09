@@ -412,7 +412,7 @@ MiscInitialization (
     // The PEI phase should be exited with fully accessibe ACPI PM IO space:
     // 1. set PMBA
     //
-    PciAndThenOr32 (Pmba, (UINT32) ~0xFFC0,
+    PciAndThenOr32 (Pmba, ~(UINT32)PIIX4_PMBA_MASK,
       FixedPcdGet16 (PcdPiix4AcpiPmBaseAddress));
 
     //
