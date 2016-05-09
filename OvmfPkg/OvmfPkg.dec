@@ -79,6 +79,10 @@
   #  to PIIX4 function 3 offset 0x40-0x43 bits [15:6].
   gUefiOvmfPkgTokenSpaceGuid.PcdPiix4AcpiPmBaseAddress|0xB000|UINT16|5
 
+  ## This PCD determines the Power Management Base Address of choice, written
+  #  to ICH9 device 31 function 0, offset 0x40-0x43 bits [15:7].
+  gUefiOvmfPkgTokenSpaceGuid.PcdIch9AcpiPmBaseAddress|0x0600|UINT16|0x28
+
   ## When VirtioScsiDxe is instantiated for a HBA, the numbers of targets and
   #  LUNs are retrieved from the host during virtio-scsi setup.
   #  MdeModulePkg/Bus/Scsi/ScsiBusDxe then scans all MaxTarget * MaxLun
