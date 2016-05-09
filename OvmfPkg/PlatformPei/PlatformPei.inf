@@ -99,6 +99,7 @@
 [FixedPcd]
   gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress
   gUefiOvmfPkgTokenSpaceGuid.PcdPiix4AcpiPmBaseAddress
+  gUefiOvmfPkgTokenSpaceGuid.PcdIch9AcpiPmBaseAddress
 
 [FeaturePcd]
   gUefiOvmfPkgTokenSpaceGuid.PcdSmmSmramRequire

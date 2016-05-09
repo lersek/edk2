@@ -33,6 +33,7 @@
 
 [FixedPcd]
   gUefiOvmfPkgTokenSpaceGuid.PcdPiix4AcpiPmBaseAddress
+  gUefiOvmfPkgTokenSpaceGuid.PcdIch9AcpiPmBaseAddress
 
 [LibraryClasses]
   BaseLib
