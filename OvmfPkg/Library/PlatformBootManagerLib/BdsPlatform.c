@@ -1425,5 +1425,22 @@ PlatformBootManagerWaitCallback (
   UINT16          TimeoutRemain
   )
 {
+  EFI_GRAPHICS_OUTPUT_BLT_PIXEL Black;
+  EFI_GRAPHICS_OUTPUT_BLT_PIXEL White;
+  UINT16                        Timeout;
+
+  Timeout = PcdGet16 (PcdPlatformBootTimeOut);
+
+  Black.Blue = Black.Green = Black.Red = Black.Reserved = 0;
+  White.Blue = White.Green = White.Red = White.Reserved = 0xFF;
+
+  BootLogoUpdateProgress (
+    White,
+    Black,
+    L"Start boot option",
+    White,
+    (Timeout - TimeoutRemain) * 100 / Timeout,
+    0
+    );
 }
 
