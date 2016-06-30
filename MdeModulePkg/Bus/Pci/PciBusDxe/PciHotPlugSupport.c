@@ -317,6 +317,69 @@ IsSHPC (
 }
 
 /**
+  Check whether PciIoDevice supports PCIe hotplug.
+
+  This is equivalent to the following condition:
+  - the device is either a PCIe switch downstream port or a root port,
+  - and the device has the SlotImplemented bit set in its PCIe capability
+    register.
+
+  @param[in] PciIoDevice  The device being checked.
+
+  @retval TRUE   PciIoDevice is a PCIe port that accepts a hotplugged device.
+  @retval FALSE  Otherwise.
+
+**/
+BOOLEAN
+SupportsPcieHotplug (
+  IN PCI_IO_DEVICE                      *PciIoDevice
+  )
+{
+  UINT32                  Offset;
+  EFI_STATUS              Status;
+  PCI_REG_PCIE_CAPABILITY Capability;
+
+  if (PciIoDevice == NULL) {
+    return FALSE;
+  }
+
+  //
+  // Read the PCI Express Capabilities Register
+  //
+  if (!PciIoDevice->IsPciExp) {
+    return FALSE;
+  }
+  Offset = PciIoDevice->PciExpressCapabilityOffset +
+           OFFSET_OF (PCI_CAPABILITY_PCIEXP, Capability);
+
+  Status = PciIoDevice->PciIo.Pci.Read (
+                                    &PciIoDevice->PciIo,
+                                    EfiPciIoWidthUint16,
+                                    Offset,
+                                    1,
+                                    &Capability
+                                    );
+  if (EFI_ERROR (Status)) {
+    return FALSE;
+  }
+
+  //
+  // Check the contents of the register
+  //
+  switch (Capability.Bits.DevicePortType) {
+  case PCIE_DEVICE_PORT_TYPE_ROOT_PORT:
+  case PCIE_DEVICE_PORT_TYPE_DOWNSTREAM_PORT:
+    break;
+  default:
+    return FALSE;
+  }
+  if (Capability.Bits.SlotImplemented) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
   Get resource padding if the specified PCI bridge is a hot plug bus.
 
   @param PciIoDevice    PCI bridge instance.
@@ -378,6 +441,14 @@ IsPciHotPlugBus (
     //
     // If the PPB has the hot plug controller build-in,
     // then return TRUE;
+    //
+    return TRUE;
+  }
+
+  if (SupportsPcieHotplug (PciIoDevice)) {
+    //
+    // If the PPB is a PCIe root complex port or a switch downstream port, and
+    // implements a slot, then also return TRUE.
     //
     return TRUE;
   }
