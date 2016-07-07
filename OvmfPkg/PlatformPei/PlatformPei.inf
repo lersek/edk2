@@ -30,6 +30,7 @@
 
 [Sources]
   Cmos.c
+  FeatureControl.c
   Fv.c
   MemDetect.c
   Platform.c
@@ -103,6 +104,7 @@
 
 [Ppis]
   gEfiPeiMasterBootModePpiGuid
+  gEfiPeiMpServicesPpiGuid
 
 [Depex]
   TRUE
