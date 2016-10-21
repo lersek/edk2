@@ -116,7 +116,10 @@ CpsrString (
     break;
   }
 
-  AsciiStrCat (Str, ModeStr);
+  //
+  // See the interface contract in the leading comment block.
+  //
+  AsciiStrCatS (Str, 32 - (Str - ReturnStr), ModeStr);
   return;
 }
 
