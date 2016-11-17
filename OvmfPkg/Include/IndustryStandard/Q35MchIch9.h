@@ -91,8 +91,13 @@
 //
 // IO ports
 //
-#define ICH9_APM_CNT 0xB2
-#define ICH9_APM_STS 0xB3
+#define ICH9_APM_CNT                   0xB2
+#define ICH9_APM_STS                   0xB3
+//
+// The following bits are QEMU extensions.
+//
+#define QEMU_ICH9_APM_STS_GET_SET_FEAT   BIT1
+#define QEMU_ICH9_APM_STS_F_BCAST_SMI    BIT2
 
 //
 // IO ports relative to PMBASE
