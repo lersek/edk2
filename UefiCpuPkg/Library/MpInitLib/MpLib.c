@@ -707,6 +707,7 @@ WakeUpAP (
   CPU_AP_DATA                      *CpuData;
   BOOLEAN                          ResetVectorRequired;
   CPU_INFO_IN_HOB                  *CpuInfoInHob;
+  UINT32                           KnownProcessorCount;
 
   CpuMpData->FinishedCount = 0;
   ResetVectorRequired = FALSE;
@@ -745,10 +746,17 @@ WakeUpAP (
       SendInitSipiSipiAllExcludingSelf ((UINT32) ExchangeInfo->BufferStart);
     }
     if (CpuMpData->InitFlag == ApInitConfig) {
-      //
-      // Wait for all potential APs waken up in one specified period
-      //
-      MicroSecondDelay (PcdGet32(PcdCpuApInitTimeOutInMicroSeconds));
+      KnownProcessorCount = PcdGet32 (PcdCpuKnownLogicalProcessorNumber);
+      if (KnownProcessorCount > 0) {
+        while (CpuMpData->FinishedCount < (KnownProcessorCount - 1)) {
+          CpuPause ();
+        }
+      } else {
+        //
+        // Wait for all potential APs waken up in one specified period
+        //
+        MicroSecondDelay (PcdGet32(PcdCpuApInitTimeOutInMicroSeconds));
+      }
     } else {
       //
       // Wait all APs waken up if this is not the 1st broadcast of SIPI

@@ -225,5 +225,16 @@
   # @ValidList   0x80000001 | 0
   gUefiCpuPkgTokenSpaceGuid.PcdCpuHotPlugDataAddress|0x0|UINT64|0x60000011
 
+  ## On platforms where the number of boot-time CPUs can be dynamically
+  #  retrieved from a platform-specific information source, the BSP does not
+  #  have to wait for PcdCpuApInitTimeOutInMicroSeconds in order to detect all
+  #  APs for the first time. On such platforms, this PCD specifies the number
+  #  of CPUs available at boot. If the platform doesn't support this feature,
+  #  this PCD should be set to 0. The platform is responsible for ensuring that
+  #  this PCD is never set to a value larger than
+  #  PcdCpuMaxLogicalProcessorNumber.
+  # @Prompt Known number of CPUs available at boot.
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuKnownLogicalProcessorNumber|0|UINT32|0x60000012
+
 [UserExtensions.TianoCore."ExtraFiles"]
   UefiCpuPkgExtra.uni
