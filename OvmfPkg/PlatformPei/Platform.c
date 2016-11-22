@@ -394,6 +394,7 @@ MiscInitialization (
   UINTN         AcpiCtlReg;
   UINT8         AcpiEnBit;
   RETURN_STATUS PcdStatus;
+  UINT16        KnownProcessorCount;
 
   //
   // Disable A20 Mask
@@ -472,6 +473,27 @@ MiscInitialization (
     // Set PCI Express Register Range Base Address
     //
     PciExBarInitialization ();
+  }
+
+  //
+  // Fetch the number of boot CPUs from QEMU and expose it to MpInitLib in
+  // UefiCpuPkg.
+  //
+  QemuFwCfgSelectItem (QemuFwCfgItemSmpCpuCount);
+  KnownProcessorCount = QemuFwCfgRead16 ();
+  if (KnownProcessorCount > PcdGet32 (PcdCpuMaxLogicalProcessorNumber)) {
+    DEBUG ((DEBUG_ERROR,
+      "%a: KnownProcessorCount (%d) > PcdCpuMaxLogicalProcessorNumber (%u)\n",
+      __FUNCTION__, KnownProcessorCount,
+      PcdGet32 (PcdCpuMaxLogicalProcessorNumber)));
+    ASSERT (FALSE);
+    CpuDeadLoop ();
+  } else if (KnownProcessorCount > 0) {
+    PcdStatus = PcdSet32S (PcdCpuKnownLogicalProcessorNumber,
+                  KnownProcessorCount);
+    ASSERT_RETURN_ERROR (PcdStatus);
+    DEBUG ((DEBUG_INFO, "%a: QEMU reports %d processors\n", __FUNCTION__,
+      KnownProcessorCount));
   }
 }
 

@@ -495,6 +495,8 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetNxForStack|FALSE
   gEfiMdeModulePkgTokenSpaceGuid.PcdPropertiesTableEnable|FALSE
 
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuKnownLogicalProcessorNumber|0
+
 ################################################################################
 #
 # Components Section - list of all EDK II Modules needed by this Platform.
