@@ -174,7 +174,8 @@
   # @Prompt Configure max supported number of Logical Processors
   gUefiCpuPkgTokenSpaceGuid.PcdCpuMaxLogicalProcessorNumber|64|UINT32|0x00000002
   ## Specifies timeout value in microseconds for the BSP to detect all APs for the first time.
-  # @Prompt Timeout for the BSP to detect all APs for the first time.
+  #  When set to zero, the BSP will wait forever for all (PcdCpuMaxLogicalProcessorNumber-1) APs to report in.
+  # @Prompt Timeout for the BSP to detect all APs for the first time (zero means await maximum supported AP count).
   gUefiCpuPkgTokenSpaceGuid.PcdCpuApInitTimeOutInMicroSeconds|50000|UINT32|0x00000004
   ## Specifies the base address of the first microcode Patch in the microcode Region.
   # @Prompt Microcode Region base address.
