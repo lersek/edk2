@@ -25,6 +25,8 @@
 
 #include <Protocol/FdtClient.h>
 
+#include <IndustryStandard/QemuFwCfgDma.h>
+
 STATIC UINTN mFwCfgSelectorAddress;
 STATIC UINTN mFwCfgDataAddress;
 STATIC UINTN mFwCfgDmaAddress;
@@ -52,26 +54,6 @@ STATIC READ_BYTES_FUNCTION DmaReadBytes;
 // This points to the one we detect at runtime.
 //
 STATIC READ_BYTES_FUNCTION *InternalQemuFwCfgReadBytes = MmioReadBytes;
-
-//
-// Communication structure for DmaReadBytes(). All fields are encoded in big
-// endian.
-//
-#pragma pack (1)
-typedef struct {
-  UINT32 Control;
-  UINT32 Length;
-  UINT64 Address;
-} FW_CFG_DMA_ACCESS;
-#pragma pack ()
-
-//
-// Macros for the FW_CFG_DMA_ACCESS.Control bitmap (in native encoding).
-//
-#define FW_CFG_DMA_CTL_ERROR  BIT0
-#define FW_CFG_DMA_CTL_READ   BIT1
-#define FW_CFG_DMA_CTL_SKIP   BIT2
-#define FW_CFG_DMA_CTL_SELECT BIT3
 
 
 /**
@@ -183,7 +165,7 @@ QemuFwCfgInitialize (
 
         QemuFwCfgSelectItem (QemuFwCfgItemInterfaceVersion);
         Features = QemuFwCfgRead32 ();
-        if ((Features & BIT1) != 0) {
+        if ((Features & FW_CFG_F_DMA) != 0) {
           mFwCfgDmaAddress = FwCfgDmaAddress;
           InternalQemuFwCfgReadBytes = DmaReadBytes;
         }
