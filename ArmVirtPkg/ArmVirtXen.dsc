@@ -197,7 +197,10 @@
   # Platform Driver
   #
   ArmVirtPkg/XenioFdtDxe/XenioFdtDxe.inf
-  ArmVirtPkg/FdtClientDxe/FdtClientDxe.inf
+  ArmVirtPkg/FdtClientDxe/FdtClientDxe.inf {
+    <LibraryClasses>
+      QemuFwCfgLib|ArmVirtPkg/Library/QemuFwCfgLib/QemuFwCfgLibExplicitInit.inf
+  }
 
   #
   # FAT filesystem + GPT/MBR partitioning

@@ -29,12 +29,14 @@
   EmbeddedPkg/EmbeddedPkg.dec
   MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
+  OvmfPkg/OvmfPkg.dec
 
 [LibraryClasses]
   BaseLib
   DebugLib
   FdtLib
   HobLib
+  QemuFwCfgLib
   UefiBootServicesTableLib
   UefiDriverEntryPoint
 
@@ -44,9 +46,6 @@
 [Guids]
   gFdtHobGuid
   gFdtTableGuid
-
-[FeaturePcd]
-  gArmVirtTokenSpaceGuid.PcdPureAcpiBoot
 
 [Depex]
   TRUE

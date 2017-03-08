@@ -18,6 +18,7 @@
 #include <Library/UefiDriverEntryPoint.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/HobLib.h>
+#include <Library/QemuFwCfgLib.h>
 #include <libfdt.h>
 
 #include <Guid/Fdt.h>
@@ -26,6 +27,15 @@
 #include <Protocol/FdtClient.h>
 
 STATIC VOID  *mDeviceTreeBase;
+
+typedef enum {
+  OsExposureUnavailable,
+  OsExposureEnabled,
+  OsExposureDisabled,
+  OsExposureMax
+} OS_EXPOSURE_STATE;
+
+STATIC OS_EXPOSURE_STATE mOsExposure;
 
 STATIC
 EFI_STATUS
@@ -300,7 +310,11 @@ GetOsExposure (
   OUT BOOLEAN *FdtExposedToOs
   )
 {
-  *FdtExposedToOs = !FeaturePcdGet (PcdPureAcpiBoot);
+  ASSERT (mOsExposure < OsExposureMax);
+  if (mOsExposure == OsExposureUnavailable) {
+    return EFI_NOT_STARTED;
+  }
+  *FdtExposedToOs = (BOOLEAN)(mOsExposure == OsExposureEnabled);
   return EFI_SUCCESS;
 }
 
@@ -317,6 +331,12 @@ STATIC FDT_CLIENT_PROTOCOL mFdtClientProtocol = {
   GetOsExposure
 };
 
+RETURN_STATUS
+EFIAPI
+QemuFwCfgInitialize (
+  VOID
+  );
+
 EFI_STATUS
 EFIAPI
 InitializeFdtClientDxe (
@@ -327,6 +347,7 @@ InitializeFdtClientDxe (
   VOID              *Hob;
   VOID              *DeviceTreeBase;
   EFI_STATUS        Status;
+  EFI_TPL           OldTpl;
 
   Hob = GetFirstGuidHob (&gFdtHobGuid);
   if (Hob == NULL || GET_GUID_HOB_DATA_SIZE (Hob) != sizeof (UINT64)) {
@@ -344,15 +365,49 @@ InitializeFdtClientDxe (
 
   DEBUG ((EFI_D_INFO, "%a: DTB @ 0x%p\n", __FUNCTION__, mDeviceTreeBase));
 
-  if (!FeaturePcdGet (PcdPureAcpiBoot)) {
+  //
+  // Install the protocol for our QemuFwCfgLibExplicitInit instance, but
+  // prevent any protocol notifies at TPL_CALLBACK from firing.
+  //
+  OldTpl = gBS->RaiseTPL (TPL_CALLBACK);
+  Status = gBS->InstallProtocolInterface (&ImageHandle,
+                  &gFdtClientProtocolGuid, EFI_NATIVE_INTERFACE,
+                  &mFdtClientProtocol);
+  if (EFI_ERROR (Status)) {
+    goto RestoreTpl;
+  }
+
+  //
+  // Install the FDT as a configuration table only if:
+  // - we're running on 32-bit ARM, or
+  // - we're running on Xen, or
+  // - QEMU doesn't provide us with ACPI payload (e.g. due to the -no-acpi
+  //   option).
+  //
+  mOsExposure = OsExposureEnabled;
+  if (MAX_UINTN != MAX_UINT32) {
     //
-    // Only install the FDT as a configuration table if we want to leave it up
-    // to the OS to decide whether it prefers ACPI over DT.
+    // Call the fw_cfg library constructor explicitly. It always succeeds;
+    // we'll check fw_cfg availability separately.
     //
+    QemuFwCfgInitialize ();
+    if (QemuFwCfgIsAvailable ()) {
+      FIRMWARE_CONFIG_ITEM FwCfgItem;
+      UINTN                FwCfgSize;
+
+      if (!RETURN_ERROR (QemuFwCfgFindFile ("etc/table-loader", &FwCfgItem,
+                           &FwCfgSize))) {
+        mOsExposure = OsExposureDisabled;
+      }
+    }
+  }
+
+  if (mOsExposure == OsExposureEnabled) {
     Status = gBS->InstallConfigurationTable (&gFdtTableGuid, DeviceTreeBase);
     ASSERT_EFI_ERROR (Status);
   }
 
-  return gBS->InstallProtocolInterface (&ImageHandle, &gFdtClientProtocolGuid,
-                EFI_NATIVE_INTERFACE, &mFdtClientProtocol);
+RestoreTpl:
+  gBS->RestoreTPL (OldTpl);
+  return Status;
 }

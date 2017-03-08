@@ -301,7 +301,10 @@
   # Platform Driver
   #
   ArmVirtPkg/VirtioFdtDxe/VirtioFdtDxe.inf
-  ArmVirtPkg/FdtClientDxe/FdtClientDxe.inf
+  ArmVirtPkg/FdtClientDxe/FdtClientDxe.inf {
+    <LibraryClasses>
+      QemuFwCfgLib|ArmVirtPkg/Library/QemuFwCfgLib/QemuFwCfgLibExplicitInit.inf
+  }
   ArmVirtPkg/HighMemDxe/HighMemDxe.inf
   OvmfPkg/VirtioBlkDxe/VirtioBlk.inf
   OvmfPkg/VirtioScsiDxe/VirtioScsi.inf
