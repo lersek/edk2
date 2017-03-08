@@ -35,6 +35,7 @@ ArmVirtPL031FdtClientLibConstructor (
   UINT32                        RegSize;
   UINT64                        RegBase;
   RETURN_STATUS                 PcdStatus;
+  BOOLEAN                       FdtExposedToOs;
 
   Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL,
                   (VOID **)&FdtClient);
@@ -66,7 +67,10 @@ ArmVirtPL031FdtClientLibConstructor (
 
   DEBUG ((EFI_D_INFO, "Found PL031 RTC @ 0x%Lx\n", RegBase));
 
-  if (!FeaturePcdGet (PcdPureAcpiBoot)) {
+  Status = FdtClient->GetOsExposure (&FdtExposedToOs);
+  ASSERT_EFI_ERROR (Status);
+
+  if (FdtExposedToOs) {
     //
     // UEFI takes ownership of the RTC hardware, and exposes its functionality
     // through the UEFI Runtime Services GetTime, SetTime, etc. This means we
