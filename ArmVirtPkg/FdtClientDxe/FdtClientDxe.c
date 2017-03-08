@@ -294,6 +294,16 @@ GetOrInsertChosenNode (
   return EFI_SUCCESS;
 }
 
+STATIC
+EFI_STATUS
+GetOsExposure (
+  OUT BOOLEAN *FdtExposedToOs
+  )
+{
+  *FdtExposedToOs = !FeaturePcdGet (PcdPureAcpiBoot);
+  return EFI_SUCCESS;
+}
+
 STATIC FDT_CLIENT_PROTOCOL mFdtClientProtocol = {
   GetNodeProperty,
   SetNodeProperty,
@@ -304,6 +314,7 @@ STATIC FDT_CLIENT_PROTOCOL mFdtClientProtocol = {
   FindMemoryNodeReg,
   FindNextMemoryNodeReg,
   GetOrInsertChosenNode,
+  GetOsExposure
 };
 
 EFI_STATUS

@@ -115,6 +115,30 @@ EFI_STATUS
   OUT INT32                   *Node
   );
 
+/*
+  @param[out] FdtExposedToOs  Whether the firmware exposes the FDT to the guest
+                              OS as an EFI system configuration table.
+
+  @retval EFI_NOT_STARTED  The protocol instance is in the process of
+                           determining whether it should expose the FDT to the
+                           guest OS as an EFI system configuration table.
+
+                           This status code is never returned to modules that
+                           depend on the protocol with a DEPEX, or wait for it
+                           with a TPL_CALLBACK protocol notify. Protocol
+                           notifies registered at higher task priority levels
+                           may see this return value (but such protocol
+                           notifies should not be used in the first place, in
+                           general).
+
+  @retval EFI_SUCCESS      FdtExposedToOs has been set.
+*/
+typedef
+EFI_STATUS
+(EFIAPI *FDT_CLIENT_GET_OS_EXPOSURE) (
+  OUT BOOLEAN *FdtExposedToOs
+  );
+
 struct _FDT_CLIENT_PROTOCOL {
   FDT_CLIENT_GET_NODE_PROPERTY             GetNodeProperty;
   FDT_CLIENT_SET_NODE_PROPERTY             SetNodeProperty;
@@ -128,6 +152,8 @@ struct _FDT_CLIENT_PROTOCOL {
   FDT_CLIENT_FIND_NEXT_MEMORY_NODE_REG     FindNextMemoryNodeReg;
 
   FDT_CLIENT_GET_OR_INSERT_CHOSEN_NODE     GetOrInsertChosenNode;
+
+  FDT_CLIENT_GET_OS_EXPOSURE               GetOsExposure;
 };
 
 extern EFI_GUID gFdtClientProtocolGuid;
