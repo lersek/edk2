@@ -592,6 +592,13 @@
   OvmfPkg/SmmAccess/SmmAccessPei.inf
 !endif
   UefiCpuPkg/CpuMpPei/CpuMpPei.inf
+!if ($(SMM_REQUIRE) == TRUE) || ($(MEM_VARSTORE_EMU_ENABLE) == FALSE)
+  MdeModulePkg/Universal/FaultTolerantWritePei/FaultTolerantWritePei.inf {
+    <LibraryClasses>
+      NULL|OvmfPkg/Library/FlashNvStorageAddressLib/FlashNvStorageAddressLib.inf
+  }
+  MdeModulePkg/Universal/Variable/Pei/VariablePei.inf
+!endif
 
   #
   # DXE Phase modules
