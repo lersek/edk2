@@ -39,6 +39,7 @@
   DEFINE HTTP_BOOT_ENABLE        = FALSE
   DEFINE SMM_REQUIRE             = FALSE
   DEFINE TLS_ENABLE              = FALSE
+  DEFINE MEM_VARSTORE_EMU_ENABLE = TRUE
 
   #
   # Flash size selection. Setting FD_SIZE_IN_KB on the command line directly to
@@ -409,6 +410,9 @@
 !if $(SMM_REQUIRE) == TRUE
   gUefiOvmfPkgTokenSpaceGuid.PcdSmmSmramRequire|TRUE
   gUefiCpuPkgTokenSpaceGuid.PcdCpuSmmEnableBspElection|FALSE
+!endif
+!if $(MEM_VARSTORE_EMU_ENABLE) == FALSE
+  gUefiOvmfPkgTokenSpaceGuid.PcdMemVarstoreEmuEnable|FALSE
 !endif
 
 [PcdsFixedAtBuild]

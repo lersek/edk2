@@ -150,3 +150,9 @@
   #  runtime OS from tampering with firmware structures (special memory ranges
   #  used by OVMF, the varstore pflash chip, LockBox etc).
   gUefiOvmfPkgTokenSpaceGuid.PcdSmmSmramRequire|FALSE|BOOLEAN|0x1e
+
+  ## This feature flag reports whether in-memory (that is, non-flash) variable
+  #  emulation is enabled. Note that with PcdSmmSmramRequire set to TRUE, this
+  #  setting is irrelevant, as SMM/SMRAM support always requires flash
+  #  variables.
+  gUefiOvmfPkgTokenSpaceGuid.PcdMemVarstoreEmuEnable|TRUE|BOOLEAN|3
