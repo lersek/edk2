@@ -246,6 +246,7 @@ QemuFlashInitialize (
 
   if (!QemuFlashDetected ()) {
     ASSERT (!FeaturePcdGet (PcdSmmSmramRequire));
+    ASSERT (FeaturePcdGet (PcdMemVarstoreEmuEnable));
     return EFI_WRITE_PROTECTED;
   }
 

@@ -87,6 +87,7 @@
 
 [FeaturePcd]
   gUefiOvmfPkgTokenSpaceGuid.PcdSmmSmramRequire
+  gUefiOvmfPkgTokenSpaceGuid.PcdMemVarstoreEmuEnable
 
 [Depex]
   TRUE
