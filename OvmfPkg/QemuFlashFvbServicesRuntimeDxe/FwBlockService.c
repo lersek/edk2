@@ -1093,24 +1093,46 @@ FvbInitialize (
 
   MarkMemoryRangeForRuntimeAccess (BaseAddress, Length);
 
-  //
-  // Set several PCD values to point to flash
-  //
-  PcdStatus = PcdSet64S (
-    PcdFlashNvStorageVariableBase64,
-    (UINTN) PcdGet32 (PcdOvmfFlashNvStorageVariableBase)
-    );
-  ASSERT_RETURN_ERROR (PcdStatus);
-  PcdStatus = PcdSet32S (
-    PcdFlashNvStorageFtwWorkingBase,
-    PcdGet32 (PcdOvmfFlashNvStorageFtwWorkingBase)
-    );
-  ASSERT_RETURN_ERROR (PcdStatus);
-  PcdStatus = PcdSet32S (
-    PcdFlashNvStorageFtwSpareBase,
-    PcdGet32 (PcdOvmfFlashNvStorageFtwSpareBase)
-    );
-  ASSERT_RETURN_ERROR (PcdStatus);
+  if (!FeaturePcdGet (PcdSmmSmramRequire) &&
+      FeaturePcdGet (PcdMemVarstoreEmuEnable)) {
+    //
+    // This build is suitable for both flash and in-memory emulated variables,
+    // and we happen to have found flash. Set several PCD values to point to
+    // flash.
+    //
+    PcdStatus = PcdSet64S (
+                  PcdFlashNvStorageVariableBase64,
+                  PcdGet32 (PcdOvmfFlashNvStorageVariableBase)
+                  );
+    ASSERT_RETURN_ERROR (PcdStatus);
+    PcdStatus = PcdSet32S (
+                  PcdFlashNvStorageFtwWorkingBase,
+                  PcdGet32 (PcdOvmfFlashNvStorageFtwWorkingBase)
+                  );
+    ASSERT_RETURN_ERROR (PcdStatus);
+    PcdStatus = PcdSet32S (
+                  PcdFlashNvStorageFtwSpareBase,
+                  PcdGet32 (PcdOvmfFlashNvStorageFtwSpareBase)
+                  );
+    ASSERT_RETURN_ERROR (PcdStatus);
+  } else {
+    //
+    // This build is suitable for flash variables only. Double-check several
+    // PCDs that point to the flash.
+    //
+    ASSERT (
+      (PcdGet64 (PcdFlashNvStorageVariableBase64) ==
+       PcdGet32 (PcdOvmfFlashNvStorageVariableBase))
+      );
+    ASSERT (
+      (PcdGet32 (PcdFlashNvStorageFtwWorkingBase) ==
+       PcdGet32 (PcdOvmfFlashNvStorageFtwWorkingBase))
+      );
+    ASSERT (
+      (PcdGet32 (PcdFlashNvStorageFtwSpareBase) ==
+       PcdGet32 (PcdOvmfFlashNvStorageFtwSpareBase))
+      );
+  }
 
   FwhInstance = (EFI_FW_VOL_INSTANCE *)
     (
