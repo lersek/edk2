@@ -664,7 +664,8 @@ InitializePlatform (
   }
 
   if (mBootMode != BOOT_ON_S3_RESUME) {
-    if (!FeaturePcdGet (PcdSmmSmramRequire)) {
+    if (!FeaturePcdGet (PcdSmmSmramRequire) &&
+        FeaturePcdGet (PcdMemVarstoreEmuEnable)) {
       ReserveEmuVariableNvStore ();
     }
     PeiFvInitialization ();

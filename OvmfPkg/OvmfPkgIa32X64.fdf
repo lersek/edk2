@@ -192,7 +192,7 @@ APRIORI DXE {
   INF  MdeModulePkg/Universal/DevicePathDxe/DevicePathDxe.inf
   INF  MdeModulePkg/Universal/PCD/Dxe/Pcd.inf
   INF  OvmfPkg/AmdSevDxe/AmdSevDxe.inf
-!if $(SMM_REQUIRE) == FALSE
+!if ($(SMM_REQUIRE) == FALSE) && ($(MEM_VARSTORE_EMU_ENABLE) == TRUE)
   INF  OvmfPkg/QemuFlashFvbServicesRuntimeDxe/FvbServicesRuntimeDxe.inf
 !endif
 }
@@ -382,7 +382,9 @@ INF  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableSmmRuntimeDxe.inf
 # Variable driver stack (non-SMM)
 #
 INF  OvmfPkg/QemuFlashFvbServicesRuntimeDxe/FvbServicesRuntimeDxe.inf
+!if $(MEM_VARSTORE_EMU_ENABLE) == TRUE
 INF  OvmfPkg/EmuVariableFvbRuntimeDxe/Fvb.inf
+!endif
 INF  MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
 INF  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf
 !endif

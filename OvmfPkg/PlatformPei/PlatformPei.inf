@@ -108,6 +108,7 @@
 
 [FeaturePcd]
   gUefiOvmfPkgTokenSpaceGuid.PcdSmmSmramRequire
+  gUefiOvmfPkgTokenSpaceGuid.PcdMemVarstoreEmuEnable
 
 [Ppis]
   gEfiPeiMasterBootModePpiGuid

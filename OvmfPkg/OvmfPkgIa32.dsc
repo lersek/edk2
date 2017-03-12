@@ -502,7 +502,7 @@
 
 [PcdsDynamicDefault]
   # only set when
-  #   ($(SMM_REQUIRE) == FALSE)
+  #   (($(SMM_REQUIRE) == FALSE) && ($(MEM_VARSTORE_EMU_ENABLE) == TRUE))
   gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvStoreReserved|0
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64|0
@@ -871,10 +871,12 @@
   # Variable driver stack (non-SMM)
   #
   OvmfPkg/QemuFlashFvbServicesRuntimeDxe/FvbServicesRuntimeDxe.inf
+!if $(MEM_VARSTORE_EMU_ENABLE) == TRUE
   OvmfPkg/EmuVariableFvbRuntimeDxe/Fvb.inf {
     <LibraryClasses>
       PlatformFvbLib|OvmfPkg/Library/EmuVariableFvbLib/EmuVariableFvbLib.inf
   }
+!endif
   MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
   MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf {
     <LibraryClasses>
