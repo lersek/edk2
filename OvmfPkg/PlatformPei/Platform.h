@@ -74,6 +74,11 @@ PeiFvInitialization (
   );
 
 VOID
+MemTypeInfoInitialization (
+  VOID
+  );
+
+VOID
 InstallFeatureControlCallback (
   VOID
   );
