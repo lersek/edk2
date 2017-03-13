@@ -1,0 +1,48 @@
+## @file
+#
+# A hook-in library for variable-related PEIMs, in order to set
+# - gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64,
+# - gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase,
+# - gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase,
+# from their gUefiOvmfPkgTokenSpaceGuid counterparts, just before those PEIMs
+# consume them.
+#
+# Copyright (C) 2017, Red Hat, Inc.
+#
+# This program and the accompanying materials are licensed and made available
+# under the terms and conditions of the BSD License which accompanies this
+# distribution. The full text of the license may be found at
+# http://opensource.org/licenses/bsd-license.php
+#
+# THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS, WITHOUT
+# WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+#
+##
+
+[Defines]
+  INF_VERSION                    = 1.25
+  BASE_NAME                      = FlashNvStorageAddressLib
+  FILE_GUID                      = 5FF5A9F9-D01E-49EC-9A17-1682FC85122F
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = FlashNvStorageAddressLib|PEIM
+  CONSTRUCTOR                    = SetFlashNvStorageAddresses
+
+[Sources]
+  FlashNvStorageAddressLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  OvmfPkg/OvmfPkg.dec
+
+[LibraryClasses]
+  PcdLib
+
+[Pcd]
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashNvStorageFtwSpareBase
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashNvStorageFtwWorkingBase
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashNvStorageVariableBase
