@@ -68,13 +68,21 @@ https://github.com/tianocore/tianocore.github.io/wiki/How%20to%20build%20OVMF
     * Run qemu with: -pflash path/to/OVMF.fd
     * Note that this option is required for running SecureBoot-enabled builds
       (-D SECURE_BOOT_ENABLE).
+    * When a commitment to this option (i.e., -pflash) can be made, it is
+      recommended to build OVMF with -D MEM_VARSTORE_EMU_ENABLE=FALSE. Said
+      build setting enables UEFI memory map defragmentation across boots of the
+      virtual machine.
   - Option 2: Use QEMU -bios parameter
     * Note that UEFI variables will be partially emulated, and non-volatile
       variables may lose their contents after a reboot
+    * The build option -D MEM_VARSTORE_EMU_ENABLE=FALSE is incompatible with
+      the QEMU -bios option.
     * Run qemu with: -bios path/to/OVMF.fd
   - Option 3: Use QEMU -L parameter
     * Note that UEFI variables will be partially emulated, and non-volatile
       variables may lose their contents after a reboot
+    * The build option -D MEM_VARSTORE_EMU_ENABLE=FALSE is incompatible with
+      the QEMU -L option.
     * Either copy, rename or symlink OVMF.fd => bios.bin
     * Use the QEMU -L parameter to specify the directory where the bios.bin
       file is located.
@@ -139,6 +147,8 @@ during boot (even in RELEASE builds). Both the naming of the flag (SMM_REQUIRE,
 instead of SMM_ENABLE), and this behavior are consistent with the goal
 described above: this is supposed to be a security feature, and fallbacks are
 not allowed. Similarly, a pflash-backed variable store is a requirement.
+(Accordingly, SMM_REQUIRE automatically enables all benefits of
+MEM_VARSTORE_EMU_ENABLE=FALSE).
 
 QEMU should be started with the options listed below (in addition to any other
 guest-specific flags). The command line should be gradually composed from the
