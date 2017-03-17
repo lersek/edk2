@@ -25,24 +25,21 @@
   PlatformHasAcpiDtDxe.c
 
 [Packages]
-  ArmVirtPkg/ArmVirtPkg.dec
   EmbeddedPkg/EmbeddedPkg.dec
   MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
+  OvmfPkg/OvmfPkg.dec
 
 [LibraryClasses]
   BaseLib
   DebugLib
-  PcdLib
+  QemuFwCfgLib
   UefiBootServicesTableLib
   UefiDriverEntryPoint
 
 [Guids]
   gEdkiiPlatformHasAcpiGuid       ## SOMETIMES_PRODUCES ## PROTOCOL
   gEdkiiPlatformHasDeviceTreeGuid ## SOMETIMES_PRODUCES ## PROTOCOL
-
-[FeaturePcd]
-  gArmVirtTokenSpaceGuid.PcdPureAcpiBoot ## CONSUMES
 
 [Depex]
   TRUE
