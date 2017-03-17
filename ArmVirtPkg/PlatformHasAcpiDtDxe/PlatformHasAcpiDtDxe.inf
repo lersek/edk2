@@ -28,20 +28,18 @@
   ArmPkg/ArmPkg.dec
   ArmVirtPkg/ArmVirtPkg.dec
   MdePkg/MdePkg.dec
+  OvmfPkg/OvmfPkg.dec
 
 [LibraryClasses]
   BaseLib
   DebugLib
-  PcdLib
+  QemuFwCfgLib
   UefiBootServicesTableLib
   UefiDriverEntryPoint
 
 [Protocols]
   gEdkiiPlatformHasAcpiProtocolGuid       ## SOMETIMES_PRODUCES
   gEdkiiPlatformHasDeviceTreeProtocolGuid ## SOMETIMES_PRODUCES
-
-[FeaturePcd]
-  gArmVirtTokenSpaceGuid.PcdPureAcpiBoot ## CONSUMES
 
 [Depex]
   TRUE
