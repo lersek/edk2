@@ -439,9 +439,16 @@
       gEfiMdePkgTokenSpaceGuid.PcdUefiLibMaxPrintBufferSize|8000
   }
 
-[Components.AARCH64]
   #
   # ACPI Support
   #
-  MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
+  MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf {
+    <LibraryClasses>
+      NULL|ArmPkg/Library/PlatformHasAcpiLib/PlatformHasAcpiLib.inf
+  }
+
+[Components.AARCH64]
+  #
+  # EBC support
+  #
   MdeModulePkg/Universal/EbcDxe/EbcDxe.inf
