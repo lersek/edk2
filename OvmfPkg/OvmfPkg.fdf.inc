@@ -20,8 +20,35 @@
 #
 # Defining FD_SIZE_1MB on the build command line can override this.
 #
+# A firmware binary built for the default 2MB flash size, and a firmware binary
+# built with FD_SIZE_1MB defined, use the same variable store layout.
+#
+# Defining FD_SIZE_4MB results in a different (much larger) variable store
+# structure that is incompatible with both the default and the FD_SIZE_1MB
+# firmware binaries.
+#
 
 DEFINE BLOCK_SIZE        = 0x1000
+
+!ifdef $(FD_SIZE_4MB)
+
+DEFINE VARS_SIZE         = 0x80000
+DEFINE VARS_BLOCKS       = 0x80
+DEFINE VARS_LIVE_SIZE    = 0x3E000
+DEFINE VARS_SPARE_SIZE   = 0x40000
+
+DEFINE FW_BASE_ADDRESS   = 0xFFC00000
+DEFINE FW_SIZE           = 0x00400000
+DEFINE FW_BLOCKS         = 0x400
+DEFINE CODE_BASE_ADDRESS = 0xFFC80000
+DEFINE CODE_SIZE         = 0x00380000
+DEFINE CODE_BLOCKS       = 0x380
+DEFINE FVMAIN_SIZE       = 0x0034C000
+DEFINE SECFV_OFFSET      = 0x003CC000
+DEFINE SECFV_SIZE        = 0x34000
+
+!else
+
 DEFINE VARS_SIZE         = 0x20000
 DEFINE VARS_BLOCKS       = 0x20
 DEFINE VARS_LIVE_SIZE    = 0xE000
@@ -50,6 +77,8 @@ DEFINE CODE_BLOCKS       = 0x1E0
 DEFINE FVMAIN_SIZE       = 0x001AC000
 DEFINE SECFV_OFFSET      = 0x001CC000
 DEFINE SECFV_SIZE        = 0x34000
+
+!endif
 
 !endif
 
