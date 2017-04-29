@@ -400,8 +400,13 @@
   gEfiMdePkgTokenSpaceGuid.PcdMaximumGuidedExtractHandler|0x10
   gEfiMdeModulePkgTokenSpaceGuid.PcdPeiCoreMaxFvSupported|6
   gEfiMdeModulePkgTokenSpaceGuid.PcdPeiCoreMaxPeimPerFv|32
+!ifdef $(FD_SIZE_4MB)
+  gEfiMdeModulePkgTokenSpaceGuid.PcdMaxVariableSize|0x8400
+  gEfiMdeModulePkgTokenSpaceGuid.PcdMaxAuthVariableSize|0x8400
+!else
   gEfiMdeModulePkgTokenSpaceGuid.PcdMaxVariableSize|0x2000
   gEfiMdeModulePkgTokenSpaceGuid.PcdMaxAuthVariableSize|0x2800
+!endif
   gEfiMdeModulePkgTokenSpaceGuid.PcdVariableStoreSize|0xe000
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdVpdBaseAddress|0x0
