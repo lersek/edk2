@@ -33,7 +33,8 @@ typedef enum {
 
 typedef enum {
   QemuLoaderAllocHigh = 1,
-  QemuLoaderAllocFSeg
+  QemuLoaderAllocFSeg,
+  QemuLoaderAlloc64Bit,
 } QEMU_LOADER_ALLOC_ZONE;
 
 typedef enum {

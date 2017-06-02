@@ -204,7 +204,7 @@ ProcessCmdAllocate (
   }
 
   NumPages = EFI_SIZE_TO_PAGES (FwCfgSize);
-  Address = 0xFFFFFFFF;
+  Address = (Zone == QemuLoaderAlloc64Bit) ? MAX_UINT64 : MAX_UINT32;
   Status = gBS->AllocatePages (AllocateMaxAddress, EfiACPIMemoryNVS, NumPages,
                   &Address);
   if (EFI_ERROR (Status)) {
