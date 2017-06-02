@@ -38,6 +38,8 @@ typedef struct {
   UINT8   *Base;                        // Pointer to the blob data.
   BOOLEAN Releasable;                   // TRUE iff the blob should be released
                                         // at the end of processing.
+  BOOLEAN AcpiTablesExcluded;           // TRUE iff QEMU guarantees that the
+                                        // blob contains no ACPI tables
 } BLOB;
 
 
@@ -169,6 +171,8 @@ ProcessCmdAllocate (
   FIRMWARE_CONFIG_ITEM FwCfgItem;
   UINTN                FwCfgSize;
   EFI_STATUS           Status;
+  UINT32               Zone;
+  BOOLEAN              AcpiTablesExcluded;
   UINTN                NumPages;
   EFI_PHYSICAL_ADDRESS Address;
   BLOB                 *Blob;
@@ -191,6 +195,14 @@ ProcessCmdAllocate (
     return Status;
   }
 
+  Zone = Allocate->Zone;
+  if ((Zone & QemuLoaderAllocContentNoAcpi) != 0) {
+    Zone &= ~(UINT32)QemuLoaderAllocContentNoAcpi;
+    AcpiTablesExcluded = TRUE;
+  } else {
+    AcpiTablesExcluded = FALSE;
+  }
+
   NumPages = EFI_SIZE_TO_PAGES (FwCfgSize);
   Address = 0xFFFFFFFF;
   Status = gBS->AllocatePages (AllocateMaxAddress, EfiACPIMemoryNVS, NumPages,
@@ -208,6 +220,7 @@ ProcessCmdAllocate (
   Blob->Size = FwCfgSize;
   Blob->Base = (VOID *)(UINTN)Address;
   Blob->Releasable = TRUE;
+  Blob->AcpiTablesExcluded = AcpiTablesExcluded;
 
   Status = OrderedCollectionInsert (Tracker, NULL, Blob);
   if (Status == RETURN_ALREADY_STARTED) {
@@ -597,7 +610,9 @@ UndoCmdWritePointer (
                                different from RDST and XSDT, the table is
                                installed. If a target address is seen for the
                                second or later times, it is skipped without
-                               taking any action.
+                               taking any action. Target addresses that fall
+                               into fw_cfg blobs that QEMU reported in advance
+                               as holding no ACPI content are not even tracked.
 
   @retval EFI_INVALID_PARAMETER  NumInstalled was outside the allowed range on
                                  input.
@@ -653,6 +668,18 @@ Process2ndPassCmdAddPointer (
   TrackerEntry2 = OrderedCollectionFind (Tracker, AddPointer->PointeeFile);
   Blob = OrderedCollectionUserStruct (TrackerEntry);
   Blob2 = OrderedCollectionUserStruct (TrackerEntry2);
+
+  if (Blob2->AcpiTablesExcluded) {
+    DEBUG ((
+      DEBUG_VERBOSE,
+      "%a: marking blob \"%a\" with no ACPI content as unreleasable\n",
+      __FUNCTION__,
+      AddPointer->PointeeFile
+      ));
+    Blob2->Releasable = FALSE;
+    return EFI_SUCCESS;
+  }
+
   PointerField = Blob->Base + AddPointer->PointerOffset;
   PointerValue = 0;
   CopyMem (&PointerValue, PointerField, AddPointer->PointerSize);

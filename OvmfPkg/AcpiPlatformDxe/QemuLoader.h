@@ -36,6 +36,11 @@ typedef enum {
   QemuLoaderAllocFSeg
 } QEMU_LOADER_ALLOC_ZONE;
 
+typedef enum {
+  QemuLoaderAllocContentMixed  = 0x00,
+  QemuLoaderAllocContentNoAcpi = 0x80,
+} QEMU_LOADER_ALLOC_CONTENT;
+
 #pragma pack (1)
 //
 // QemuLoaderCmdAllocate: download the fw_cfg file named File, to a buffer
@@ -44,7 +49,9 @@ typedef enum {
 typedef struct {
   UINT8  File[QEMU_LOADER_FNAME_SIZE]; // NUL-terminated
   UINT32 Alignment;                    // power of two
-  UINT8  Zone;                         // QEMU_LOADER_ALLOC_ZONE values
+  UINT8  Zone;                         // One QEMU_LOADER_ALLOC_ZONE value
+                                       // OR-ed together with one
+                                       // QEMU_LOADER_ALLOC_CONTENT value
 } QEMU_LOADER_ALLOCATE;
 
 //
