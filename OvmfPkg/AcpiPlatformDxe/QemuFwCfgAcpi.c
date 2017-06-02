@@ -36,9 +36,8 @@ typedef struct {
                                         // key.
   UINTN   Size;                         // The number of bytes in this blob.
   UINT8   *Base;                        // Pointer to the blob data.
-  BOOLEAN HostsOnlyTableData;           // TRUE iff the blob has been found to
-                                        // only contain data that is directly
-                                        // part of ACPI tables.
+  BOOLEAN Releasable;                   // TRUE iff the blob should be released
+                                        // at the end of processing.
 } BLOB;
 
 
@@ -208,7 +207,7 @@ ProcessCmdAllocate (
   CopyMem (Blob->File, Allocate->File, QEMU_LOADER_FNAME_SIZE);
   Blob->Size = FwCfgSize;
   Blob->Base = (VOID *)(UINTN)Address;
-  Blob->HostsOnlyTableData = TRUE;
+  Blob->Releasable = TRUE;
 
   Status = OrderedCollectionInsert (Tracker, NULL, Blob);
   if (Status == RETURN_ALREADY_STARTED) {
@@ -507,7 +506,7 @@ ProcessCmdWritePointer (
   // as unreleasable, for the case when the whole linker/loader script is
   // handled successfully.
   //
-  PointeeBlob->HostsOnlyTableData = FALSE;
+  PointeeBlob->Releasable = FALSE;
 
   DEBUG ((DEBUG_VERBOSE, "%a: PointerFile=\"%a\" PointeeFile=\"%a\" "
     "PointerOffset=0x%x PointeeOffset=0x%x PointerSize=%d\n", __FUNCTION__,
@@ -614,8 +613,9 @@ UndoCmdWritePointer (
                                  InstalledKey and NumInstalled), or RSDT or
                                  XSDT has been identified but not installed, or
                                  the fw_cfg blob pointed-into by AddPointer has
-                                 been marked as hosting something else than
-                                 just direct ACPI table contents.
+                                 been marked as non-releasable due to hosting
+                                 something else than just direct ACPI table
+                                 contents.
 
   @return                        Error codes returned by
                                  AcpiProtocol->InstallAcpiTable().
@@ -742,7 +742,7 @@ Process2ndPassCmdAddPointer (
 
   if (TableSize == 0) {
     DEBUG ((EFI_D_VERBOSE, "not found; marking fw_cfg blob as opaque\n"));
-    Blob2->HostsOnlyTableData = FALSE;
+    Blob2->Releasable = FALSE;
     return EFI_SUCCESS;
   }
 
@@ -984,8 +984,8 @@ RollbackWritePointersAndFreeTracker:
 
   //
   // Tear down the tracker infrastructure. Each fw_cfg blob will be left in
-  // place only if we're exiting with success and the blob hosts data that is
-  // not directly part of some ACPI table.
+  // place only if we're exiting with success and the blob has been marked
+  // non-releasable.
   //
   for (TrackerEntry = OrderedCollectionMin (Tracker); TrackerEntry != NULL;
        TrackerEntry = TrackerEntry2) {
@@ -996,7 +996,7 @@ RollbackWritePointersAndFreeTracker:
     OrderedCollectionDelete (Tracker, TrackerEntry, &UserStruct);
     Blob = UserStruct;
 
-    if (EFI_ERROR (Status) || Blob->HostsOnlyTableData) {
+    if (EFI_ERROR (Status) || Blob->Releasable) {
       DEBUG ((EFI_D_VERBOSE, "%a: freeing \"%a\"\n", __FUNCTION__,
         Blob->File));
       gBS->FreePages ((UINTN)Blob->Base, EFI_SIZE_TO_PAGES (Blob->Size));
