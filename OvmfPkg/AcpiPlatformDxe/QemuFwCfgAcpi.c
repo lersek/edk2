@@ -133,12 +133,167 @@ PointerCompare (
 
 
 /**
+  Comparator function for two ASCII strings. Can be used as both Key and
+  UserStruct comparator.
+
+  This function exists solely so we can avoid casting &AsciiStrCmp to
+  ORDERED_COLLECTION_USER_COMPARE and ORDERED_COLLECTION_KEY_COMPARE.
+
+  @param[in] AsciiString1  Pointer to the first ASCII string.
+
+  @param[in] AsciiString2  Pointer to the second ASCII string.
+
+  @return  The return value of AsciiStrCmp (AsciiString1, AsciiString2).
+**/
+STATIC
+INTN
+EFIAPI
+AsciiStringCompare (
+  IN CONST VOID *AsciiString1,
+  IN CONST VOID *AsciiString2
+  )
+{
+  return AsciiStrCmp (AsciiString1, AsciiString2);
+}
+
+
+/**
+  Release the ORDERED_COLLECTION structure populated by
+  CollectRestrictedAllocations() (below).
+
+  This function may be called by CollectRestrictedAllocations() itself, on
+  the error path.
+
+  @param[in] RestrictedAllocations  The ORDERED_COLLECTION structure to
+                                    release.
+**/
+STATIC
+VOID
+ReleaseRestrictedAllocations (
+  IN ORDERED_COLLECTION *RestrictedAllocations
+)
+{
+  ORDERED_COLLECTION_ENTRY *Entry, *Entry2;
+
+  for (Entry = OrderedCollectionMin (RestrictedAllocations);
+       Entry != NULL;
+       Entry = Entry2) {
+    Entry2 = OrderedCollectionNext (Entry);
+    OrderedCollectionDelete (RestrictedAllocations, Entry, NULL);
+  }
+  OrderedCollectionUninit (RestrictedAllocations);
+}
+
+
+/**
+  Iterate over the linker/loader script, and collect the names of the fw_cfg
+  blobs that are referenced by QEMU_LOADER_ADD_POINTER.PointeeFile fields, such
+  that QEMU_LOADER_ADD_POINTER.PointerSize is less than 8. This means that the
+  pointee blob's address will have to be patched into a narrower-than-8 byte
+  pointer field, hence the pointee blob must not be allocated from 64-bit
+  address space.
+
+  @param[out] RestrictedAllocations  The ORDERED_COLLECTION structure linking
+                                     (not copying / owning) such
+                                     QEMU_LOADER_ADD_POINTER.PointeeFile fields
+                                     that name the blobs restricted from 64-bit
+                                     allocation.
+
+  @param[in] LoaderStart             Points to the first entry in the
+                                     linker/loader script.
+
+  @param[in] LoaderEnd               Points one past the last entry in the
+                                     linker/loader script.
+
+  @retval EFI_SUCCESS           RestrictedAllocations has been populated.
+
+  @retval EFI_OUT_OF_RESOURCES  Memory allocation failed.
+
+  @retval EFI_PROTOCOL_ERROR    Invalid linker/loader script contents.
+**/
+STATIC
+EFI_STATUS
+CollectRestrictedAllocations (
+  OUT ORDERED_COLLECTION     **RestrictedAllocations,
+  IN CONST QEMU_LOADER_ENTRY *LoaderStart,
+  IN CONST QEMU_LOADER_ENTRY *LoaderEnd
+)
+{
+  ORDERED_COLLECTION      *Collection;
+  CONST QEMU_LOADER_ENTRY *LoaderEntry;
+  EFI_STATUS              Status;
+
+  Collection = OrderedCollectionInit (AsciiStringCompare, AsciiStringCompare);
+  if (Collection == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  for (LoaderEntry = LoaderStart; LoaderEntry < LoaderEnd; ++LoaderEntry) {
+    CONST QEMU_LOADER_ADD_POINTER *AddPointer;
+
+    if (LoaderEntry->Type != QemuLoaderCmdAddPointer) {
+      continue;
+    }
+    AddPointer = &LoaderEntry->Command.AddPointer;
+
+    if (AddPointer->PointerSize >= 8) {
+      continue;
+    }
+
+    if (AddPointer->PointeeFile[QEMU_LOADER_FNAME_SIZE - 1] != '\0') {
+      DEBUG ((DEBUG_ERROR, "%a: malformed file name\n", __FUNCTION__));
+      Status = EFI_PROTOCOL_ERROR;
+      goto RollBack;
+    }
+
+    Status = OrderedCollectionInsert (
+               Collection,
+               NULL,                           // Entry
+               (VOID *)AddPointer->PointeeFile
+               );
+    switch (Status) {
+    case EFI_SUCCESS:
+      DEBUG ((
+        DEBUG_VERBOSE,
+        "%a: restricting blob \"%a\" from 64-bit allocation\n",
+        __FUNCTION__,
+        AddPointer->PointeeFile
+        ));
+      break;
+    case EFI_ALREADY_STARTED:
+      //
+      // The restriction has been recorded already.
+      //
+      break;
+    case EFI_OUT_OF_RESOURCES:
+      goto RollBack;
+    default:
+      ASSERT (FALSE);
+    }
+  }
+
+  *RestrictedAllocations = Collection;
+  return EFI_SUCCESS;
+
+RollBack:
+  ReleaseRestrictedAllocations (Collection);
+  return Status;
+}
+
+
+/**
   Process a QEMU_LOADER_ALLOCATE command.
 
-  @param[in] Allocate     The QEMU_LOADER_ALLOCATE command to process.
+  @param[in] Allocate               The QEMU_LOADER_ALLOCATE command to
+                                    process.
 
-  @param[in,out] Tracker  The ORDERED_COLLECTION tracking the BLOB user
-                          structures created thus far.
+  @param[in,out] Tracker            The ORDERED_COLLECTION tracking the BLOB
+                                    user structures created thus far.
+
+  @param[in] RestrictedAllocations  The ORDERED_COLLECTION populated by
+                                    CollectRestrictedAllocations(), naming the
+                                    fw_cfg blobs that must not be allocated
+                                    from 64-bit address space.
 
   @retval EFI_SUCCESS           An area of whole AcpiNVS pages has been
                                 allocated for the blob contents, and the
@@ -164,7 +319,8 @@ EFI_STATUS
 EFIAPI
 ProcessCmdAllocate (
   IN CONST QEMU_LOADER_ALLOCATE *Allocate,
-  IN OUT ORDERED_COLLECTION     *Tracker
+  IN OUT ORDERED_COLLECTION     *Tracker,
+  IN ORDERED_COLLECTION         *RestrictedAllocations
   )
 {
   FIRMWARE_CONFIG_ITEM FwCfgItem;
@@ -193,7 +349,10 @@ ProcessCmdAllocate (
   }
 
   NumPages = EFI_SIZE_TO_PAGES (FwCfgSize);
-  Address = 0xFFFFFFFF;
+  Address = MAX_UINT64;
+  if (OrderedCollectionFind (RestrictedAllocations, Allocate->File) != NULL) {
+    Address = MAX_UINT32;
+  }
   Status = gBS->AllocatePages (AllocateMaxAddress, EfiACPIMemoryNVS, NumPages,
                   &Address);
   if (EFI_ERROR (Status)) {
@@ -806,6 +965,7 @@ InstallQemuFwCfgTables (
   CONST QEMU_LOADER_ENTRY  *WritePointerSubsetEnd;
   ORIGINAL_ATTRIBUTES      *OriginalPciAttributes;
   UINTN                    OriginalPciAttributesCount;
+  ORDERED_COLLECTION       *RestrictedAllocations;
   S3_CONTEXT               *S3Context;
   ORDERED_COLLECTION       *Tracker;
   UINTN                    *InstalledKey;
@@ -834,6 +994,15 @@ InstallQemuFwCfgTables (
   RestorePciDecoding (OriginalPciAttributes, OriginalPciAttributesCount);
   LoaderEnd = LoaderStart + FwCfgSize / sizeof *LoaderEntry;
 
+  Status = CollectRestrictedAllocations (
+             &RestrictedAllocations,
+             LoaderStart,
+             LoaderEnd
+             );
+  if (EFI_ERROR (Status)) {
+    goto FreeLoader;
+  }
+
   S3Context = NULL;
   if (QemuFwCfgS3Enabled ()) {
     //
@@ -842,7 +1011,7 @@ InstallQemuFwCfgTables (
     //
     Status = AllocateS3Context (&S3Context, LoaderEnd - LoaderStart);
     if (EFI_ERROR (Status)) {
-      goto FreeLoader;
+      goto FreeRestrictedAllocations;
     }
   }
 
@@ -863,7 +1032,11 @@ InstallQemuFwCfgTables (
   for (LoaderEntry = LoaderStart; LoaderEntry < LoaderEnd; ++LoaderEntry) {
     switch (LoaderEntry->Type) {
     case QemuLoaderCmdAllocate:
-      Status = ProcessCmdAllocate (&LoaderEntry->Command.Allocate, Tracker);
+      Status = ProcessCmdAllocate (
+                 &LoaderEntry->Command.Allocate,
+                 Tracker,
+                 RestrictedAllocations
+                 );
       break;
 
     case QemuLoaderCmdAddPointer:
@@ -1009,6 +1182,9 @@ FreeS3Context:
   if (S3Context != NULL) {
     ReleaseS3Context (S3Context);
   }
+
+FreeRestrictedAllocations:
+  ReleaseRestrictedAllocations (RestrictedAllocations);
 
 FreeLoader:
   FreePool (LoaderStart);
