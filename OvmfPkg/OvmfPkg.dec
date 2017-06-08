@@ -31,6 +31,11 @@
   #
   NvVarsFileLib|Include/Library/NvVarsFileLib.h
 
+  ##  @libraryclass  Utility library to query TSEG size-related quantities on
+  #                  Q35.
+  #
+  Q35TsegSizeLib|Include/Library/Q35TsegSizeLib.h
+
   ##  @libraryclass  Access QEMU's firmware configuration interface
   #
   QemuFwCfgLib|Include/Library/QemuFwCfgLib.h
