@@ -33,6 +33,7 @@ Module Name:
 #include <Library/ResourcePublicationLib.h>
 #include <Library/MtrrLib.h>
 #include <Library/QemuFwCfgLib.h>
+#include <Library/Q35TsegSizeLib.h>
 
 #include "Platform.h"
 #include "Cmos.h"
@@ -348,7 +349,7 @@ PublishPeiMemory (
     //
     // TSEG is chipped from the end of low RAM
     //
-    LowerMemorySize -= FixedPcdGet8 (PcdQ35TsegMbytes) * SIZE_1MB;
+    LowerMemorySize -= Q35TsegSizeGetPreferredMbytes () * SIZE_1MB;
   }
 
   //
@@ -456,7 +457,7 @@ QemuInitializeRam (
     if (FeaturePcdGet (PcdSmmSmramRequire)) {
       UINT32 TsegSize;
 
-      TsegSize = FixedPcdGet8 (PcdQ35TsegMbytes) * SIZE_1MB;
+      TsegSize = Q35TsegSizeGetPreferredMbytes () * SIZE_1MB;
       AddMemoryRangeHob (BASE_1MB, LowerMemorySize - TsegSize);
       AddReservedMemoryBaseSizeHob (LowerMemorySize - TsegSize, TsegSize,
         TRUE);
@@ -605,7 +606,7 @@ InitializeRamRegions (
       // Make sure the TSEG area that we reported as a reserved memory resource
       // cannot be used for reserved memory allocations.
       //
-      TsegSize = FixedPcdGet8 (PcdQ35TsegMbytes) * SIZE_1MB;
+      TsegSize = Q35TsegSizeGetPreferredMbytes () * SIZE_1MB;
       BuildMemoryAllocationHob (
         GetSystemMemorySizeBelow4gb() - TsegSize,
         TsegSize,
