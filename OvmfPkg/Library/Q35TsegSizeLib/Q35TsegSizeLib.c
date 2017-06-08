@@ -21,6 +21,7 @@
 
 STATIC BOOLEAN mPreferencesInitialized;
 STATIC UINT8   mPreferredEsmramcTsegSzMask;
+STATIC UINT16  mExtendedTsegMbytes;
 
 /**
   Fetch the preferences into static variables that are going to be used by the
@@ -63,7 +64,41 @@ Q35TsegSizeGetPreferences (
 
   mPreferencesInitialized = TRUE;
 
-  switch (FixedPcdGet8 (PcdQ35TsegMbytes)) {
+  //
+  // Check if QEMU offers an extended TSEG.
+  //
+  // This can be seen from writing MCH_EXT_TSEG_MB_QUERY to the MCH_EXT_TSEG_MB
+  // register, and reading back the register.
+  //
+  // On a QEMU machine type that does not offer an extended TSEG, the initial
+  // write overwrites whatever value a malicious guest OS may have placed in
+  // the (unimplemented) register, before entering S3 or rebooting.
+  // Subsequently, the read returns MCH_EXT_TSEG_MB_QUERY unchanged.
+  //
+  // On a QEMU machine type that offers an extended TSEG, the initial write
+  // triggers an update to the register. Subsequently, the value read back
+  // (which is guaranteed to differ from MCH_EXT_TSEG_MB_QUERY) tells us the
+  // number of megabytes.
+  //
+  PciWrite16 (DRAMC_REGISTER_Q35 (MCH_EXT_TSEG_MB), MCH_EXT_TSEG_MB_QUERY);
+  mExtendedTsegMbytes = PciRead16 (DRAMC_REGISTER_Q35 (MCH_EXT_TSEG_MB));
+  if (mExtendedTsegMbytes != MCH_EXT_TSEG_MB_QUERY) {
+    DEBUG ((
+      DEBUG_INFO,
+      "%a: %a: QEMU offers an extended TSEG (%d MB)\n",
+      gEfiCallerBaseName,
+      __FUNCTION__,
+      mExtendedTsegMbytes
+      ));
+
+    mPreferredEsmramcTsegSzMask = MCH_ESMRAMC_TSEG_EXT;
+    return;
+  }
+
+  //
+  // Fall back to the default TSEG size otherwise.
+  //
+  switch (FixedPcdGet8 (PcdQ35TsegDefaultMbytes)) {
   case 1:
     mPreferredEsmramcTsegSzMask = MCH_ESMRAMC_TSEG_1MB;
     break;
@@ -165,6 +200,15 @@ Q35TsegSizeConvertEsmramcValToMbytes (
   case MCH_ESMRAMC_TSEG_8MB:
     Mbytes = 8;
     break;
+  case MCH_ESMRAMC_TSEG_EXT:
+    if (mExtendedTsegMbytes != MCH_EXT_TSEG_MB_QUERY) {
+      Mbytes = mExtendedTsegMbytes;
+      break;
+    }
+    //
+    // Fall through otherwise -- QEMU didn't offer an extended TSEG, so this
+    // should never happen.
+    //
   default:
     DEBUG ((
       DEBUG_ERROR,
