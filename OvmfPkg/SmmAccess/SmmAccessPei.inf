@@ -55,12 +55,10 @@
   PciLib
   PeiServicesLib
   PeimEntryPoint
+  Q35TsegSizeLib
 
 [FeaturePcd]
   gUefiOvmfPkgTokenSpaceGuid.PcdSmmSmramRequire
-
-[FixedPcd]
-  gUefiOvmfPkgTokenSpaceGuid.PcdQ35TsegMbytes
 
 [Ppis]
   gPeiSmmAccessPpiGuid           ## PRODUCES
