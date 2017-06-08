@@ -45,6 +45,7 @@
   DebugLib
   PcdLib
   PciLib
+  Q35TsegSizeLib
   UefiBootServicesTableLib
   UefiDriverEntryPoint
 

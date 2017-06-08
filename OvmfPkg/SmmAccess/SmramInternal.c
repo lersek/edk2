@@ -18,6 +18,7 @@
 #include <IndustryStandard/Q35MchIch9.h>
 #include <Library/DebugLib.h>
 #include <Library/PciLib.h>
+#include <Library/Q35TsegSizeLib.h>
 
 #include "SmramInternal.h"
 
@@ -132,7 +133,7 @@ SmramAccessGetCapabilities (
   UINTN  OriginalSize;
   UINT32 TsegMemoryBaseMb, TsegMemoryBase;
   UINT64 CommonRegionState;
-  UINT8  TsegSizeBits;
+  UINT8  EsmramcVal;
 
   OriginalSize  = *SmramMapSize;
   *SmramMapSize = DescIdxCount * sizeof *SmramMap;
@@ -166,10 +167,9 @@ SmramAccessGetCapabilities (
     CommonRegionState | EFI_ALLOCATED;
 
   //
-  // Get the TSEG size bits from the ESMRAMC register.
+  // Read the ESMRAMC register so we can extract the TSEG size bits.
   //
-  TsegSizeBits = PciRead8 (DRAMC_REGISTER_Q35 (MCH_ESMRAMC)) &
-                 MCH_ESMRAMC_TSEG_MASK;
+  EsmramcVal = PciRead8 (DRAMC_REGISTER_Q35 (MCH_ESMRAMC));
 
   //
   // The second region is the main one, following the first.
@@ -179,9 +179,8 @@ SmramAccessGetCapabilities (
     SmramMap[DescIdxSmmS3ResumeState].PhysicalSize;
   SmramMap[DescIdxMain].CpuStart = SmramMap[DescIdxMain].PhysicalStart;
   SmramMap[DescIdxMain].PhysicalSize =
-    (TsegSizeBits == MCH_ESMRAMC_TSEG_8MB ? SIZE_8MB :
-     TsegSizeBits == MCH_ESMRAMC_TSEG_2MB ? SIZE_2MB :
-     SIZE_1MB) - SmramMap[DescIdxSmmS3ResumeState].PhysicalSize;
+    (Q35TsegSizeConvertEsmramcValToMbytes (EsmramcVal) * SIZE_1MB) -
+    SmramMap[DescIdxSmmS3ResumeState].PhysicalSize;
   SmramMap[DescIdxMain].RegionState = CommonRegionState;
 
   return EFI_SUCCESS;
