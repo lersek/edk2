@@ -196,9 +196,11 @@ SmramAccessGetCapabilities (
     SmramMap[DescIdxSmmS3ResumeState].PhysicalSize;
   SmramMap[DescIdxMain].CpuStart = SmramMap[DescIdxMain].PhysicalStart;
   SmramMap[DescIdxMain].PhysicalSize =
-    (TsegSizeBits == MCH_ESMRAMC_TSEG_8MB ? SIZE_8MB :
-     TsegSizeBits == MCH_ESMRAMC_TSEG_2MB ? SIZE_2MB :
-     SIZE_1MB) - SmramMap[DescIdxSmmS3ResumeState].PhysicalSize;
+                             (TsegSizeBits == MCH_ESMRAMC_TSEG_8MB ? SIZE_8MB :
+                              TsegSizeBits == MCH_ESMRAMC_TSEG_2MB ? SIZE_2MB :
+                              TsegSizeBits == MCH_ESMRAMC_TSEG_1MB ? SIZE_1MB :
+                              mQ35TsegMbytes * SIZE_1MB) -
+                             SmramMap[DescIdxSmmS3ResumeState].PhysicalSize;
   SmramMap[DescIdxMain].RegionState = CommonRegionState;
 
   return EFI_SUCCESS;
