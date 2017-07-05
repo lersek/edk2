@@ -2771,6 +2771,7 @@ Returns:
   UINT32                           Index;
   UINT32                           DebugDirectoryEntryRva;
   UINT32                           DebugDirectoryEntrySize;
+  UINT32                           TruncatedDebugDirectorySize;
   UINT32                           DebugDirectoryEntryFileOffset;
   UINT32                           ExportDirectoryEntryRva;
   UINT32                           ExportDirectoryEntryFileOffset;
@@ -2893,6 +2894,25 @@ Returns:
     DebugEntry = (EFI_IMAGE_DEBUG_DIRECTORY_ENTRY *) (FileBuffer + DebugDirectoryEntryFileOffset);
     Index = 0;
     for (Index=0; Index < DebugDirectoryEntrySize / sizeof (EFI_IMAGE_DEBUG_DIRECTORY_ENTRY); Index ++, DebugEntry ++) {
+      //
+      // Work around GNU Binutils bug: if the debug information pointed-to by
+      // DebugEntry was incorrectly included in DebugDirectoryEntrySize, then
+      // the debug directory doesn't actually extend past the pointed-to debug
+      // information. Truncate DebugDirectoryEntrySize accordingly.
+      //
+      if (DebugEntry->FileOffset >= DebugDirectoryEntryFileOffset &&
+          DebugEntry->FileOffset < (DebugDirectoryEntryFileOffset +
+                                    DebugDirectoryEntrySize)) {
+        TruncatedDebugDirectorySize = (DebugEntry->FileOffset -
+                                       DebugDirectoryEntryFileOffset);
+        VerboseMsg (
+          "truncating debug directory size from %u to %u",
+          DebugDirectoryEntrySize,
+          TruncatedDebugDirectorySize
+          );
+        DebugDirectoryEntrySize = TruncatedDebugDirectorySize;
+      }
+
       DebugEntry->TimeDateStamp = 0;
       if (ZeroDebugFlag || DebugEntry->Type != EFI_IMAGE_DEBUG_TYPE_CODEVIEW) {
         memset (FileBuffer + DebugEntry->FileOffset, 0, DebugEntry->SizeOfData);
