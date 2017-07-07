@@ -19,6 +19,7 @@ Module Name:
 //
 // The package level header files this module uses
 //
+#include <IndustryStandard/E820.h>
 #include <IndustryStandard/Q35MchIch9.h>
 #include <PiPei.h>
 
@@ -103,6 +104,142 @@ Q35TsegMbytesInitialization (
 }
 
 
+/**
+  Callback function for the high RAM entries in QEMU's fw_cfg E820 RAM map.
+
+  @param[in] HighRamEntry  The EFI_E820_ENTRY64 structure to process.
+
+  @param[in,out] Context   Opaque context object used while looping over the
+                           RAM map.
+**/
+typedef
+VOID
+(*E820_HIGH_RAM_ENTRY_CALLBACK) (
+  IN     CONST EFI_E820_ENTRY64 *HighRamEntry,
+  IN OUT VOID                   *Context
+  );
+
+
+/**
+  Iterate over the high RAM entries in QEMU's fw_cfg E820 RAM map.
+
+  @param[in] Callback     The callback function to pass each high RAM entry to.
+
+  @param[in,out] Context  Context to pass to Callback invariably on each
+                          invocation.
+
+  @retval EFI_SUCCESS         The fw_cfg E820 RAM map was found and processed.
+
+  @retval EFI_PROTOCOL_ERROR  The RAM map was found, but its size wasn't a
+                              whole multiple of sizeof(EFI_E820_ENTRY64).
+                              Callback() was not invoked.
+
+  @return                     Error codes from QemuFwCfgFindFile(). Callback()
+                              was not invoked.
+**/
+STATIC
+EFI_STATUS
+E820HighRamIterate (
+  IN     E820_HIGH_RAM_ENTRY_CALLBACK Callback,
+  IN OUT VOID                         *Context
+  )
+{
+  EFI_STATUS           Status;
+  FIRMWARE_CONFIG_ITEM FwCfgItem;
+  UINTN                FwCfgSize;
+  EFI_E820_ENTRY64     E820Entry;
+  UINTN                Processed;
+
+  Status = QemuFwCfgFindFile ("etc/e820", &FwCfgItem, &FwCfgSize);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+  if (FwCfgSize % sizeof E820Entry != 0) {
+    return EFI_PROTOCOL_ERROR;
+  }
+
+  QemuFwCfgSelectItem (FwCfgItem);
+  for (Processed = 0; Processed < FwCfgSize; Processed += sizeof E820Entry) {
+    QemuFwCfgReadBytes (sizeof E820Entry, &E820Entry);
+    DEBUG ((
+      DEBUG_VERBOSE,
+      "%a: Base=0x%Lx Length=0x%Lx Type=%u\n",
+      __FUNCTION__,
+      E820Entry.BaseAddr,
+      E820Entry.Length,
+      E820Entry.Type
+      ));
+    if (E820Entry.Type == EfiAcpiAddressRangeMemory &&
+        E820Entry.BaseAddr >= BASE_4GB) {
+      Callback (&E820Entry, Context);
+    }
+  }
+  return EFI_SUCCESS;
+}
+
+
+/**
+  Callback function for E820HighRamIterate() that finds the highest exclusive
+  >=4GB RAM address.
+
+  @param[in] HighRamEntry    The EFI_E820_ENTRY64 structure to process.
+
+  @param[in,out] MaxAddress  The highest exclusive >=4GB RAM address,
+                             represented as a UINT64, that has been found thus
+                             far in the search. Before calling
+                             E820HighRamIterate(), the caller shall set
+                             MaxAddress to BASE_4GB. When E820HighRamIterate()
+                             returns with success, MaxAddress holds the highest
+                             exclusive >=4GB RAM address.
+**/
+VOID
+E820HighRamFindHighestExclusiveAddress (
+  IN     CONST EFI_E820_ENTRY64 *HighRamEntry,
+  IN OUT VOID                   *MaxAddress
+  )
+{
+  UINT64 *Current;
+  UINT64 Candidate;
+
+  Current = MaxAddress;
+  Candidate = HighRamEntry->BaseAddr + HighRamEntry->Length;
+  if (Candidate > *Current) {
+    *Current = Candidate;
+    DEBUG ((DEBUG_VERBOSE, "%a: MaxAddress=0x%Lx\n", __FUNCTION__, *Current));
+  }
+}
+
+
+/**
+  Callback function for E820HighRamIterate() that produces memory resource
+  descriptor HOBs.
+
+  @param[in] HighRamEntry  The EFI_E820_ENTRY64 structure to process.
+
+  @param[in,out] Context   Ignored.
+**/
+VOID
+E820HighRamAddMemoryHob (
+  IN     CONST EFI_E820_ENTRY64 *HighRamEntry,
+  IN OUT VOID                   *Context
+  )
+{
+  UINT64 Base;
+  UINT64 End;
+
+  //
+  // Round up the start address, and round down the end address.
+  //
+  Base = ALIGN_VALUE (HighRamEntry->BaseAddr, (UINT64)EFI_PAGE_SIZE);
+  End = (HighRamEntry->BaseAddr + HighRamEntry->Length) &
+        ~(UINT64)EFI_PAGE_MASK;
+  if (Base < End) {
+    AddMemoryRangeHob (Base, End);
+    DEBUG ((DEBUG_VERBOSE, "%a: [0x%Lx, 0x%Lx)\n", __FUNCTION__, Base, End));
+  }
+}
+
+
 UINT32
 GetSystemMemorySizeBelow4gb (
   VOID
@@ -170,7 +307,21 @@ GetFirstNonAddress (
   UINT64               HotPlugMemoryEnd;
   RETURN_STATUS        PcdStatus;
 
-  FirstNonAddress = BASE_4GB + GetSystemMemorySizeAbove4gb ();
+  //
+  // If QEMU presents an E820 map, then get the highest exclusive >=4GB RAM
+  // address from it. This can express an address >= 4GB+1TB.
+  //
+  // Otherwise, get the flat size of the memory above 4GB from the CMOS (which
+  // can only express a size smaller than 1TB), and add it to 4GB.
+  //
+  FirstNonAddress = BASE_4GB;
+  Status = E820HighRamIterate (
+             E820HighRamFindHighestExclusiveAddress,
+             &FirstNonAddress
+             );
+  if (EFI_ERROR (Status)) {
+    FirstNonAddress = BASE_4GB + GetSystemMemorySizeAbove4gb ();
+  }
 
   //
   // If DXE is 32-bit, then we're done; PciBusDxe will degrade 64-bit MMIO
@@ -525,7 +676,13 @@ QemuInitializeRam (
       AddMemoryRangeHob (BASE_1MB, LowerMemorySize);
     }
 
-    if (UpperMemorySize != 0) {
+    //
+    // If QEMU presents an E820 map, then create memory HOBs for the >=4GB RAM
+    // entries. Otherwise, create a single memory HOB with the flat >=4GB
+    // memory size read from the CMOS.
+    //
+    Status = E820HighRamIterate (E820HighRamAddMemoryHob, NULL);
+    if (EFI_ERROR (Status) && UpperMemorySize != 0) {
       AddMemoryBaseSizeHob (BASE_4GB, UpperMemorySize);
     }
   }
