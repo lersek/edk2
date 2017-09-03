@@ -1644,7 +1644,9 @@ EhcExitBootService (
   )
 
 {
-  USB2_HC_DEV   *Ehc;
+  USB2_HC_DEV     *Ehc;
+  USBHC_MEM_POOL  *MemPool;
+  USBHC_MEM_BLOCK *MemBlock;
 
   Ehc = (USB2_HC_DEV *) Context;
 
@@ -1652,6 +1654,27 @@ EhcExitBootService (
   // Reset the Host Controller
   //
   EhcResetHC (Ehc, EHC_RESET_TIMEOUT);
+
+  //
+  // Unmap the frame list.
+  //
+  if (Ehc->PeriodFrame != NULL) {
+    Ehc->PciIo->Unmap (Ehc->PciIo, Ehc->PeriodFrameMap);
+  }
+
+  //
+  // Unmap the memory pool.
+  //
+  MemPool = Ehc->MemPool;
+  if (MemPool != NULL) {
+    for (MemBlock = MemPool->Head;
+         MemBlock != NULL;
+         MemBlock = MemBlock->Next) {
+      if (MemBlock->BufHost != NULL) {
+        MemPool->PciIo->Unmap (MemPool->PciIo, MemBlock->Mapping);
+      }
+    }
+  }
 }
 
 
