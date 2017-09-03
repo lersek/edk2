@@ -103,7 +103,8 @@ ATA_ATAPI_PASS_THRU_INSTANCE gAtaAtapiPassThruInstanceTemplate = {
   {                   // NonBlocking TaskList
     NULL,
     NULL
-  }
+  },
+  NULL,               // ExitBootEvent
 };
 
 ATAPI_DEVICE_PATH    mAtapiDevicePathTemplate = {
@@ -478,6 +479,50 @@ InitializeAtaAtapiPassThru (
 }
 
 /**
+  If operating in AHCI mode, then reset the HBA and unmap CommonBuffer Bus
+  Master DMA when exiting the boot services.
+
+  @param[in] Event    Event for which this notification function is being
+                      called.
+  @param[in] Context  Pointer to the ATA_ATAPI_PASS_THRU_INSTANCE that
+                      represents the HBA.
+**/
+VOID
+EFIAPI
+AtaPassThruExitBootServices (
+  IN EFI_EVENT Event,
+  IN VOID      *Context
+  )
+{
+  ATA_ATAPI_PASS_THRU_INSTANCE *Instance;
+  EFI_PCI_IO_PROTOCOL          *PciIo;
+  EFI_AHCI_REGISTERS           *AhciRegisters;
+
+  Instance = Context;
+
+  if (Instance->Mode == EfiAtaAhciMode) {
+    PciIo = Instance->PciIo;
+    AhciRegisters = &Instance->AhciRegisters;
+    //
+    // De-program common buffer references from the HBA by resetting the HBA.
+    //
+    AhciReset (PciIo, EFI_AHCI_BUS_RESET_TIMEOUT);
+    //
+    // Unmap long-lived common buffers.
+    //
+    if (AhciRegisters->AhciRFis != NULL) {
+      PciIo->Unmap (PciIo, AhciRegisters->MapRFis);
+    }
+    if (AhciRegisters->AhciCmdList != NULL) {
+      PciIo->Unmap (PciIo, AhciRegisters->MapCmdList);
+    }
+    if (AhciRegisters->AhciCommandTable != NULL) {
+      PciIo->Unmap (PciIo, AhciRegisters->MapCommandTable);
+    }
+  }
+}
+
+/**
   Tests to see if this driver supports a given controller. If a child device is provided,
   it further tests to see if this driver supports creating a handle for the specified child device.
 
@@ -755,6 +800,17 @@ AtaAtapiPassThruStart (
   InitializeListHead(&Instance->DeviceList);
   InitializeListHead(&Instance->NonBlockingTaskList);
 
+  Status = gBS->CreateEvent (
+                  EVT_SIGNAL_EXIT_BOOT_SERVICES,
+                  TPL_CALLBACK,
+                  AtaPassThruExitBootServices,
+                  Instance,
+                  &Instance->ExitBootEvent
+                  );
+  if (EFI_ERROR (Status)) {
+    goto ErrorExit;
+  }
+
   Instance->TimerEvent = NULL;
 
   Status = gBS->CreateEvent (
@@ -806,6 +862,10 @@ ErrorExit:
 
   if ((Instance != NULL) && (Instance->TimerEvent != NULL)) {
     gBS->CloseEvent (Instance->TimerEvent);
+  }
+
+  if ((Instance != NULL) && (Instance->ExitBootEvent != NULL)) {
+    gBS->CloseEvent (Instance->ExitBootEvent);
   }
 
   //
@@ -911,6 +971,11 @@ AtaAtapiPassThruStop (
   // Free allocated resource
   //
   DestroyDeviceInfoList (Instance);
+
+  if (Instance->ExitBootEvent != NULL) {
+    gBS->CloseEvent (Instance->ExitBootEvent);
+    Instance->ExitBootEvent = NULL;
+  }
 
   //
   // If the current working mode is AHCI mode, then pre-allocated resource

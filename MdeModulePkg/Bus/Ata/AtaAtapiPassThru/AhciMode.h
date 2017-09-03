@@ -367,5 +367,23 @@ AhciStopCommand (
   IN  UINT64                    Timeout
   );
 
+/**
+  Do AHCI HBA reset.
+
+  @param  PciIo              The PCI IO protocol instance.
+  @param  Timeout            The timeout value of reset, uses 100ns as a unit.
+
+  @retval EFI_DEVICE_ERROR   AHCI controller is failed to complete hardware
+                             reset.
+  @retval EFI_TIMEOUT        The reset operation is time out.
+  @retval EFI_SUCCESS        AHCI controller is reset successfully.
+
+**/
+EFI_STATUS
+EFIAPI
+AhciReset (
+  IN  EFI_PCI_IO_PROTOCOL       *PciIo,
+  IN  UINT64                    Timeout
+  );
 #endif
 

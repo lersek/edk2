@@ -120,6 +120,11 @@ typedef struct {
   //
   EFI_EVENT                         TimerEvent;
   LIST_ENTRY                        NonBlockingTaskList;
+
+  //
+  // For resetting AHCI and unmapping CommonBuffer DMA at ExitBootServices().
+  //
+  EFI_EVENT                         ExitBootEvent;
 } ATA_ATAPI_PASS_THRU_INSTANCE;
 
 //
