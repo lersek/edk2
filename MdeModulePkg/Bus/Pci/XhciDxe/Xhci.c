@@ -1859,6 +1859,9 @@ XhcExitBootService (
 {
   USB_XHCI_INSTANCE    *Xhc;
   EFI_PCI_IO_PROTOCOL  *PciIo;
+  UINT32               Index;
+  USBHC_MEM_POOL       *MemPool;
+  USBHC_MEM_BLOCK      *MemBlock;
 
   Xhc = (USB_XHCI_INSTANCE*) Context;
   PciIo = Xhc->PciIo;
@@ -1885,6 +1888,34 @@ XhcExitBootService (
                   Xhc->OriginalPciAttributes,
                   NULL
                   );
+
+  //
+  // Unmap Scratchpad Buffers and Scratchpad Buffer Array.
+  //
+  if (Xhc->MaxScratchpadBufs > 0) {
+    for (Index = 0; Index < Xhc->MaxScratchpadBufs; Index++) {
+      if ((VOID *)(UINTN)Xhc->ScratchEntry[Index] != NULL) {
+        PciIo->Unmap (PciIo, (VOID *)Xhc->ScratchEntryMap[Index]);
+      }
+    }
+    if (Xhc->ScratchBuf != NULL) {
+      PciIo->Unmap (PciIo, Xhc->ScratchMap);
+    }
+  }
+
+  //
+  // Unmap the memory pool.
+  //
+  MemPool = Xhc->MemPool;
+  if (MemPool != NULL) {
+    for (MemBlock = MemPool->Head;
+         MemBlock != NULL;
+         MemBlock = MemBlock->Next) {
+      if (MemBlock->BufHost != NULL) {
+        MemPool->PciIo->Unmap (MemPool->PciIo, MemBlock->Mapping);
+      }
+    }
+  }
 }
 
 /**
