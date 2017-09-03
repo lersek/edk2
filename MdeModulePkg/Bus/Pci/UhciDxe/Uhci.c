@@ -1594,7 +1594,9 @@ UhcExitBootService (
   VOID                           *Context
   )
 {
-  USB_HC_DEV   *Uhc;
+  USB_HC_DEV      *Uhc;
+  USBHC_MEM_POOL  *MemPool;
+  USBHC_MEM_BLOCK *MemBlock;
 
   Uhc = (USB_HC_DEV *) Context;
 
@@ -1608,6 +1610,27 @@ UhcExitBootService (
   //
   UhciSetRegBit (Uhc->PciIo, USBCMD_OFFSET, USBCMD_HCRESET);
   gBS->Stall (UHC_ROOT_PORT_RECOVERY_STALL);
+
+  //
+  // Unmap the frame list.
+  //
+  if (Uhc->FrameBase != NULL) {
+    Uhc->PciIo->Unmap (Uhc->PciIo, Uhc->FrameMapping);
+  }
+
+  //
+  // Unmap the memory pool.
+  //
+  MemPool = Uhc->MemPool;
+  if (MemPool != NULL) {
+    for (MemBlock = MemPool->Head;
+         MemBlock != NULL;
+         MemBlock = MemBlock->Next) {
+      if (MemBlock->BufHost != NULL) {
+        MemPool->PciIo->Unmap (MemPool->PciIo, MemBlock->Mapping);
+      }
+    }
+  }
 }
 
 /**
