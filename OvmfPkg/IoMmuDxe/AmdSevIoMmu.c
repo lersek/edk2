@@ -45,17 +45,17 @@ STATIC LIST_ENTRY mRecycledMapInfos = INITIALIZE_LIST_HEAD_VARIABLE (
 #define COMMON_BUFFER_SIG SIGNATURE_64 ('C', 'M', 'N', 'B', 'U', 'F', 'F', 'R')
 
 //
-// ASCII names for EDKII_IOMMU_OPERATION constants, for debug logging.
+// The following macro builds the first two operands of a conditional (ternary)
+// operator that matches Expression against the EDKII_IOMMU_OPERATION constant
+// derived from ShortName. In case of a match, the replacement text evaluates
+// to an ASCII string literal that stands for the constant. The replacement
+// text stops before the colon (":"). The macro invocation site is supposed to
+// provide the colon and the third operand, either as another invocation of the
+// same macro, or as a default (fallback) string literal.
 //
-STATIC CONST CHAR8 * CONST
-mBusMasterOperationName[EdkiiIoMmuOperationMaximum] = {
-  "Read",
-  "Write",
-  "CommonBuffer",
-  "Read64",
-  "Write64",
-  "CommonBuffer64"
-};
+#define BUS_MASTER_OPERATION_NAME(Expression, ShortName) \
+          ((Expression) == (EdkiiIoMmuOperationBusMaster ## ShortName)) ? \
+          (# ShortName)
 
 //
 // The following structure enables Map() and Unmap() to perform in-place
@@ -133,9 +133,12 @@ IoMmuMap (
     DEBUG_VERBOSE,
     "%a: Operation=%a Host=0x%p Bytes=0x%Lx\n",
     __FUNCTION__,
-    ((Operation >= 0 &&
-      Operation < ARRAY_SIZE (mBusMasterOperationName)) ?
-     mBusMasterOperationName[Operation] :
+    (BUS_MASTER_OPERATION_NAME (Operation, Read) :
+     BUS_MASTER_OPERATION_NAME (Operation, Write) :
+     BUS_MASTER_OPERATION_NAME (Operation, CommonBuffer) :
+     BUS_MASTER_OPERATION_NAME (Operation, Read64) :
+     BUS_MASTER_OPERATION_NAME (Operation, Write64) :
+     BUS_MASTER_OPERATION_NAME (Operation, CommonBuffer64) :
      "Invalid"),
     HostAddress,
     (UINT64)((NumberOfBytes == NULL) ? 0 : *NumberOfBytes)
