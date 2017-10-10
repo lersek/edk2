@@ -87,6 +87,30 @@ MorLockInit (
   // Need set this variable to be read-only to prevent other module set it.
   //
   VariableLockRequestToLock (&mVariableLock, MEMORY_OVERWRITE_REQUEST_CONTROL_LOCK_NAME, &gEfiMemoryOverwriteRequestControlLockGuid);
+
+  //
+  // The MOR variable can effectively improve platform security only when the
+  // MorLock variable protects the MOR variable. In turn MorLock cannot be made
+  // secure without SMM support in the platform firmware (see above).
+  //
+  // Thus, delete the MOR variable, should it exist for any reason (some OSes
+  // are known to create MOR unintentionally, in an attempt to set it), then
+  // also lock the MOR variable, in order to prevent other modules from
+  // creating it.
+  //
+  VariableServiceSetVariable (
+    MEMORY_OVERWRITE_REQUEST_VARIABLE_NAME,
+    &gEfiMemoryOverwriteControlDataGuid,
+    0,                                      // Attributes
+    0,                                      // DataSize
+    NULL                                    // Data
+    );
+  VariableLockRequestToLock (
+    &mVariableLock,
+    MEMORY_OVERWRITE_REQUEST_VARIABLE_NAME,
+    &gEfiMemoryOverwriteControlDataGuid
+    );
+
   return EFI_SUCCESS;
 }
 
