@@ -40,8 +40,8 @@ ASM_PFX(_ModuleEntryPoint):
     ;
     %define SEC_TOP_OF_STACK (FixedPcdGet32 (PcdOvmfSecPeiTempRamBase) + \
                           FixedPcdGet32 (PcdOvmfSecPeiTempRamSize))
-    mov     eax, SEC_TOP_OF_STACK
-    mov     esp, eax
+    mov     ebx, SEC_TOP_OF_STACK
+    mov     esp, ebx
     nop
 
     ;
@@ -50,7 +50,7 @@ ASM_PFX(_ModuleEntryPoint):
     ;   [esp+4] BootFirmwareVolumePtr
     ;   [esp+8] TopOfCurrentStack
     ;
-    push    eax
+    push    ebx
     push    ebp
     call    ASM_PFX(SecCoreStartupWithStack)
 
