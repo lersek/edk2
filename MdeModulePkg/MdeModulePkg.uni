@@ -44,6 +44,13 @@
 #string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdProgressCodeOsLoaderStart_HELP  #language en-US "Progress Code for OS Loader StartImage start.<BR><BR>\n"
                                                                                               "PROGRESS_CODE_OS_LOADER_START  = (EFI_SOFTWARE_DXE_BS_DRIVER | (EFI_OEM_SPECIFIC | 0x00000001)) = 0x03058001<BR>"
 
+#string STR_gEfiMdeModulePkgTokenSpaceGuid_ERR_80000007 #language en-US "Incorrect debug code provided."
+
+#string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdDebugCodeOsLoaderDetail_PROMPT  #language en-US "Debug Code for OS Loader Detail"
+
+#string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdDebugCodeOsLoaderDetail_HELP  #language en-US "Debug Code for OS Loader Detail.<BR><BR>\n"
+                                                                                            "DEBUG_CODE_OS_LOADER_DETAIL = (EFI_SOFTWARE_DXE_BS_DRIVER | (EFI_OEM_SPECIFIC | 0x00000003)) = 0x03058003<BR>"
+
 #string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdProgressCodeS3SuspendStart_PROMPT  #language en-US "Progress Code for S3 Suspend start"
 
 #string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdProgressCodeS3SuspendStart_HELP  #language en-US "Progress Code for S3 Suspend start.<BR><BR>\n"

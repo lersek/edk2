@@ -392,6 +392,9 @@
   ## Include/Guid/PlatformHasAcpi.h
   gEdkiiPlatformHasAcpiGuid = { 0xf0966b41, 0xc23f, 0x41b9, { 0x96, 0x04, 0x0f, 0xf7, 0xe1, 0x11, 0x96, 0x5a } }
 
+  ## Include/Guid/StatusCodeDataTypeOsLoaderDetail.h
+  gEdkiiStatusCodeDataTypeOsLoaderDetailGuid = { 0xBE4904DC, 0x7EC4, 0x4167, { 0x90, 0x52, 0x38, 0x4D, 0x0B, 0x81, 0x30, 0x0B } }
+
 [Ppis]
   ## Include/Ppi/AtaController.h
   gPeiAtaControllerPpiGuid       = { 0xa45e60d1, 0xc719, 0x44aa, { 0xb0, 0x7a, 0xaa, 0x77, 0x7f, 0x85, 0x90, 0x6d }}
@@ -854,6 +857,12 @@
   # @Prompt Progress Code for OS Loader StartImage start.
   # @ValidList  0x80000003 | 0x03058001
   gEfiMdeModulePkgTokenSpaceGuid.PcdProgressCodeOsLoaderStart|0x03058001|UINT32|0x30001031
+
+  ## Debug Code for OS Loader Detail.<BR><BR>
+  #  DEBUG_CODE_OS_LOADER_DETAIL = (EFI_SOFTWARE_DXE_BS_DRIVER | (EFI_OEM_SPECIFIC | 0x00000003)) = 0x03058003<BR>
+  # @Prompt Debug Code for OS Loader Detail.
+  # @ValidList  0x80000007 | 0x03058003
+  gEfiMdeModulePkgTokenSpaceGuid.PcdDebugCodeOsLoaderDetail|0x03058003|UINT32|0x3000103B
 
   ## Progress Code for S3 Suspend start.<BR><BR>
   #  PROGRESS_CODE_S3_SUSPEND_START = (EFI_SOFTWARE_SMM_DRIVER | (EFI_OEM_SPECIFIC | 0x00000000))    = 0x03078000<BR>
