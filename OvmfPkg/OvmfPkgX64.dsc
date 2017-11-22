@@ -434,7 +434,14 @@
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdVpdBaseAddress|0x0
 
+  # REPORT_STATUS_CODE_PROPERTY_PROGRESS_CODE_ENABLED 0x01
+  # REPORT_STATUS_CODE_PROPERTY_ERROR_CODE_ENABLED    0x02
+  # REPORT_STATUS_CODE_PROPERTY_DEBUG_CODE_ENABLED    0x04
+!if $(TARGET) == RELEASE
+  gEfiMdePkgTokenSpaceGuid.PcdReportStatusCodePropertyMask|0x03
+!else
   gEfiMdePkgTokenSpaceGuid.PcdReportStatusCodePropertyMask|0x07
+!endif
 
   # DEBUG_INIT      0x00000001  // Initialization
   # DEBUG_WARN      0x00000002  // Warnings
