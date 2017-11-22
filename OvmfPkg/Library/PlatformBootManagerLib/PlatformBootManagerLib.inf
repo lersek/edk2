@@ -30,6 +30,7 @@
   BdsPlatform.c
   PlatformData.c
   QemuKernel.c
+  StatusCodeHandler.c
   BdsPlatform.h
 
 [Packages]
@@ -63,6 +64,7 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfHostBridgePciDevId
   gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut
   gEfiIntelFrameworkModulePkgTokenSpaceGuid.PcdShellFile
+  gEfiMdeModulePkgTokenSpaceGuid.PcdDebugCodeOsLoaderDetail
 
 [Pcd.IA32, Pcd.X64]
   gEfiMdePkgTokenSpaceGuid.PcdFSBClock
@@ -74,8 +76,10 @@
   gEfiDxeSmmReadyToLockProtocolGuid             # PROTOCOL SOMETIMES_PRODUCED
   gEfiLoadedImageProtocolGuid                   # PROTOCOL SOMETIMES_PRODUCED
   gEfiFirmwareVolume2ProtocolGuid               # PROTOCOL SOMETIMES_CONSUMED
+  gEfiRscHandlerProtocolGuid                    # PROTOCOL SOMETIMES_CONSUMED
 
 [Guids]
   gEfiXenInfoGuid
   gEfiEndOfDxeEventGroupGuid
   gRootBridgesConnectedEventGroupGuid
+  gEdkiiStatusCodeDataTypeOsLoaderDetailGuid

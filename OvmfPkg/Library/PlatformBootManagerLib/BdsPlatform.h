@@ -192,4 +192,19 @@ TryRunningQemuKernel (
   VOID
   );
 
+/**
+  Register a status code handler for printing EDKII_OS_LOADER_DETAIL reports to
+  the console.
+
+  @retval EFI_SUCCESS  The status code handler has been successfully
+                       registered.
+
+  @return              Error codes propagated from boot services and from
+                       EFI_RSC_HANDLER_PROTOCOL.
+**/
+EFI_STATUS
+RegisterStatusCodeHandler (
+  VOID
+  );
+
 #endif // _PLATFORM_SPECIFIC_BDS_PLATFORM_H_

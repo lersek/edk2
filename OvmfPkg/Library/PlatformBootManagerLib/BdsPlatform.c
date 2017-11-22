@@ -1463,6 +1463,10 @@ Routine Description:
   //
   TryRunningQemuKernel ();
 
+  AsciiPrint (
+    "%a: auto-generating trailing boot options for bootable devices\n",
+    gEfiCallerBaseName
+    );
   EfiBootManagerRefreshAllBootOption ();
 
   //
@@ -1472,8 +1476,12 @@ Routine Description:
     PcdGetPtr (PcdShellFile), L"EFI Internal Shell", LOAD_OPTION_ACTIVE
     );
 
+  AsciiPrint ("%a: filtering and reordering boot options\n",
+    gEfiCallerBaseName);
   RemoveStaleFvFileOptions ();
   SetBootOrderFromQemu ();
+
+  RegisterStatusCodeHandler ();
 }
 
 /**
