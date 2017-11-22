@@ -1674,6 +1674,8 @@ EfiBootManagerBoot (
   UINTN                     FileSize;
   EFI_BOOT_LOGO_PROTOCOL    *BootLogo;
   EFI_EVENT                 LegacyBootEvent;
+  EDKII_OS_LOADER_DETAIL    *OsLoaderDetail;
+  UINTN                     OsLoaderDetailSize;
 
   if (BootOption == NULL) {
     return;
@@ -1683,6 +1685,9 @@ EfiBootManagerBoot (
     BootOption->Status = EFI_INVALID_PARAMETER;
     return;
   }
+
+  OsLoaderDetail = NULL;
+  OsLoaderDetailSize = 0;
 
   //
   // 1. Create Boot#### for a temporary boot if there is no match Boot#### (i.e. a boot by selected a EFI Shell using "Boot From File")
@@ -1760,6 +1765,17 @@ EfiBootManagerBoot (
   }
   DEBUG_CODE_END ();
 
+  //
+  // Try to create the status code payload structure for detailed debug
+  // reporting.
+  //
+  Status = BmCreateOsLoaderDetail (BootOption, &OsLoaderDetail,
+             &OsLoaderDetailSize);
+  if (EFI_ERROR (Status) && (Status != EFI_UNSUPPORTED)) {
+    DEBUG ((DEBUG_WARN | DEBUG_LOAD, "[Bds]BmCreateOsLoaderDetail(): %r\n",
+      Status));
+  }
+
   ImageHandle       = NULL;
   RamDiskDevicePath = NULL;
   if (DevicePathType (BootOption->FilePath) != BBS_DEVICE_PATH) {
@@ -1771,6 +1787,13 @@ EfiBootManagerBoot (
       RamDiskDevicePath = BmGetRamDiskDevicePath (FilePath);
 
       REPORT_STATUS_CODE (EFI_PROGRESS_CODE, PcdGet32 (PcdProgressCodeOsLoaderLoad));
+      BmReportOsLoaderDetail (
+        OsLoaderDetail,
+        OsLoaderDetailSize,
+        EDKII_OS_LOADER_DETAIL_TYPE_LOAD,
+        0                                 // DetailStatus -- unused here
+        );
+
       Status = gBS->LoadImage (
                       TRUE,
                       gImageHandle,
@@ -1795,6 +1818,13 @@ EfiBootManagerBoot (
         EFI_ERROR_CODE | EFI_ERROR_MINOR,
         (EFI_SOFTWARE_DXE_BS_DRIVER | EFI_SW_DXE_BS_EC_BOOT_OPTION_LOAD_ERROR)
         );
+      BmReportOsLoaderDetail (
+        OsLoaderDetail,
+        OsLoaderDetailSize,
+        EDKII_OS_LOADER_DETAIL_TYPE_LOAD_ERROR,
+        Status
+        );
+
       BootOption->Status = Status;
       //
       // Destroy the RAM disk
@@ -1803,7 +1833,7 @@ EfiBootManagerBoot (
         BmDestroyRamDisk (RamDiskDevicePath);
         FreePool (RamDiskDevicePath);
       }
-      return;
+      goto FreeOsLoaderDetail;
     }
   }
 
@@ -1835,7 +1865,7 @@ EfiBootManagerBoot (
     }
 
     PERF_END_EX (gImageHandle, "BdsAttempt", NULL, 0, (UINT32) OptionNumber);
-    return;
+    goto FreeOsLoaderDetail;
   }
  
   //
@@ -1867,6 +1897,12 @@ EfiBootManagerBoot (
   );
 
   REPORT_STATUS_CODE (EFI_PROGRESS_CODE, PcdGet32 (PcdProgressCodeOsLoaderStart));
+  BmReportOsLoaderDetail (
+    OsLoaderDetail,
+    OsLoaderDetailSize,
+    EDKII_OS_LOADER_DETAIL_TYPE_START,
+    0                                  // DetailStatus -- unused here
+    );
 
   Status = gBS->StartImage (ImageHandle, &BootOption->ExitDataSize, &BootOption->ExitData);
   DEBUG ((DEBUG_INFO | DEBUG_LOAD, "Image Return Status = %r\n", Status));
@@ -1878,6 +1914,12 @@ EfiBootManagerBoot (
     REPORT_STATUS_CODE (
       EFI_ERROR_CODE | EFI_ERROR_MINOR,
       (EFI_SOFTWARE_DXE_BS_DRIVER | EFI_SW_DXE_BS_EC_BOOT_OPTION_FAILED)
+      );
+    BmReportOsLoaderDetail (
+      OsLoaderDetail,
+      OsLoaderDetailSize,
+      EDKII_OS_LOADER_DETAIL_TYPE_START_ERROR,
+      Status
       );
   }
   PERF_END_EX (gImageHandle, "BdsAttempt", NULL, 0, (UINT32) OptionNumber);
@@ -1921,6 +1963,11 @@ EfiBootManagerBoot (
   // exiting BootXXXX causes deleting BootCurrent returns EFI_NOT_FOUND.
   //
   ASSERT (Status == EFI_SUCCESS || Status == EFI_NOT_FOUND);
+
+FreeOsLoaderDetail:
+  if (OsLoaderDetail != NULL) {
+    FreePool (OsLoaderDetail);
+  }
 }
 
 /**

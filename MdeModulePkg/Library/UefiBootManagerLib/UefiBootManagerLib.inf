@@ -88,6 +88,7 @@
 
   gPerformanceProtocolGuid                      ## SOMETIMES_CONSUMES ## Variable:L"PerfDataMemAddr" (The ACPI address of performance data)
   gEdkiiStatusCodeDataTypeVariableGuid          ## SOMETIMES_CONSUMES ## GUID
+  gEdkiiStatusCodeDataTypeOsLoaderDetailGuid    ## SOMETIMES_CONSUMES ## GUID
   gEfiDiskInfoAhciInterfaceGuid                 ## SOMETIMES_CONSUMES ## GUID
   gEfiDiskInfoIdeInterfaceGuid                  ## SOMETIMES_CONSUMES ## GUID
   gEfiDiskInfoScsiInterfaceGuid                 ## SOMETIMES_CONSUMES ## GUID
@@ -121,6 +122,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdResetOnMemoryTypeInformationChange      ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdProgressCodeOsLoaderLoad                ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdProgressCodeOsLoaderStart               ## SOMETIMES_CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdDebugCodeOsLoaderDetail                 ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdErrorCodeSetVariable                    ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdBootManagerMenuFile                     ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdDriverHealthConfigureForm               ## SOMETIMES_CONSUMES

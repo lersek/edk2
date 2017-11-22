@@ -53,6 +53,7 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <Guid/GlobalVariable.h>
 #include <Guid/Performance.h>
 #include <Guid/StatusCodeDataTypeVariable.h>
+#include <Guid/StatusCodeDataTypeOsLoaderDetail.h>
 
 #include <Library/PrintLib.h>
 #include <Library/DebugLib.h>
@@ -305,6 +306,89 @@ BmSetVariableAndReportStatusCodeOnError (
   IN UINT32     Attributes,
   IN UINTN      DataSize,
   IN VOID       *Data
+  );
+
+/**
+  Dynamically allocate and initialize an EDKII_OS_LOADER_DETAIL status code
+  payload.
+
+  @param[in] BootOption           Capture the OptionNumber, FilePath and
+                                  Description fields of BootOption in the
+                                  EDKII_OS_LOADER_DETAIL payload.
+
+  @param[out] OsLoaderDetail      On successful return, set to the
+                                  EDKII_OS_LOADER_DETAIL object that has been
+                                  allocated and initialized. On failure, not
+                                  modified.
+
+  @param[out] OsLoaderDetailSize  On successful return, set to the size of the
+                                  EDKII_OS_LOADER_DETAIL object that has been
+                                  allocated and initialized. On failure, not
+                                  modified.
+
+  @retval EFI_UNSUPPORTED        EFI_DEBUG_CODE reporting is disabled in the
+                                 platform.
+
+  @retval EFI_INVALID_PARAMETER  BootOption->OptionNumber is not in
+                                 0x0000..0xFFFF, inclusive.
+
+  @retval EFI_BAD_BUFFER_SIZE    BootOption->FilePath and/or
+                                 BootOption->Description would exceed the
+                                 UINT16 size limits presented by
+                                 EDKII_OS_LOADER_DETAIL or
+                                 EFI_STATUS_CODE_DATA.
+
+  @retval EFI_OUT_OF_RESOURCES   Memory allocation failed.
+
+  @retval EFI_SUCCESS            The EDKII_OS_LOADER_DETAIL object has been
+                                 allocated and initialized. The caller is
+                                 responsible for freeing the object with
+                                 FreePool().
+**/
+EFI_STATUS
+BmCreateOsLoaderDetail (
+  IN  CONST EFI_BOOT_MANAGER_LOAD_OPTION *BootOption,
+  OUT EDKII_OS_LOADER_DETAIL             **OsLoaderDetail,
+  OUT UINTN                              *OsLoaderDetailSize
+  );
+
+/**
+  Report an EFI_DEBUG_CODE status code with EDKII_OS_LOADER_DETAIL as payload
+  (i.e., extended data).
+
+  @param[in,out] OsLoaderDetail  The EDKII_OS_LOADER_DETAIL payload previously
+                                 created with BmCreateOsLoaderDetail(), and
+                                 modified zero or more times by
+                                 BmReportOsLoaderDetail(). If OsLoaderDetail is
+                                 NULL, the function does nothing. Otherwise,
+                                 the Type and Status fields are overwritten in
+                                 OsLoaderDetail, and a status code is reported.
+
+  @param[in] OsLoaderDetailSize  The size returned by BmCreateOsLoaderDetail().
+                                 If OsLoaderDetail is NULL, OsLoaderDetailSize
+                                 may be zero.
+
+  @param[in] DetailType          OsLoaderDetail->Type is set to DetailType
+                                 before reporting the status code. The caller
+                                 is responsible for passing an
+                                 EDKII_OS_LOADER_DETAIL_TYPE_* value.
+
+  @param[in] DetailStatus        OsLoaderDetail->Status is set to DetailStatus
+                                 before reporting the status code.
+
+  @retval EFI_UNSUPPORTED  EFI_DEBUG_CODE reporting is disabled in the
+                           platform.
+
+  @retval EFI_ABORTED      OsLoaderDetail is NULL.
+
+  @return                  Values propagated from REPORT_STATUS_CODE_EX().
+**/
+EFI_STATUS
+BmReportOsLoaderDetail (
+  IN OUT EDKII_OS_LOADER_DETAIL *OsLoaderDetail     OPTIONAL,
+  IN     UINTN                  OsLoaderDetailSize,
+  IN     UINT32                 DetailType,
+  IN     EFI_STATUS             DetailStatus
   );
 
 /**
