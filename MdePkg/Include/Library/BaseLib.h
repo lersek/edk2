@@ -9068,5 +9068,47 @@ AsmWriteTr (
   IN UINT16 Selector
   );
 
+/**
+  Patch the immediate operand of an IA32 or X64 instruction such that the byte,
+  word, dword or qword operand is encoded at the end of the instruction's
+  binary representation.
+
+  This function should be used to update object code that was compiled with
+  NASM from assembly source code. Example:
+
+  NASM source code:
+
+        mov     eax, strict dword 0 ; the imm32 zero operand will be patched
+    ASM_PFX(gPatchCr3):
+        mov     cr3, eax
+
+  C source code:
+
+    extern UINT8 gPatchCr3;
+    PatchInstructionX86 (&gPatchCr3, AsmReadCr3 (), 4);
+
+  @param[out] InstructionEnd  Pointer to the byte one past the instruction to
+                              patch. The immediate operand to patch is expected
+                              to comprise the trailing bytes of the
+                              instruction. If InstructionEnd is closer to
+                              address 0 than ValueSize permits, then ASSERT().
+
+  @param[in] PatchValue       The constant to write to the immediate operand.
+                              The caller is responsible for ensuring that
+                              PatchValue can be represented in the byte, word,
+                              dword or qword operand (as indicated through
+                              ValueSize); otherwise ASSERT().
+
+  @param[in] ValueSize        The size of the operand in bytes; must be 1, 2,
+                              4, or 8. ASSERT() otherwise.
+**/
+VOID
+EFIAPI
+PatchInstructionX86 (
+  OUT VOID   *InstructionEnd,
+  IN  UINT64 PatchValue,
+  IN  UINTN  ValueSize
+  );
+
 #endif // defined (MDE_CPU_IA32) || defined (MDE_CPU_X64)
 #endif // !defined (__BASE_LIB__)
