@@ -310,7 +310,8 @@ extern CONST UINT8                  gcSmmInitTemplate[];
 extern CONST UINT16                 gcSmmInitSize;
 extern UINT32                       gSmmCr0;
 extern UINT8                        gPatchSmmCr3;
-extern UINT32                       gSmmCr4;
+extern UINT32                       mSmmCr4;
+extern UINT8                        gPatchSmmCr4;
 extern UINTN                        gSmmInitStack;
 
 /**
