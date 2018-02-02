@@ -295,17 +295,6 @@ WriteSaveStateRegister (
   IN CONST VOID                   *Buffer
   );
 
-//
-//
-//
-typedef struct {
-  UINT32                            Offset;
-  UINT16                            Segment;
-  UINT16                            Reserved;
-} IA32_FAR_ADDRESS;
-
-extern IA32_FAR_ADDRESS             gSmmJmpAddr;
-
 extern CONST UINT8                  gcSmmInitTemplate[];
 extern CONST UINT16                 gcSmmInitSize;
 extern UINT8                        gPatchSmmCr0;
