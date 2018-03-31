@@ -41,12 +41,12 @@
 [LibraryClasses]
   BaseLib
   BaseMemoryLib
-  MemoryAllocationLib
-  UefiRuntimeServicesTableLib
   DebugLib
-  OpensslLib
   IntrinsicLib
+  MemoryAllocationLib
+  OpensslLib
   PrintLib
+  UefiRuntimeServicesTableLib
 
 [BuildOptions]
   #
