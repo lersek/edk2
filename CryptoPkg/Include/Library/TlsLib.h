@@ -356,7 +356,8 @@ TlsSetConnectionEnd (
 
   @retval  EFI_SUCCESS           The ciphers list was set successfully.
   @retval  EFI_INVALID_PARAMETER The parameter is invalid.
-  @retval  EFI_UNSUPPORTED       Unsupported TLS cipher in the list.
+  @retval  EFI_UNSUPPORTED       No supported TLS cipher was found in CipherId.
+  @retval  EFI_OUT_OF_RESOURCES  Memory allocation failed.
 
 **/
 EFI_STATUS
