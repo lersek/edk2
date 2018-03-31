@@ -55,3 +55,5 @@
   #
   MSFT:*_*_*_CC_FLAGS = /wd4090
 
+[UserExtensions.TianoCore."ExtraFiles"]
+  TlsMappingTable.sh
