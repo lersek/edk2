@@ -404,7 +404,10 @@ TlsSetConnectionEnd (
   This function sets the ciphers for use by a specified TLS object.
 
   @param[in]  Tls          Pointer to a TLS object.
-  @param[in]  CipherId     Pointer to a UINT16 cipher Id.
+  @param[in]  CipherId     Array of UINT16 cipher identifiers. Each UINT16
+                           cipher identifier comes from the TLS Cipher Suite
+                           Registry of the IANA, interpreting Byte1 and Byte2
+                           in network (big endian) byte order.
   @param[in]  CipherNum    The number of cipher in the list.
 
   @retval  EFI_SUCCESS           The ciphers list was set successfully.
