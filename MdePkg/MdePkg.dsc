@@ -71,6 +71,7 @@
   MdePkg/Library/BasePciSegmentLibPci/BasePciSegmentLibPci.inf
   MdePkg/Library/BasePciSegmentInfoLibNull/BasePciSegmentInfoLibNull.inf
   MdePkg/Library/BasePciCapLib/BasePciCapLib.inf
+  MdePkg/Library/BasePciCapPciSegmentLib/BasePciCapPciSegmentLib.inf
   MdePkg/Library/PciSegmentLibSegmentInfo/BasePciSegmentLibSegmentInfo.inf
   MdePkg/Library/PciSegmentLibSegmentInfo/DxeRuntimePciSegmentLibSegmentInfo.inf
   MdePkg/Library/BaseS3PciSegmentLib/BaseS3PciSegmentLib.inf

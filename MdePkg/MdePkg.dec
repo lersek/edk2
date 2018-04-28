@@ -155,6 +155,11 @@
   ##                 config space.
   PciCapLib|Include/Library/PciCapLib.h
 
+  ##  @libraryclass  Layered on top of PciCapLib, allows clients to plug a
+  ##                 PciSegmentLib backend into PciCapLib, for config space
+  ##                 access.
+  PciCapPciSegmentLib|Include/Library/PciCapPciSegmentLib.h
+
   ##  @libraryclass  Provides library services to get and set Platform Configuration Database entries.
   PcdLib|Include/Library/PcdLib.h
 
