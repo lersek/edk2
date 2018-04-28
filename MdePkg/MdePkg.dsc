@@ -136,6 +136,7 @@
   MdePkg/Library/UefiUsbLib/UefiUsbLib.inf
   MdePkg/Library/UefiPciLibPciRootBridgeIo/UefiPciLibPciRootBridgeIo.inf
   MdePkg/Library/UefiPciSegmentLibPciRootBridgeIo/UefiPciSegmentLibPciRootBridgeIo.inf
+  MdePkg/Library/UefiPciCapPciIoLib/UefiPciCapPciIoLib.inf
   MdePkg/Library/SmmLibNull/SmmLibNull.inf
   MdePkg/Library/BaseExtractGuidedSectionLib/BaseExtractGuidedSectionLib.inf
 

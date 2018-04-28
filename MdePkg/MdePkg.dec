@@ -160,6 +160,11 @@
   ##                 access.
   PciCapPciSegmentLib|Include/Library/PciCapPciSegmentLib.h
 
+  ##  @libraryclass  Layered on top of PciCapLib, allows clients to plug an
+  ##                 EFI_PCI_IO_PROTOCOL backend into PciCapLib, for config
+  ##                 space access.
+  PciCapPciIoLib|Include/Library/PciCapPciIoLib.h
+
   ##  @libraryclass  Provides library services to get and set Platform Configuration Database entries.
   PcdLib|Include/Library/PcdLib.h
 
