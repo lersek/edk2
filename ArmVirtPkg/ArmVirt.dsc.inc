@@ -131,6 +131,9 @@
   # PCI Libraries
   PciLib|MdePkg/Library/BasePciLibPciExpress/BasePciLibPciExpress.inf
   PciExpressLib|ArmVirtPkg/Library/BaseCachingPciExpressLib/BaseCachingPciExpressLib.inf
+  PciCapLib|MdePkg/Library/BasePciCapLib/BasePciCapLib.inf
+  PciCapPciSegmentLib|MdePkg/Library/BasePciCapPciSegmentLib/BasePciCapPciSegmentLib.inf
+  PciCapPciIoLib|MdePkg/Library/UefiPciCapPciIoLib/UefiPciCapPciIoLib.inf
 
   # USB Libraries
   UefiUsbLib|MdePkg/Library/UefiUsbLib/UefiUsbLib.inf
