@@ -127,6 +127,9 @@
   PciExpressLib|MdePkg/Library/BasePciExpressLib/BasePciExpressLib.inf
   PciLib|MdePkg/Library/BasePciLibCf8/BasePciLibCf8.inf
   PciSegmentLib|MdePkg/Library/BasePciSegmentLibPci/BasePciSegmentLibPci.inf
+  PciCapLib|MdePkg/Library/BasePciCapLib/BasePciCapLib.inf
+  PciCapPciSegmentLib|MdePkg/Library/BasePciCapPciSegmentLib/BasePciCapPciSegmentLib.inf
+  PciCapPciIoLib|MdePkg/Library/UefiPciCapPciIoLib/UefiPciCapPciIoLib.inf
   IoLib|MdePkg/Library/BaseIoLibIntrinsic/BaseIoLibIntrinsicSev.inf
   OemHookStatusCodeLib|MdeModulePkg/Library/OemHookStatusCodeLibNull/OemHookStatusCodeLibNull.inf
   SerialPortLib|PcAtChipsetPkg/Library/SerialIoLib/SerialIoLib.inf
