@@ -165,7 +165,10 @@ PCCTS_H=../h
 #   UNIX  (default)
 #
 BUILD_CC?=gcc
-COPT=-O
+
+# keep EXTRA_OPTFLAGS last
+COPT=-O $(EXTRA_OPTFLAGS)
+
 ANTLR=${BIN_DIR}/antlr
 DLG=${BIN_DIR}/dlg
 OBJ_EXT=o
