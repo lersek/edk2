@@ -118,15 +118,18 @@ BUILD_CC?=cc
 COPT=-O
 ANTLR=${BIN_DIR}/antlr
 DLG=${BIN_DIR}/dlg
-BUILD_CFLAGS= $(COPT) -I. -I$(SET) -I$(PCCTS_H) -DUSER_ZZSYN -DZZLEXBUFSIZE=65536
-BUILD_CPPFLAGS=
+
+# keep COPT last
+BUILD_CFLAGS=$(COPT)
+
+BUILD_CPPFLAGS=-I. -I$(SET) -I$(PCCTS_H) -DUSER_ZZSYN -DZZLEXBUFSIZE=65536
 OBJ_EXT=o
 OUT_OBJ = -o
 OBJ = dlg_p.o dlg_a.o main.o err.o set.o support.o output.o \
         relabel.o automata.o
 
 $(BIN_DIR)/dlg : $(OBJ) $(SRC)
-		$(BUILD_CC) $(BUILD_CFLAGS) -o $(BIN_DIR)/dlg $(OBJ)
+		$(BUILD_CC) -o $(BIN_DIR)/dlg $(OBJ)
 
 SRC = dlg_p.c dlg_a.c main.c err.c $(SET)/set.c support.c output.c \
         relabel.c automata.c
@@ -138,19 +141,19 @@ SRC = dlg_p.c dlg_a.c main.c err.c $(SET)/set.c support.c output.c \
 #	$(DLG) -C2 parser.dlg dlg_a.c
 
 dlg_p.$(OBJ_EXT) : dlg_p.c dlg.h tokens.h mode.h
-	$(BUILD_CC) $(BUILD_CFLAGS) -c dlg_p.c
+	$(BUILD_CC) -c $(BUILD_CPPFLAGS) $(BUILD_CFLAGS) dlg_p.c
 
 dlg_a.$(OBJ_EXT) : dlg_a.c dlg.h tokens.h mode.h
-	$(BUILD_CC) $(BUILD_CFLAGS) -c dlg_a.c
+	$(BUILD_CC) -c $(BUILD_CPPFLAGS) $(BUILD_CFLAGS) dlg_a.c
 
 main.$(OBJ_EXT) : main.c dlg.h
-	$(BUILD_CC) $(BUILD_CFLAGS) -c main.c
+	$(BUILD_CC) -c $(BUILD_CPPFLAGS) $(BUILD_CFLAGS) main.c
 
 set.$(OBJ_EXT) : $(SET)/set.c
-	$(BUILD_CC) -c $(BUILD_CFLAGS) $(SET)/set.c
+	$(BUILD_CC) -c $(BUILD_CPPFLAGS) $(BUILD_CFLAGS) $(SET)/set.c
 
 %.o : %.c 
-	$(BUILD_CC) -c $(BUILD_CFLAGS) $(BUILD_CPPFLAGS) $< -o $@
+	$(BUILD_CC) -c $(BUILD_CPPFLAGS) $(BUILD_CFLAGS) -o $@ $<
 
 lint:
 	lint *.c

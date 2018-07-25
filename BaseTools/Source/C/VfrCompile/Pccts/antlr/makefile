@@ -170,8 +170,11 @@ ANTLR=${BIN_DIR}/antlr
 DLG=${BIN_DIR}/dlg
 OBJ_EXT=o
 OUT_OBJ = -o
-BUILD_CFLAGS= $(COPT) -I. -I$(SET) -I$(PCCTS_H) -DUSER_ZZSYN $(COTHER) -DZZLEXBUFSIZE=65536
-BUILD_CPPFLAGS=
+
+# keep COPT last
+BUILD_CFLAGS=$(COPT)
+
+BUILD_CPPFLAGS=-I. -I$(SET) -I$(PCCTS_H) -DUSER_ZZSYN -DZZLEXBUFSIZE=65536
 #
 # SGI Users, use this CFLAGS
 #
@@ -180,7 +183,7 @@ OBJ=antlr.o scan.o err.o bits.o build.o fset2.o fset.o gen.o  \
         globals.o hash.o lex.o main.o misc.o set.o pred.o egman.o mrhoist.o fcache.o
 
 $(BIN_DIR)/antlr : $(OBJ) $(SRC)
-		$(BUILD_CC) $(BUILD_CFLAGS) -o $(BIN_DIR)/antlr $(OBJ)
+		$(BUILD_CC) -o $(BIN_DIR)/antlr $(OBJ)
 
 # what files does PCCTS generate (both ANTLR and DLG)
 PCCTS_GEN=antlr.c scan.c err.c tokens.h mode.h parser.dlg stdpccts.h remap.h
@@ -203,10 +206,10 @@ scan.o : scan.c mode.h tokens.h
 #	$(DLG) -C2 parser.dlg scan.c
 
 set.o : $(SET)/set.c
-	$(BUILD_CC) $(BUILD_CFLAGS) -c -o set.o $(SET)/set.c
+	$(BUILD_CC) -c $(BUILD_CPPFLAGS) $(BUILD_CFLAGS) -o set.o $(SET)/set.c
 
 %.o : %.c 
-	$(BUILD_CC) -c $(BUILD_CFLAGS) $(BUILD_CPPFLAGS) $< -o $@
+	$(BUILD_CC) -c $(BUILD_CPPFLAGS) $(BUILD_CFLAGS) -o $@ $<
 
 #
 # ****** These next targets are common to UNIX and PC world ********
