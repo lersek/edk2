@@ -178,6 +178,10 @@ OUT_OBJ = -o
 BUILD_CFLAGS=$(COPT)
 
 BUILD_CPPFLAGS=-I. -I$(SET) -I$(PCCTS_H) -DUSER_ZZSYN -DZZLEXBUFSIZE=65536
+
+# keep EXTRA_LDFLAGS last
+BUILD_LFLAGS = $(EXTRA_LDFLAGS)
+
 #
 # SGI Users, use this CFLAGS
 #
@@ -186,7 +190,7 @@ OBJ=antlr.o scan.o err.o bits.o build.o fset2.o fset.o gen.o  \
         globals.o hash.o lex.o main.o misc.o set.o pred.o egman.o mrhoist.o fcache.o
 
 $(BIN_DIR)/antlr : $(OBJ) $(SRC)
-		$(BUILD_CC) -o $(BIN_DIR)/antlr $(OBJ)
+		$(BUILD_CC) -o $(BIN_DIR)/antlr $(BUILD_LFLAGS) $(OBJ)
 
 # what files does PCCTS generate (both ANTLR and DLG)
 PCCTS_GEN=antlr.c scan.c err.c tokens.h mode.h parser.dlg stdpccts.h remap.h

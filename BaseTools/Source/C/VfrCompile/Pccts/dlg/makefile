@@ -126,13 +126,17 @@ DLG=${BIN_DIR}/dlg
 BUILD_CFLAGS=$(COPT)
 
 BUILD_CPPFLAGS=-I. -I$(SET) -I$(PCCTS_H) -DUSER_ZZSYN -DZZLEXBUFSIZE=65536
+
+# keep EXTRA_LDFLAGS last
+BUILD_LFLAGS = $(EXTRA_LDFLAGS)
+
 OBJ_EXT=o
 OUT_OBJ = -o
 OBJ = dlg_p.o dlg_a.o main.o err.o set.o support.o output.o \
         relabel.o automata.o
 
 $(BIN_DIR)/dlg : $(OBJ) $(SRC)
-		$(BUILD_CC) -o $(BIN_DIR)/dlg $(OBJ)
+		$(BUILD_CC) -o $(BIN_DIR)/dlg $(BUILD_LFLAGS) $(OBJ)
 
 SRC = dlg_p.c dlg_a.c main.c err.c $(SET)/set.c support.c output.c \
         relabel.c automata.c
