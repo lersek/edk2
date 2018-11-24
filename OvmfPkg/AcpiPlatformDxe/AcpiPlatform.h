@@ -118,5 +118,15 @@ TransferS3ContextToBootScript (
   IN S3_CONTEXT *S3Context
   );
 
+VOID
+RegisterAcpiTestSupport (
+  VOID
+  );
+
+VOID
+UnregisterAcpiTestSupport (
+  VOID
+  );
+
 #endif
 

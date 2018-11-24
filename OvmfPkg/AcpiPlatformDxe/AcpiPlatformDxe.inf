@@ -29,6 +29,7 @@
 [Sources]
   AcpiPlatform.c
   AcpiPlatform.h
+  AcpiTestSupport.c
   BootScript.c
   EntryPoint.c
   PciDecoding.c
@@ -74,6 +75,9 @@
   gUefiCpuPkgTokenSpaceGuid.PcdCpuLocalApicBaseAddress
   gPcAtChipsetPkgTokenSpaceGuid.Pcd8259LegacyModeEdgeLevel
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFdBaseAddress
+
+[FeaturePcd]
+  gUefiOvmfPkgTokenSpaceGuid.PcdAcpiTestSupport
 
 [Depex]
   gEfiAcpiTableProtocolGuid

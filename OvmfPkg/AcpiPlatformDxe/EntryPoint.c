@@ -66,6 +66,10 @@ AcpiPlatformEntryPoint (
   EFI_STATUS Status;
   EFI_EVENT  RootBridgesConnected;
 
+  if (FeaturePcdGet (PcdAcpiTestSupport)) {
+    RegisterAcpiTestSupport ();
+  }
+
   //
   // If the platform doesn't support PCI, or PCI enumeration has been disabled,
   // install the tables at once, and let the entry point's return code reflect
@@ -74,7 +78,11 @@ AcpiPlatformEntryPoint (
   if (PcdGetBool (PcdPciDisableBusEnumeration)) {
     DEBUG ((EFI_D_INFO, "%a: PCI or its enumeration disabled, installing "
       "ACPI tables\n", __FUNCTION__));
-    return InstallAcpiTables (FindAcpiTableProtocol ());
+    Status = InstallAcpiTables (FindAcpiTableProtocol ());
+    if (EFI_ERROR (Status)) {
+      goto RollbackAcpiTestSupport;
+    }
+    return EFI_SUCCESS;
   }
 
   //
@@ -86,11 +94,17 @@ AcpiPlatformEntryPoint (
   Status = gBS->CreateEventEx (EVT_NOTIFY_SIGNAL, TPL_CALLBACK,
                   OnRootBridgesConnected, NULL /* Context */,
                   &gRootBridgesConnectedEventGroupGuid, &RootBridgesConnected);
-  if (!EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_INFO,
-      "%a: waiting for root bridges to be connected, registered callback\n",
-      __FUNCTION__));
+  if (EFI_ERROR (Status)) {
+    goto RollbackAcpiTestSupport;
   }
+  DEBUG ((DEBUG_INFO,
+    "%a: waiting for root bridges to be connected, registered callback\n",
+    __FUNCTION__));
+  return EFI_SUCCESS;
 
+RollbackAcpiTestSupport:
+  if (FeaturePcdGet (PcdAcpiTestSupport)) {
+    UnregisterAcpiTestSupport ();
+  }
   return Status;
 }

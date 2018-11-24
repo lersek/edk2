@@ -165,3 +165,8 @@
   #  runtime OS from tampering with firmware structures (special memory ranges
   #  used by OVMF, the varstore pflash chip, LockBox etc).
   gUefiOvmfPkgTokenSpaceGuid.PcdSmmSmramRequire|FALSE|BOOLEAN|0x1e
+
+  ## Instruct AcpiPlatformDxe to expose the RSD PTR address(es) in the
+  #  MB-aligned ACPI_TEST_SUPPORT structure to the hypervisor. This is a
+  #  development / unit test aid; do not enable in production builds.
+  gUefiOvmfPkgTokenSpaceGuid.PcdAcpiTestSupport|FALSE|BOOLEAN|3

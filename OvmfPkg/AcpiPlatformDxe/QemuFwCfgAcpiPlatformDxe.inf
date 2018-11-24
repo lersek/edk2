@@ -28,6 +28,7 @@
 
 [Sources]
   AcpiPlatform.h
+  AcpiTestSupport.c
   BootScript.c
   EntryPoint.c
   PciDecoding.c
@@ -61,6 +62,9 @@
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdPciDisableBusEnumeration
+
+[FeaturePcd]
+  gUefiOvmfPkgTokenSpaceGuid.PcdAcpiTestSupport
 
 [Depex]
   gEfiAcpiTableProtocolGuid
