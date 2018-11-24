@@ -66,6 +66,10 @@
   gEfiPciIoProtocolGuid                         # PROTOCOL SOMETIMES_CONSUMED
 
 [Guids]
+  gAcpiTestSupportGuid
+  gEfiAcpi10TableGuid
+  gEfiAcpi20TableGuid
+  gEfiEventReadyToBootGuid
   gEfiXenInfoGuid
   gRootBridgesConnectedEventGroupGuid
 
