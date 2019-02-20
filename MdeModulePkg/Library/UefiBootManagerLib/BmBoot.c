@@ -1668,6 +1668,55 @@ BmIsBootManagerMenuFilePath (
 }
 
 /**
+  Report status code with EFI_RETURN_STATUS_EXTENDED_DATA about LoadImage() or
+  StartImage() failure.
+
+  @param[in] ErrorCode      An Error Code in the Software Class, DXE Boot
+                            Service Driver Subclass. ErrorCode will be used to
+                            compose the Value parameter for status code
+                            reporting. Must be one of
+                            EFI_SW_DXE_BS_EC_BOOT_OPTION_LOAD_ERROR and
+                            EFI_SW_DXE_BS_EC_BOOT_OPTION_FAILED.
+
+  @param[in] FailureStatus  The failure status returned by the boot service
+                            that should be reported.
+**/
+VOID
+BmReportImageFailure (
+  IN UINT32     ErrorCode,
+  IN EFI_STATUS FailureStatus
+  )
+{
+  EFI_RETURN_STATUS_EXTENDED_DATA ExtendedData;
+  VOID                            *PaddingStart;
+  UINTN                           PaddingSize;
+
+  if (!ReportErrorCodeEnabled ()) {
+    return;
+  }
+
+  ASSERT (
+    (ErrorCode == EFI_SW_DXE_BS_EC_BOOT_OPTION_LOAD_ERROR) ||
+    (ErrorCode == EFI_SW_DXE_BS_EC_BOOT_OPTION_FAILED)
+    );
+
+  PaddingStart = &ExtendedData.DataHeader + 1;
+  PaddingSize = (UINTN) &ExtendedData.ReturnStatus - (UINTN) PaddingStart;
+  ZeroMem (PaddingStart, PaddingSize);
+  ExtendedData.ReturnStatus = FailureStatus;
+
+  REPORT_STATUS_CODE_EX (
+    (EFI_ERROR_CODE | EFI_ERROR_MINOR),
+    (EFI_SOFTWARE_DXE_BS_DRIVER | ErrorCode),
+    0,
+    NULL,
+    NULL,
+    PaddingStart,
+    PaddingSize + sizeof (ExtendedData.ReturnStatus)
+    );
+}
+
+/**
   Attempt to boot the EFI boot option. This routine sets L"BootCurent" and
   also signals the EFI ready to boot event. If the device path for the option
   starts with a BBS device path a legacy boot is attempted via the registered
@@ -1822,15 +1871,7 @@ EfiBootManagerBoot (
       //
       // Report Status Code with the failure status to indicate that the failure to load boot option
       //
-      REPORT_STATUS_CODE_EX (
-        EFI_ERROR_CODE | EFI_ERROR_MINOR,
-        (EFI_SOFTWARE_DXE_BS_DRIVER | EFI_SW_DXE_BS_EC_BOOT_OPTION_LOAD_ERROR),
-        0,
-        NULL,
-        NULL,
-        &Status,
-        sizeof (EFI_STATUS)
-        );
+      BmReportImageFailure (EFI_SW_DXE_BS_EC_BOOT_OPTION_LOAD_ERROR, Status);
       BootOption->Status = Status;
       //
       // Destroy the RAM disk
@@ -1911,15 +1952,7 @@ EfiBootManagerBoot (
     //
     // Report Status Code with the failure status to indicate that boot failure
     //
-    REPORT_STATUS_CODE_EX (
-      EFI_ERROR_CODE | EFI_ERROR_MINOR,
-      (EFI_SOFTWARE_DXE_BS_DRIVER | EFI_SW_DXE_BS_EC_BOOT_OPTION_FAILED),
-      0,
-      NULL,
-      NULL,
-      &Status,
-      sizeof (EFI_STATUS)
-      );
+    BmReportImageFailure (EFI_SW_DXE_BS_EC_BOOT_OPTION_FAILED, Status);
   }
   PERF_END_EX (gImageHandle, "BdsAttempt", NULL, 0, (UINT32) OptionNumber);
 
