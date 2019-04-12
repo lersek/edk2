@@ -234,6 +234,14 @@ typedef struct {
   ///
 } EFI_COMMON_SECTION_HEADER;
 
+///
+/// Union that permits accessing EFI_COMMON_SECTION_HEADER as a UINT32 object.
+///
+typedef union {
+  EFI_COMMON_SECTION_HEADER Hdr;
+  UINT32                    Uint32;
+} EFI_COMMON_SECTION_HEADER_UNION;
+
 typedef struct {
   ///
   /// A 24-bit unsigned integer that contains the total size of the section in bytes,
@@ -481,7 +489,7 @@ typedef struct {
 } EFI_VERSION_SECTION2;
 
 #define SECTION_SIZE(SectionHeaderPtr) \
-    ((UINT32) (*((UINT32 *) ((EFI_COMMON_SECTION_HEADER *) (UINTN) SectionHeaderPtr)->Size) & 0x00ffffff))
+    (((EFI_COMMON_SECTION_HEADER_UNION *) (UINTN) (SectionHeaderPtr))->Uint32 & 0x00ffffff)
 
 #define IS_SECTION2(SectionHeaderPtr) \
     (SECTION_SIZE (SectionHeaderPtr) == 0x00ffffff)
