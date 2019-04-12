@@ -149,6 +149,11 @@ typedef struct {
   EFI_SECTION_TYPE  Type;
 } EFI_COMMON_SECTION_HEADER;
 
+typedef union {
+  EFI_COMMON_SECTION_HEADER Hdr;
+  UINT32                    Uint32;
+} EFI_COMMON_SECTION_HEADER_UNION;
+
 typedef struct {
   UINT8             Size[3];
   EFI_SECTION_TYPE  Type;
@@ -301,7 +306,7 @@ typedef struct {
 } EFI_VERSION_SECTION2;
 
 #define SECTION_SIZE(SectionHeaderPtr) \
-    ((UINT32) (*((UINT32 *) ((EFI_COMMON_SECTION_HEADER *) SectionHeaderPtr)->Size) & 0x00ffffff))
+    (((EFI_COMMON_SECTION_HEADER_UNION *) (SectionHeaderPtr))->Uint32 & 0x00ffffff)
 
 #pragma pack()
 
