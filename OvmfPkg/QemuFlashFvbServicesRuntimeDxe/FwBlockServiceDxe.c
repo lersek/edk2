@@ -169,6 +169,11 @@ MarkIoMemoryRangeForRuntimeAccess (
                   Length
                   );
 
+  //
+  // Suppress "Value stored to ... is never read" analyzer warnings.
+  //
+  (VOID)Status;
+
   Status = gDS->AddMemorySpace (
                   EfiGcdMemoryTypeMemoryMappedIo,
                   BaseAddress,

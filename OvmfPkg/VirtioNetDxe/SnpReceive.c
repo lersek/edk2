@@ -158,6 +158,11 @@ VirtioNetReceive (
   }
   RxPtr += sizeof (UINT16);
 
+  //
+  // Suppress "Value stored to ... is never read" analyzer warnings.
+  //
+  (VOID)RxPtr;
+
   Status = EFI_SUCCESS;
 
 RecycleDesc:

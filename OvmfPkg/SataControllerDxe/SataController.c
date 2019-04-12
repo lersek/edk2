@@ -225,6 +225,11 @@ CalculateBestUdmaMode (
   DeviceUDmaMode = 0;
 
   //
+  // Suppress "Value stored to ... is never read" analyzer warnings.
+  //
+  (VOID)DeviceUDmaMode;
+
+  //
   // Check whether the WORD 88 (supported UltraDMA by drive) is valid
   //
   if ((IdentifyData->AtaData.field_validity & 0x04) == 0x00) {

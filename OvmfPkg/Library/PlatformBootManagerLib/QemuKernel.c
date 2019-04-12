@@ -42,6 +42,11 @@ TryRunningQemuKernel (
   InitrdData = NULL;
   InitrdSize = 0;
 
+  //
+  // Suppress "Value stored to ... is never read" analyzer warnings.
+  //
+  (VOID)SetupSize;
+
   if (!QemuFwCfgIsAvailable ()) {
     return EFI_NOT_FOUND;
   }

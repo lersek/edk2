@@ -62,6 +62,12 @@ ReleaseGopResources (
                0,                  // ScanoutId
                0                   // ResourceId
                );
+
+    //
+    // Suppress "Value stored to ... is never read" analyzer warnings.
+    //
+    (VOID)Status;
+
     //
     // HACK BEGINS HERE
     //

@@ -118,6 +118,11 @@ VirtioRingInit (
   Ring->Used.AvailEvent = (volatile VOID *) RingPagesPtr;
   RingPagesPtr += sizeof *Ring->Used.AvailEvent;
 
+  //
+  // Suppress "Value stored to ... is never read" analyzer warnings.
+  //
+  (VOID)RingPagesPtr;
+
   Ring->QueueSize = QueueSize;
   return EFI_SUCCESS;
 }

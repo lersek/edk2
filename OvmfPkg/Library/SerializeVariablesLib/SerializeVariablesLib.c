@@ -601,6 +601,10 @@ SerializeVariablesIterateSystemVariables (
         FreePool (VariableData);
         VariableData = NULL;
         VariableDataBufferSize = 0;
+        //
+        // Suppress "Value stored to ... is never read" analyzer warnings.
+        //
+        (VOID)VariableDataBufferSize;
       }
       VariableData = AllocatePool (VariableDataSize);
       if (VariableData == NULL) {

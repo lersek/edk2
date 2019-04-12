@@ -150,6 +150,11 @@ InstallXenTables (
   NumberOfTableEntries = 0;
 
   //
+  // Suppress "Value stored to ... is never read" analyzer warnings.
+  //
+  (VOID)NumberOfTableEntries;
+
+  //
   // Try to find Xen ACPI tables
   //
   Status = GetXenAcpiRsdp (&XenAcpiRsdpStructurePtr);

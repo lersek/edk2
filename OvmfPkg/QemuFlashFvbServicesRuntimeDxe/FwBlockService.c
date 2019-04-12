@@ -1077,6 +1077,11 @@ FvbInitialize (
     );
 
   //
+  // Suppress "Value stored to ... is never read" analyzer warnings.
+  //
+  (VOID)FwhInstance;
+
+  //
   // Module type specific hook.
   //
   InstallVirtualAddressChangeHandler ();
