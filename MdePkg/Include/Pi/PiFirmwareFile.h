@@ -179,8 +179,16 @@ typedef struct {
 #define IS_FFS_FILE2(FfsFileHeaderPtr) \
     (((((EFI_FFS_FILE_HEADER *) (UINTN) FfsFileHeaderPtr)->Attributes) & FFS_ATTRIB_LARGE_FILE) == FFS_ATTRIB_LARGE_FILE)
 
+#define FFS_FILE_SIZE_ARRAY(FfsFileHeaderPtr) \
+    (((EFI_FFS_FILE_HEADER *) (UINTN) (FfsFileHeaderPtr))->Size)
+
+#define FFS_FILE_SIZE_ELEMENT(FfsFileHeaderPtr, Index) \
+    ((UINT32) FFS_FILE_SIZE_ARRAY (FfsFileHeaderPtr)[(Index)])
+
 #define FFS_FILE_SIZE(FfsFileHeaderPtr) \
-    ((UINT32) (*((UINT32 *) ((EFI_FFS_FILE_HEADER *) (UINTN) FfsFileHeaderPtr)->Size) & 0x00ffffff))
+    ((FFS_FILE_SIZE_ELEMENT ((FfsFileHeaderPtr), 0) <<  0) | \
+     (FFS_FILE_SIZE_ELEMENT ((FfsFileHeaderPtr), 1) <<  8) | \
+     (FFS_FILE_SIZE_ELEMENT ((FfsFileHeaderPtr), 2) << 16))
 
 #define FFS_FILE2_SIZE(FfsFileHeaderPtr) \
     ((UINT32) (((EFI_FFS_FILE_HEADER2 *) (UINTN) FfsFileHeaderPtr)->ExtendedSize))
