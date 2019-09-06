@@ -16,7 +16,8 @@
   { 0xeb97088e, 0xcfdf, 0x49c6, { 0xbe, 0x4b, 0xd9, 0x6, 0xa5, 0xb2, 0xe, 0x86 }}
 
 typedef UINT32  EFI_ACPI_TABLE_VERSION;
-typedef VOID    *EFI_ACPI_HANDLE;
+struct EFI_ACPI_OBJECT;
+typedef struct EFI_ACPI_OBJECT *EFI_ACPI_HANDLE;
 
 #define EFI_ACPI_TABLE_VERSION_NONE (1 << 0)
 #define EFI_ACPI_TABLE_VERSION_1_0B (1 << 1)

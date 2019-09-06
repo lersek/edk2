@@ -145,7 +145,7 @@ typedef struct {
 ///
 /// IHANDLE - contains a list of protocol handles
 ///
-typedef struct {
+typedef struct EFI_OBJECT {
   UINTN               Signature;
   /// All handles list of IHANDLE
   LIST_ENTRY          AllHandles;

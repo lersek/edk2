@@ -28,11 +28,13 @@ typedef RETURN_STATUS             EFI_STATUS;
 ///
 /// A collection of related interfaces.
 ///
-typedef VOID                      *EFI_HANDLE;
+struct EFI_OBJECT;
+typedef struct EFI_OBJECT *EFI_HANDLE;
 ///
 /// Handle to an event structure.
 ///
-typedef VOID                      *EFI_EVENT;
+struct EFI_EVENT_OBJECT;
+typedef struct EFI_EVENT_OBJECT *EFI_EVENT;
 ///
 /// Task priority level.
 ///

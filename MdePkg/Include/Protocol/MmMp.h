@@ -36,7 +36,8 @@
 //
 // Completion token
 //
-typedef VOID* MM_COMPLETION;
+struct MM_COMPLETION_OBJECT;
+typedef struct MM_COMPLETION_OBJECT* MM_COMPLETION;
 
 typedef struct {
   MM_COMPLETION  Completion;

@@ -20,7 +20,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 ///
 /// The following types are currently defined:
 ///
-typedef VOID*   EFI_HII_HANDLE;
+struct EFI_HII_OBJECT;
+typedef struct EFI_HII_OBJECT* EFI_HII_HANDLE;
 typedef CHAR16* EFI_STRING;
 typedef UINT16  EFI_IMAGE_ID;
 typedef UINT16  EFI_QUESTION_ID;

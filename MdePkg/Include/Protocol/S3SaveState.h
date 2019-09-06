@@ -21,7 +21,7 @@
     { 0xe857caf6, 0xc046, 0x45dc, { 0xbe, 0x3f, 0xee, 0x7, 0x65, 0xfb, 0xa8, 0x87 }}
 
 
-typedef VOID *EFI_S3_BOOT_SCRIPT_POSITION;
+typedef UINT8 *EFI_S3_BOOT_SCRIPT_POSITION;
 
 typedef struct _EFI_S3_SAVE_STATE_PROTOCOL  EFI_S3_SAVE_STATE_PROTOCOL;
 

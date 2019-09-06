@@ -274,7 +274,7 @@ typedef struct _HII_DATABASE_PACKAGE_LIST_INSTANCE {
 
 #define HII_HANDLE_SIGNATURE            SIGNATURE_32 ('h','i','h','l')
 
-typedef struct {
+typedef struct EFI_HII_OBJECT {
   UINTN               Signature;
   LIST_ENTRY          Handle;
   UINTN               Key;

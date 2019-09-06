@@ -28,7 +28,8 @@ typedef struct _EFI_EAP_PROTOCOL EFI_EAP_PROTOCOL;
 /// Type for the identification number assigned to the Port by the
 /// System in which the Port resides.
 ///
-typedef VOID *  EFI_PORT_HANDLE;
+struct EFI_PORT_OBJECT;
+typedef struct EFI_PORT_OBJECT *EFI_PORT_HANDLE;
 
 ///
 /// EAP Authentication Method Type (RFC 3748)

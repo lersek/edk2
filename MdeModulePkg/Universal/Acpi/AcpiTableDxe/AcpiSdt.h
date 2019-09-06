@@ -88,7 +88,7 @@ struct _EFI_AML_NODE_LIST {
 //         This buffer should not be freed.
 //  Size is the total size of this ACPI node buffer.
 //
-typedef struct {
+typedef struct EFI_ACPI_OBJECT {
   UINT32                  Signature;
   UINT8                   *Buffer;
   UINTN                   Size;

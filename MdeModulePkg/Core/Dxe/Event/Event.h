@@ -37,7 +37,7 @@ typedef struct {
 } TIMER_EVENT_INFO;
 
 #define EVENT_SIGNATURE         SIGNATURE_32('e','v','n','t')
-typedef struct {
+typedef struct EFI_EVENT_OBJECT {
   UINTN                   Signature;
   UINT32                  Type;
   UINT32                  SignalCount;

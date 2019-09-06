@@ -18,12 +18,14 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 ///
 /// The handles of EFI FV.
 ///
-typedef VOID    *EFI_PEI_FV_HANDLE;
+struct EFI_PEI_FV_OBJECT;
+typedef struct EFI_PEI_FV_OBJECT *EFI_PEI_FV_HANDLE;
 
 ///
 /// The handles of EFI FFS.
 ///
-typedef VOID    *EFI_PEI_FILE_HANDLE;
+struct EFI_PEI_FILE_OBJECT;
+typedef struct EFI_PEI_FILE_OBJECT *EFI_PEI_FILE_HANDLE;
 
 ///
 /// Declare the forward reference data structure for EFI_PEI_SERVICE.

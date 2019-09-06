@@ -11,12 +11,13 @@
 #define __EFI_SHELL_PROTOCOL_H__
 
 #include <Guid/FileInfo.h>
+#include <Protocol/SimpleFileSystem.h>
 
 #define EFI_SHELL_PROTOCOL_GUID \
   { \
   0x6302d008, 0x7f9b, 0x4f30, { 0x87, 0xac, 0x60, 0xc9, 0xfe, 0xf5, 0xda, 0x4e } \
   }
-typedef VOID *SHELL_FILE_HANDLE;
+typedef EFI_FILE_PROTOCOL *SHELL_FILE_HANDLE;
 
 typedef enum {
   ///

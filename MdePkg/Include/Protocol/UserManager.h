@@ -24,8 +24,10 @@
     0xbaf1e6de, 0x209e, 0x4adb, { 0x8d, 0x96, 0xfd, 0x8b, 0x71, 0xf3, 0xf6, 0x83 } \
   }
 
-typedef VOID *EFI_USER_PROFILE_HANDLE;
-typedef VOID *EFI_USER_INFO_HANDLE;
+struct EFI_USER_PROFILE_OBJECT;
+typedef struct EFI_USER_PROFILE_OBJECT *EFI_USER_PROFILE_HANDLE;
+struct EFI_USER_INFO_OBJECT;
+typedef struct EFI_USER_INFO_OBJECT *EFI_USER_INFO_HANDLE;
 
 ///
 /// The attributes of the user profile information.
@@ -157,7 +159,8 @@ typedef CHAR16 *EFI_USER_INFO_CREDENTIAL_PROVIDER_NAME;
 /// Biometric Exchange Formats Framework) specification.
 ///
 #define EFI_USER_INFO_CBEFF_RECORD                    0x0B
-typedef VOID *EFI_USER_INFO_CBEFF;
+struct EFI_USER_INFO_CBEFF_OBJECT;
+typedef struct EFI_USER_INFO_CBEFF_OBJECT *EFI_USER_INFO_CBEFF;
 ///
 /// Indicates how close of a match the fingerprint must be in order to be considered a match.
 ///
