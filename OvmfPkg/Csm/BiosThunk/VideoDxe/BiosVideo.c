@@ -1402,9 +1402,13 @@ BiosVideoCheckForVbe (
       goto Done;
     }
 
+    //
+    // Cast "ChildHandle" to (EFI_HANDLE*) in order to work around the spec bug
+    // in UEFI v2.8, reported as Mantis#2018.
+    //
     Status = EdidOverride->GetEdid (
                              EdidOverride,
-                             BiosVideoPrivate->Handle,
+                             (EFI_HANDLE *) BiosVideoPrivate->Handle,
                              &EdidAttributes,
                              &EdidOverrideDataSize,
                              (UINT8 **) &EdidOverrideDataBlock
