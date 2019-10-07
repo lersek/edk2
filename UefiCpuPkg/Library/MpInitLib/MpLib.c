@@ -1044,24 +1044,32 @@ WakeUpAP (
       SendInitSipiSipiAllExcludingSelf ((UINT32) ExchangeInfo->BufferStart);
     }
     if (CpuMpData->InitFlag == ApInitConfig) {
-      //
-      // Here support two methods to collect AP count through adjust
-      // PcdCpuApInitTimeOutInMicroSeconds values.
-      //
-      // one way is set a value to just let the first AP to start the
-      // initialization, then through the later while loop to wait all Aps
-      // finsh the initialization.
-      // The other way is set a value to let all APs finished the initialzation.
-      // In this case, the later while loop is useless.
-      //
-      TimedWaitForApFinish (
-        CpuMpData,
-        PcdGet32 (PcdCpuMaxLogicalProcessorNumber) - 1,
-        PcdGet32 (PcdCpuApInitTimeOutInMicroSeconds)
-        );
+      if (PcdGet32 (PcdCpuBootLogicalProcessorNumber) > 0) {
+        TimedWaitForApFinish (
+          CpuMpData,
+          PcdGet32 (PcdCpuBootLogicalProcessorNumber) - 1,
+          MAX_UINT32 // approx. 71 minutes
+          );
+      } else {
+        //
+        // Here support two methods to collect AP count through adjust
+        // PcdCpuApInitTimeOutInMicroSeconds values.
+        //
+        // one way is set a value to just let the first AP to start the
+        // initialization, then through the later while loop to wait all Aps
+        // finsh the initialization.
+        // The other way is set a value to let all APs finished the
+        // initialzation. In this case, the later while loop is useless.
+        //
+        TimedWaitForApFinish (
+          CpuMpData,
+          PcdGet32 (PcdCpuMaxLogicalProcessorNumber) - 1,
+          PcdGet32 (PcdCpuApInitTimeOutInMicroSeconds)
+          );
 
-      while (CpuMpData->MpCpuExchangeInfo->NumApsExecuting != 0) {
-        CpuPause();
+        while (CpuMpData->MpCpuExchangeInfo->NumApsExecuting != 0) {
+          CpuPause();
+        }
       }
     } else {
       //
