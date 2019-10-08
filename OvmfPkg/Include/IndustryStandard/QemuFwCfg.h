@@ -95,4 +95,26 @@ typedef struct {
 } FW_CFG_DMA_ACCESS;
 #pragma pack ()
 
+//
+// Structure describing the VCPU topology on IA32 and X64, in the fw_cfg file
+// named "etc/x86-smp-topology".
+//
+// All fields are little endian.
+//
+// The number of sockets (aka packages) can be calculated by dividing
+// MaxLogicalProcessors by (DiesPerSocket * CoresPerDie * ThreadsPerCore), and
+// rounding up the quotient.
+//
+// APIC ID field widths and offsets can be derived with the standard method
+// described in "Intel(R) 64 Architecture Processor Topology Enumeration"
+// <http://software.intel.com/en-us/articles/intel-64-architecture-processor-topology-enumeration/>.
+//
+#pragma pack (1)
+typedef struct {
+  UINT32 DiesPerSocket;
+  UINT32 CoresPerDie;
+  UINT32 ThreadsPerCore;
+  UINT32 MaxLogicalProcessors;
+} FW_CFG_X86_TOPOLOGY;
+#pragma pack ()
 #endif
