@@ -564,43 +564,72 @@ S3Verification (
 
 
 /**
-  Fetch the number of boot CPUs from QEMU and expose it to UefiCpuPkg modules.
-  Set the mMaxCpuCount variable.
+  Fetch the boot CPU and max CPU numbers from QEMU, and expose them to
+  UefiCpuPkg modules. Set the mMaxCpuCount variable.
 **/
 VOID
 MaxCpuCountInitialization (
   VOID
   )
 {
-  UINT16        ProcessorCount;
-  RETURN_STATUS PcdStatus;
+  UINT16        BootCpuCount;
+  RETURN_STATUS Status;
 
+  //
+  // Try to fetch the boot CPU count.
+  //
   QemuFwCfgSelectItem (QemuFwCfgItemSmpCpuCount);
-  ProcessorCount = QemuFwCfgRead16 ();
-  //
-  // If the fw_cfg key or fw_cfg entirely is unavailable, load mMaxCpuCount
-  // from the PCD default. No change to PCDs.
-  //
-  if (ProcessorCount == 0) {
+  BootCpuCount = QemuFwCfgRead16 ();
+  if (BootCpuCount == 0) {
+    //
+    // QEMU doesn't report the boot CPU count. Let MpInitLib count APs up to
+    // (PcdCpuMaxLogicalProcessorNumber-1), or until
+    // PcdCpuApInitTimeOutInMicroSeconds elapses (whichever is reached first).
+    //
+    DEBUG ((DEBUG_WARN, "%a: boot CPU count unavailable\n", __FUNCTION__));
     mMaxCpuCount = PcdGet32 (PcdCpuMaxLogicalProcessorNumber);
-    return;
+  } else {
+    //
+    // We will expose BootCpuCount to MpInitLib. MpInitLib will count APs up to
+    // (BootCpuCount-1) precisely, regardless of timeout.
+    //
+    // Now try to fetch topology info.
+    //
+    FIRMWARE_CONFIG_ITEM FwCfgItem;
+    UINTN                FwCfgSize;
+    FW_CFG_X86_TOPOLOGY  Topology;
+
+    Status = QemuFwCfgFindFile ("etc/x86-smp-topology", &FwCfgItem,
+               &FwCfgSize);
+    if (RETURN_ERROR (Status) || FwCfgSize != sizeof Topology) {
+      //
+      // QEMU doesn't report the topology. Assume that the maximum CPU count
+      // equals the boot CPU count (implying no hotplug).
+      //
+      DEBUG ((DEBUG_WARN, "%a: topology unavailable\n", __FUNCTION__));
+      mMaxCpuCount = BootCpuCount;
+    } else {
+      //
+      // Grab the maximum CPU count from the topology info.
+      //
+      QemuFwCfgSelectItem (FwCfgItem);
+      QemuFwCfgReadBytes (FwCfgSize, &Topology);
+      DEBUG ((DEBUG_VERBOSE,
+        "%a: DiesPerSocket=%u CoresPerDie=%u ThreadsPerCore=%u\n",
+        __FUNCTION__, Topology.DiesPerSocket, Topology.CoresPerDie,
+        Topology.ThreadsPerCore));
+      mMaxCpuCount = Topology.MaxLogicalProcessors;
+    }
   }
-  //
-  // Otherwise, set mMaxCpuCount to the value reported by QEMU.
-  //
-  mMaxCpuCount = ProcessorCount;
-  //
-  // Additionally, tell UefiCpuPkg modules (a) the exact number of VCPUs, (b)
-  // to wait, in the initial AP bringup, exactly as long as it takes for all of
-  // the APs to report in. For this, we set the longest representable timeout
-  // (approx. 71 minutes).
-  //
-  PcdStatus = PcdSet32S (PcdCpuMaxLogicalProcessorNumber, ProcessorCount);
-  ASSERT_RETURN_ERROR (PcdStatus);
-  PcdStatus = PcdSet32S (PcdCpuApInitTimeOutInMicroSeconds, MAX_UINT32);
-  ASSERT_RETURN_ERROR (PcdStatus);
-  DEBUG ((DEBUG_INFO, "%a: QEMU reports %d processor(s)\n", __FUNCTION__,
-    ProcessorCount));
+
+  DEBUG ((DEBUG_INFO, "%a: BootCpuCount=%d mMaxCpuCount=%u\n", __FUNCTION__,
+    BootCpuCount, mMaxCpuCount));
+  ASSERT (BootCpuCount <= mMaxCpuCount);
+
+  Status = PcdSet32S (PcdCpuBootLogicalProcessorNumber, BootCpuCount);
+  ASSERT_RETURN_ERROR (Status);
+  Status = PcdSet32S (PcdCpuMaxLogicalProcessorNumber, mMaxCpuCount);
+  ASSERT_RETURN_ERROR (Status);
 }
 
 
