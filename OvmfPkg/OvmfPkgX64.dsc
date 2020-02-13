@@ -882,6 +882,7 @@
   #
   # Privileged drivers (DXE_SMM_DRIVER modules)
   #
+  OvmfPkg/CpuHotplugSmm/CpuHotplugSmm.inf
   UefiCpuPkg/CpuIo2Smm/CpuIo2Smm.inf
   MdeModulePkg/Universal/LockBox/SmmLockBox/SmmLockBox.inf {
     <LibraryClasses>
